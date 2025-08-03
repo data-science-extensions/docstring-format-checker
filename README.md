@@ -1,0 +1,1 @@
+# docstring-format-checker
