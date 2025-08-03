@@ -73,7 +73,7 @@ docs = [
     "pygithub==2.*",
 ]
 test = [
-    "mypy==1.*",
+    "mypy==1.*,!=1.17.*",
     "parameterized==0.*",
     "pytest==8.*",
     "pytest-clarity==1.*",

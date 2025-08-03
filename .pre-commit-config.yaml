@@ -48,7 +48,7 @@ repos:
 
   # Run MyPy type checks
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.16.1"
+    rev: "v1.17.1"
     hooks:
       - id: mypy
         files: src/toolbox_python
@@ -96,7 +96,7 @@ repos:
 
   # Check uv configs
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: "0.7.20"
+    rev: "0.8.4"
     hooks:
       - id: uv-lock
       - id: uv-sync
