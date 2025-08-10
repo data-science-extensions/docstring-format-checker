@@ -31,6 +31,7 @@ dependencies = [
     "typer>=0.9.0",
     "tomli>=2.0.0;python_version<'3.11'",
     "rich>=13.0.0",
+    "toolbox-python==1.*",
 ]
 
 [project.urls]

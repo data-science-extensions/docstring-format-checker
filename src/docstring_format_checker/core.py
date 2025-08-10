@@ -44,6 +44,7 @@
 
 # ## Python StdLib Imports ----
 import ast
+import fnmatch
 import re
 from pathlib import Path
 from typing import Literal, NamedTuple, Optional, Union
@@ -58,7 +59,12 @@ from docstring_format_checker.utils.exceptions import DocstringError
 ## --------------------------------------------------------------------------- #
 
 
-__all__: list[str] = ["DocstringChecker", "FunctionAndClassDetails", "SectionConfig", "DocstringError"]
+__all__: list[str] = [
+    "DocstringChecker",
+    "FunctionAndClassDetails",
+    "SectionConfig",
+    "DocstringError",
+]
 
 
 # ---------------------------------------------------------------------------- #
@@ -129,12 +135,12 @@ class DocstringChecker:
             with open(file_path, encoding="utf-8") as f:
                 content: str = f.read()
         except UnicodeDecodeError as e:
-            raise ValueError(f"Cannot decode file {file_path}: {e}")
+            raise ValueError(f"Cannot decode file {file_path}: {e}") from e
 
         try:
             tree: ast.Module = ast.parse(content)
         except SyntaxError as e:
-            raise SyntaxError(f"Invalid Python syntax in {file_path}: {e}")
+            raise SyntaxError(f"Invalid Python syntax in {file_path}: {e}") from e
 
         # Extract all functions and classes
         items: list[FunctionAndClassDetails] = self._extract_items(tree)
@@ -187,9 +193,6 @@ class DocstringChecker:
 
         # Filter out excluded patterns
         if exclude_patterns:
-            # ## Python StdLib Imports ----
-            import fnmatch
-
             filtered_files: list[Path] = []
             for file_path in python_files:
                 relative_path: Path = file_path.relative_to(directory_path)
@@ -258,6 +261,7 @@ class DocstringChecker:
                 self._visit_function(node)
 
             def _visit_function(self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> None:
+                """Visit function definition node (sync or async)."""
                 if not node.name.startswith("_"):  # Skip private functions
                     item_type: Literal["function", "method"] = "method" if self.class_stack else "function"
                     parent_class: str | None = self.class_stack[-1] if self.class_stack else None
@@ -347,18 +351,18 @@ class DocstringChecker:
             elif section.type == "list_name_and_type":
                 if section.name.lower() == "params" and isinstance(item.node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     if not self._check_params_section(docstring, item.node):
-                        errors.append(f"Missing or invalid Params section")
+                        errors.append("Missing or invalid Params section")
                 elif section.name.lower() in ["returns", "return"]:
                     if not self._check_returns_section(docstring):
-                        errors.append(f"Missing or invalid Returns section")
+                        errors.append("Missing or invalid Returns section")
 
             elif section.type == "list_type":
                 if section.name.lower() in ["raises", "raise"]:
                     if not self._check_raises_section(docstring):
-                        errors.append(f"Missing or invalid Raises section")
+                        errors.append("Missing or invalid Raises section")
                 elif section.name.lower() in ["yields", "yield"]:
                     if not self._check_yields_section(docstring):
-                        errors.append(f"Missing or invalid Yields section")
+                        errors.append("Missing or invalid Yields section")
 
             elif section.type == "list_name":
                 # Simple name sections - check if they exist

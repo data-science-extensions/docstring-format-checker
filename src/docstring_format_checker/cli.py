@@ -57,6 +57,7 @@ from rich.table import Table
 from docstring_format_checker import __version__
 from docstring_format_checker.config import SectionConfig, find_config_file, load_config
 from docstring_format_checker.core import DocstringChecker, DocstringError
+from toolbox_python.bools import strtobool
 
 
 ## --------------------------------------------------------------------------- #
@@ -119,7 +120,7 @@ def parse_boolean_flag(ctx: typer.Context, param: typer.CallbackParam, value: Op
         return True
 
     # Convert to lowercase for case-insensitive comparison
-    value_lower = value.lower().strip()
+    value_lower: str = value.lower().strip()
 
     # True values
     if value_lower in ("true", "t", "yes", "y", "1", "on"):
@@ -133,21 +134,8 @@ def parse_boolean_flag(ctx: typer.Context, param: typer.CallbackParam, value: Op
 
 
 def parse_recursive_flag(value: str) -> bool:
-    """Parse recursive flag string value into boolean."""
-    # Convert to lowercase for case-insensitive comparison
-    value_lower = value.lower().strip()
-
-    # True values
-    if value_lower in ("true", "t", "yes", "y", "1", "on"):
-        return True
-    # False values
-    elif value_lower in ("false", "f", "no", "n", "0", "off"):
-        return False
-    else:
-        # Invalid value
-        raise typer.BadParameter(
-            f"Invalid boolean value for --recursive: '{value}'. Use true/false, t/f, yes/no, y/n, 1/0, or on/off."
-        )
+    """Parse recursive flag using strtobool utility."""
+    return strtobool(value)
 
 
 def show_examples_callback(ctx: typer.Context, param: typer.CallbackParam, value: bool) -> None:
@@ -325,7 +313,7 @@ def check(
         "true",
         "--recursive",
         "-r",
-        help="Check directories recursively (default: true). Accepts: true/false, t/f, yes/no, y/n, 1/0, on/off",
+        help="Check directories recursively (default: true). " "Accepts: true/false, t/f, yes/no, y/n, 1/0, on/off",
     ),
     exclude: Optional[list[str]] = typer.Option(
         None,
@@ -354,7 +342,12 @@ def check(
 ) -> None:
     """Check docstrings in Python files."""
     # Parse the recursive string value into a boolean
-    recursive_bool = parse_recursive_flag(recursive)
+    try:
+        recursive_bool: bool = parse_recursive_flag(recursive)
+    except ValueError as e:
+        raise typer.BadParameter(
+            f"Invalid value for --recursive: '{recursive}'. " "Use true/false, t/f, yes/no, y/n, 1/0, or on/off."
+        ) from e
     check_docstrings(path, config, recursive_bool, exclude, quiet, verbose)
 
 

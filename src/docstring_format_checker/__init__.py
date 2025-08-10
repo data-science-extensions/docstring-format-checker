@@ -1,13 +1,17 @@
-"""Docstring Format Checker - A CLI tool to check and validate Python docstring formatting and completeness."""
+"""
+Docstring Format Checker.
+
+A CLI tool to check and validate Python docstring formatting and completeness.
+"""
 
 __version__ = "0.1.0"
 __author__ = "Chris Mahoney"
 __email__ = "docstring-format-checker@data-science-extensions.com"
 
 
-# ## Local Module Imports ----
-from .config import DEFAULT_CONFIG, load_config
-from .core import DocstringChecker, SectionConfig
+# ## Local First Party Imports ----
+from docstring_format_checker.config import DEFAULT_CONFIG, load_config
+from docstring_format_checker.core import DocstringChecker, SectionConfig
 
 
 __all__: list[str] = [

@@ -44,6 +44,7 @@
 
 # ## Python StdLib Imports ----
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, Optional, Union
 
@@ -52,11 +53,8 @@ if sys.version_info >= (3, 11):
     # ## Python StdLib Imports ----
     import tomllib
 else:
+    # ## Python Third Party Imports ----
     import tomli as tomllib
-
-
-# ## Python StdLib Imports ----
-from dataclasses import dataclass
 
 
 # (No local imports needed)
@@ -196,7 +194,7 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> list[SectionC
         with open(config_path, "rb") as f:
             config_data: dict[str, Any] = tomllib.load(f)
     except Exception as e:
-        raise ValueError(f"Failed to parse TOML file {config_path}: {e}")
+        raise ValueError(f"Failed to parse TOML file {config_path}: {e}") from e
 
     # Try to find configuration under [tool.dfc] or [tool.docstring-format-checker]
     tool_config = None
@@ -225,7 +223,7 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> list[SectionC
                 )
                 sections_config.append(section)
             except (KeyError, TypeError, ValueError) as e:
-                raise ValueError(f"Invalid section configuration: {section_data}. Error: {e}")
+                raise ValueError(f"Invalid section configuration: {section_data}. Error: {e}") from e
 
     if not sections_config:
         return DEFAULT_CONFIG
