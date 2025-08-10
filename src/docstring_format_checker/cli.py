@@ -1,0 +1,514 @@
+# ============================================================================ #
+#                                                                              #
+#     Title: Title                                                             #
+#     Purpose: Purpose                                                         #
+#     Notes: Notes                                                             #
+#     Author: chrimaho                                                         #
+#     Created: Created                                                         #
+#     References: References                                                   #
+#     Sources: Sources                                                         #
+#     Edited: Edited                                                           #
+#                                                                              #
+# ============================================================================ #
+
+
+# ---------------------------------------------------------------------------- #
+#                                                                              #
+#     Overview                                                              ####
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+
+
+# ---------------------------------------------------------------------------- #
+#  Description                                                              ####
+# ---------------------------------------------------------------------------- #
+
+
+"""
+!!! note "Summary"
+    Command-line interface for the docstring format checker.
+"""
+
+
+# ---------------------------------------------------------------------------- #
+#                                                                              #
+#     Setup                                                                 ####
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+
+
+## --------------------------------------------------------------------------- #
+##  Imports                                                                 ####
+## --------------------------------------------------------------------------- #
+
+
+# ## Python StdLib Imports ----
+from pathlib import Path
+from textwrap import dedent
+from typing import Optional
+
+# ## Python Third Party Imports ----
+import typer
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+
+# ## Local First Party Imports ----
+from docstring_format_checker import __version__
+from docstring_format_checker.config import SectionConfig, find_config_file, load_config
+from docstring_format_checker.core import DocstringChecker, DocstringError
+
+
+## --------------------------------------------------------------------------- #
+##  Exports                                                                 ####
+## --------------------------------------------------------------------------- #
+
+
+__all__: list[str] = ["version_callback", "main", "config_example"]
+
+
+# ---------------------------------------------------------------------------- #
+#                                                                              #
+#     Main Application                                                      ####
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+
+
+app = typer.Typer(
+    name="docstring-format-checker",
+    help="A CLI tool to check and validate Python docstring formatting and completeness.",
+    add_completion=False,
+    rich_markup_mode="rich",
+    add_help_option=False,  # Disable automatic help so we can add our own with -h
+)
+console = Console()
+
+
+# ---------------------------------------------------------------------------- #
+#                                                                              #
+#     Callbacks                                                             ####
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+
+
+def version_callback(value: bool) -> None:
+    """Print version and exit."""
+    if value:
+        typer.echo(f"docstring-format-checker version {__version__}")
+        raise typer.Exit()
+
+
+def help_callback(ctx: typer.Context, param: typer.CallbackParam, value: bool) -> None:
+    """Show help and exit."""
+    if not value or ctx.resilient_parsing:
+        return
+    typer.echo(ctx.get_help())
+    raise typer.Exit()
+
+
+def parse_boolean_flag(ctx: typer.Context, param: typer.CallbackParam, value: Optional[str]) -> bool:
+    """Parse boolean flag that accepts various true/false values."""
+    # Handle the case where the flag is provided without a value (e.g., just --recursive or -r)
+    # In this case, Typer doesn't call the callback, so we need to handle it differently
+    if value is None:
+        # This means the flag wasn't provided at all, use default
+        return True
+
+    # If value is an empty string, it means the flag was provided without a value
+    if value == "":
+        return True
+
+    # Convert to lowercase for case-insensitive comparison
+    value_lower = value.lower().strip()
+
+    # True values
+    if value_lower in ("true", "t", "yes", "y", "1", "on"):
+        return True
+    # False values
+    elif value_lower in ("false", "f", "no", "n", "0", "off"):
+        return False
+    else:
+        # Invalid value
+        raise typer.BadParameter(f"Invalid boolean value: '{value}'. Use true/false, t/f, yes/no, y/n, 1/0, or on/off.")
+
+
+def parse_recursive_flag(value: str) -> bool:
+    """Parse recursive flag string value into boolean."""
+    # Convert to lowercase for case-insensitive comparison
+    value_lower = value.lower().strip()
+
+    # True values
+    if value_lower in ("true", "t", "yes", "y", "1", "on"):
+        return True
+    # False values
+    elif value_lower in ("false", "f", "no", "n", "0", "off"):
+        return False
+    else:
+        # Invalid value
+        raise typer.BadParameter(
+            f"Invalid boolean value for --recursive: '{value}'. Use true/false, t/f, yes/no, y/n, 1/0, or on/off."
+        )
+
+
+def show_examples_callback(ctx: typer.Context, param: typer.CallbackParam, value: bool) -> None:
+    """Show examples and exit."""
+    if not value or ctx.resilient_parsing:
+        return
+
+    examples_content: str = dedent(
+        """
+        [green]dfc check myfile.py[/green]                    Check a single Python file
+        [green]dfc check src/[/green]                         Check all Python files in src/ directory
+        [green]dfc check . --exclude "*/tests/*"[/green]      Check current directory, excluding tests
+        [green]dfc check . -c custom.toml[/green]             Use custom configuration file
+        [green]dfc check . --verbose[/green]                  Show detailed validation output
+        [green]dfc config-example[/green]                     Show example configuration
+        """
+    ).strip()
+
+    panel = Panel(
+        examples_content,
+        title="Examples",
+        title_align="left",
+        border_style="dim",
+        padding=(0, 1),
+    )
+
+    console.print(panel)
+    raise typer.Exit()
+
+
+def show_check_examples_callback(ctx: typer.Context, param: typer.CallbackParam, value: bool) -> None:
+    """Show check command examples and exit."""
+    if not value or ctx.resilient_parsing:
+        return
+
+    examples_content: str = dedent(
+        """
+        [green]dfc check myfile.py[/green]                    Check a single Python file
+        [green]dfc check src/[/green]                         Check all Python files in src/ directory
+        [green]dfc check . --exclude "*/tests/*"[/green]      Check current directory, excluding tests
+        [green]dfc check . --config custom.toml[/green]       Use custom configuration file
+        [green]dfc check . --verbose --recursive[/green]      Show detailed output for all subdirectories
+        [green]dfc check . --quiet[/green]                    Only show errors, suppress success messages
+        """
+    )
+
+    panel = Panel(
+        examples_content,
+        title="Check Command Examples",
+        title_align="left",
+        border_style="dim",
+        padding=(0, 1),
+    )
+
+    console.print(panel)
+    raise typer.Exit()
+
+
+# This will be the default behavior when no command is specified
+def check_docstrings(
+    path: str,
+    config: Optional[str] = None,
+    recursive: bool = True,
+    exclude: Optional[list[str]] = None,
+    quiet: bool = False,
+    verbose: bool = False,
+) -> None:
+    """Core logic for checking docstrings."""
+    target_path = Path(path)
+
+    # Validate target path
+    if not target_path.exists():
+        console.print(f"[red]Error: Path does not exist: {path}[/red]")
+        raise typer.Exit(1)
+
+    # Load configuration
+    try:
+        if config:
+            config_path = Path(config)
+            if not config_path.exists():
+                console.print(f"[red]Error: Configuration file does not exist: {config}[/red]")
+                raise typer.Exit(1)
+            sections_config = load_config(config_path)
+        else:
+            # Try to find config file automatically
+            found_config: Path | None = find_config_file(target_path if target_path.is_dir() else target_path.parent)
+            if found_config:
+                if verbose:
+                    console.print(f"[blue]Using configuration from: {found_config}[/blue]")
+                sections_config: list[SectionConfig] = load_config(found_config)
+            else:
+                if verbose:
+                    console.print("[blue]Using default configuration[/blue]")
+                sections_config: list[SectionConfig] = load_config()
+    except Exception as e:
+        console.print(f"[red]Error loading configuration: {e}[/red]")
+        raise typer.Exit(1)
+
+    # Initialize checker
+    checker = DocstringChecker(sections_config)
+
+    # Check files
+    try:
+        if target_path.is_file():
+            if verbose:
+                console.print(f"[blue]Checking file: {target_path}[/blue]")
+            errors: list[DocstringError] = checker.check_file(target_path)
+            results: dict[str, list[DocstringError]] = {str(target_path): errors} if errors else {}
+        else:
+            if verbose:
+                console.print(f"[blue]Checking directory: {target_path} (recursive={recursive})[/blue]")
+            results: dict[str, list[DocstringError]] = checker.check_directory(
+                target_path, recursive=recursive, exclude_patterns=exclude
+            )
+    except Exception as e:
+        console.print(f"[red]Error during checking: {e}[/red]")
+        raise typer.Exit(1)
+
+    # Display results
+    exit_code: int = _display_results(results, quiet, verbose)
+
+    if exit_code != 0:
+        raise typer.Exit(exit_code)
+
+
+# Simple callback that only handles global options and delegates to subcommands
+@app.callback(invoke_without_command=True)
+def main(
+    ctx: typer.Context,
+    version: Optional[bool] = typer.Option(
+        None,
+        "--version",
+        "-v",
+        callback=version_callback,
+        is_eager=True,
+        help="Show version and exit",
+    ),
+    examples: Optional[bool] = typer.Option(
+        None,
+        "--examples",
+        "-e",
+        callback=show_examples_callback,
+        is_eager=True,
+        help="Show usage examples and exit",
+    ),
+    help_flag: Optional[bool] = typer.Option(
+        None,
+        "--help",
+        "-h",
+        callback=help_callback,
+        is_eager=True,
+        help="Show this message and exit",
+    ),
+) -> None:
+    """
+    Check Python docstring formatting and completeness.
+
+    This tool analyzes Python files and validates that functions, methods, and classes
+    have properly formatted docstrings according to the configured sections.
+    """
+    # If no subcommand is provided, show help
+    if ctx.invoked_subcommand is None:
+        typer.echo(ctx.get_help())
+        raise typer.Exit()
+
+
+@app.command(
+    rich_help_panel="Commands",
+    add_help_option=False,  # Disable automatic help so we can add our own with -h
+)
+def check(
+    path: str = typer.Argument(..., help="Path to Python file or directory to check"),
+    config: Optional[str] = typer.Option(None, "--config", "-c", help="Path to configuration file (TOML format)"),
+    recursive: str = typer.Option(
+        "true",
+        "--recursive",
+        "-r",
+        help="Check directories recursively (default: true). Accepts: true/false, t/f, yes/no, y/n, 1/0, on/off",
+    ),
+    exclude: Optional[list[str]] = typer.Option(
+        None,
+        "--exclude",
+        "-x",
+        help="Glob patterns to exclude (can be used multiple times)",
+    ),
+    quiet: bool = typer.Option(False, "--quiet", "-q", help="Only show errors, no success messages"),
+    verbose: bool = typer.Option(False, "--verbose", "-n", help="Show detailed output"),
+    examples: Optional[bool] = typer.Option(
+        None,
+        "--examples",
+        "-e",
+        callback=show_check_examples_callback,
+        is_eager=True,
+        help="Show usage examples and exit",
+    ),
+    help_flag: Optional[bool] = typer.Option(
+        None,
+        "--help",
+        "-h",
+        callback=help_callback,
+        is_eager=True,
+        help="Show this message and exit",
+    ),
+) -> None:
+    """Check docstrings in Python files."""
+    # Parse the recursive string value into a boolean
+    recursive_bool = parse_recursive_flag(recursive)
+    check_docstrings(path, config, recursive_bool, exclude, quiet, verbose)
+
+
+def _display_results(results: dict[str, list[DocstringError]], quiet: bool, verbose: bool) -> int:
+    """
+    Display the results of docstring checking.
+
+    Args:
+        results:
+            Dictionary mapping file paths to lists of errors
+        quiet:
+            Whether to suppress success messages
+        verbose:
+            Whether to show detailed output
+
+    Returns:
+        Exit code (0 for success, 1 for errors found)
+    """
+    if not results:
+        if not quiet:
+            console.print("[green]✓ All docstrings are valid![/green]")
+        return 0
+
+    # Count total errors
+    total_errors: int = sum(len(errors) for errors in results.values())
+    total_files: int = len(results)
+
+    if verbose:
+        # Show detailed table
+        table = Table(show_header=True, header_style="bold magenta")
+        table.add_column("File", style="cyan", no_wrap=False)
+        table.add_column("Line", justify="right", style="white")
+        table.add_column("Item", style="yellow")
+        table.add_column("Type", style="blue")
+        table.add_column("Error", style="red")
+
+        for file_path, errors in results.items():
+            for i, error in enumerate(errors):
+                file_display: str = file_path if i == 0 else ""
+                table.add_row(
+                    file_display,
+                    str(error.line_number) if error.line_number > 0 else "",
+                    error.item_name,
+                    error.item_type,
+                    error.message,
+                )
+
+        console.print(table)
+    else:
+        # Show compact output
+        for file_path, errors in results.items():
+            console.print(f"\n[cyan]{file_path}[/cyan]")
+            for error in errors:
+                if error.line_number > 0:
+                    console.print(
+                        f"  [red]Line {error.line_number}[/red] - {error.item_type} '{error.item_name}': {error.message}"
+                    )
+                else:
+                    console.print(f"  [red]Error[/red]: {error.message}")
+
+    # Summary
+    console.print(f"\n[red]Found {total_errors} error(s) in {total_files} file(s)[/red]")
+
+    return 1
+
+
+@app.command(
+    rich_help_panel="Commands",
+    add_help_option=False,  # Disable automatic help so we can add our own with -h
+)
+def config_example(
+    help_flag: Optional[bool] = typer.Option(
+        None,
+        "--help",
+        "-h",
+        callback=help_callback,
+        is_eager=True,
+        help="Show this message and exit",
+    ),
+) -> None:
+    """Show example configuration file."""
+    example_config: str = dedent(
+        """
+        # Example configuration for docstring-format-checker
+        # Place this in your pyproject.toml file
+
+        [tool.dfc]
+        # or [tool.docstring-format-checker]
+
+        [[tool.dfc.sections]]
+        order = 1
+        name = "summary"
+        type = "free_text"
+        admonition = "note"
+        prefix = "!!!"
+        required = true
+
+        [[tool.dfc.sections]]
+        order = 2
+        name = "details"
+        type = "free_text"
+        admonition = "info"
+        prefix = "???+"
+        required = false
+
+        [[tool.dfc.sections]]
+        order = 3
+        name = "params"
+        type = "list_name_and_type"
+        required = true
+
+        [[tool.dfc.sections]]
+        order = 4
+        name = "returns"
+        type = "list_name_and_type"
+        required = false
+
+        [[tool.dfc.sections]]
+        order = 5
+        name = "yields"
+        type = "list_type"
+        required = false
+
+        [[tool.dfc.sections]]
+        order = 6
+        name = "raises"
+        type = "list_type"
+        required = false
+
+        [[tool.dfc.sections]]
+        order = 7
+        name = "examples"
+        type = "free_text"
+        admonition = "example"
+        prefix = "???+"
+        required = false
+
+        [[tool.dfc.sections]]
+        order = 8
+        name = "notes"
+        type = "free_text"
+        admonition = "note"
+        prefix = "???"
+        required = false
+        """.strip()
+    )
+
+    print(example_config)
+
+
+def entry_point() -> None:
+    """Entry point for the CLI scripts defined in pyproject.toml."""
+    app()
+
+
+if __name__ == "__main__":
+    app()
