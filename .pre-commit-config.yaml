@@ -5,7 +5,7 @@
 repos:
   # Fixes
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v5.0.0"
+    rev: "v6.0.0"
     hooks:
       # File name fixes
       - id: check-case-conflict
@@ -51,7 +51,7 @@ repos:
     rev: "v1.17.1"
     hooks:
       - id: mypy
-        files: src/toolbox_python
+        files: src/docstring_format_checker
         args:
           - "--install-types"
           - "--config-file=pyproject.toml"
@@ -96,7 +96,7 @@ repos:
 
   # Check uv configs
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: "0.8.4"
+    rev: "0.8.8"
     hooks:
       - id: uv-lock
       - id: uv-sync
