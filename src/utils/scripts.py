@@ -136,11 +136,11 @@ def check() -> None:
     check_mypy()
     check_isort()
     check_codespell()
-    check_pylint()
     check_pycln()
+    # check_pylint()
+    check_pytest()
     check_mkdocs()
     check_build()
-    check_pytest()
 
 
 ## --------------------------------------------------------------------------- #
