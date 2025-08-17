@@ -65,7 +65,19 @@ else:
 ## --------------------------------------------------------------------------- #
 
 
-__all__: list[str] = ["SectionConfig", "DEFAULT_CONFIG", "load_config", "find_config_file"]
+
+
+## --------------------------------------------------------------------------- #
+##  Constants                                                               ####
+## --------------------------------------------------------------------------- #
+
+
+VALID_TYPES: tuple[str, ...] = (
+    "free_text",  # Free text sections (summary, details, examples, notes)
+    "list_name",  # Simple name sections (name)
+    "list_type",  # Simple type sections (raises, yields)
+    "list_name_and_type",  # Params-style sections (name (type): description)
+)
 
 
 # ---------------------------------------------------------------------------- #
@@ -96,13 +108,8 @@ class SectionConfig:
 
     def __post_init__(self) -> None:
         """Validate configuration after initialization."""
-        VALID_TYPES: list[str] = [
-            "free_text",  # Free text sections (summary, details, examples, notes)
-            "list_name",  # Simple name sections (name)
-            "list_type",  # Simple type sections (raises, yields)
-            "list_name_and_type",  # Params-style sections (name (type): description)
-        ]
         if self.type not in VALID_TYPES:
+            raise InvalidTypeValues(f"Invalid section type: {self.type}. Valid types: {VALID_TYPES}")
 
 
 ## --------------------------------------------------------------------------- #
