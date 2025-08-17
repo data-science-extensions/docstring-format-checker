@@ -17,3 +17,15 @@ class DocstringError(Exception):
         self.item_name = item_name
         self.item_type = item_type
         super().__init__(f"Line {line_number}, {item_type} '{item_name}': {message}")
+
+
+class InvalidConfig(Exception):
+    pass
+
+
+class InvalidConfig_DuplicateOrderValues(Exception):
+    pass
+
+
+class InvalidTypeValues(Exception):
+    pass
