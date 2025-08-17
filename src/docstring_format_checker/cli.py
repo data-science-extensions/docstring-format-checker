@@ -92,23 +92,20 @@ console = Console()
 # ---------------------------------------------------------------------------- #
 
 
-def version_callback(value: bool) -> None:
-    """Print version and exit."""
+def _version_callback(ctx: typer.Context, param: typer.CallbackParam, value: bool) -> None:
     if value:
         typer.echo(f"docstring-format-checker version {__version__}")
         raise typer.Exit()
 
 
-def help_callback(ctx: typer.Context, param: typer.CallbackParam, value: bool) -> None:
-    """Show help and exit."""
+def _help_callback(ctx: typer.Context, param: typer.CallbackParam, value: bool) -> None:
     if not value or ctx.resilient_parsing:
         return
     typer.echo(ctx.get_help())
     raise typer.Exit()
 
 
-def parse_boolean_flag(ctx: typer.Context, param: typer.CallbackParam, value: Optional[str]) -> bool:
-    """Parse boolean flag that accepts various true/false values."""
+def _parse_boolean_flag(ctx: typer.Context, param: typer.CallbackParam, value: Optional[str]) -> Optional[bool]:
     # Handle the case where the flag is provided without a value (e.g., just --recursive or -r)
     # In this case, Typer doesn't call the callback, so we need to handle it differently
     if value is None:
@@ -119,27 +116,19 @@ def parse_boolean_flag(ctx: typer.Context, param: typer.CallbackParam, value: Op
     if value == "":
         return True
 
-    # Convert to lowercase for case-insensitive comparison
-    value_lower: str = value.lower().strip()
-
-    # True values
-    if value_lower in ("true", "t", "yes", "y", "1", "on"):
-        return True
-    # False values
-    elif value_lower in ("false", "f", "no", "n", "0", "off"):
-        return False
-    else:
-        # Invalid value
-        raise typer.BadParameter(f"Invalid boolean value: '{value}'. Use true/false, t/f, yes/no, y/n, 1/0, or on/off.")
+    try:
+        return strtobool(value)
+    except ValueError as e:
+        raise typer.BadParameter(
+            f"Invalid boolean value: '{value}'. Use true/false, t/f, yes/no, y/n, 1/0, or on/off."
+        ) from e
 
 
-def parse_recursive_flag(value: str) -> bool:
-    """Parse recursive flag using strtobool utility."""
+def _parse_recursive_flag(value: str) -> bool:
     return strtobool(value)
 
 
-def show_examples_callback(ctx: typer.Context, param: typer.CallbackParam, value: bool) -> None:
-    """Show examples and exit."""
+def _show_examples_callback(ctx: typer.Context, param: typer.CallbackParam, value: bool) -> None:
     if not value or ctx.resilient_parsing:
         return
 
@@ -166,8 +155,7 @@ def show_examples_callback(ctx: typer.Context, param: typer.CallbackParam, value
     raise typer.Exit()
 
 
-def show_check_examples_callback(ctx: typer.Context, param: typer.CallbackParam, value: bool) -> None:
-    """Show check command examples and exit."""
+def _show_check_examples_callback(ctx: typer.Context, param: typer.CallbackParam, value: bool) -> None:
     if not value or ctx.resilient_parsing:
         return
 
@@ -192,163 +180,6 @@ def show_check_examples_callback(ctx: typer.Context, param: typer.CallbackParam,
 
     console.print(panel)
     raise typer.Exit()
-
-
-# This will be the default behavior when no command is specified
-def check_docstrings(
-    path: str,
-    config: Optional[str] = None,
-    recursive: bool = True,
-    exclude: Optional[list[str]] = None,
-    quiet: bool = False,
-    verbose: bool = False,
-) -> None:
-    """Core logic for checking docstrings."""
-    target_path = Path(path)
-
-    # Validate target path
-    if not target_path.exists():
-        console.print(f"[red]Error: Path does not exist: {path}[/red]")
-        raise typer.Exit(1)
-
-    # Load configuration
-    try:
-        if config:
-            config_path = Path(config)
-            if not config_path.exists():
-                console.print(f"[red]Error: Configuration file does not exist: {config}[/red]")
-                raise typer.Exit(1)
-            sections_config = load_config(config_path)
-        else:
-            # Try to find config file automatically
-            found_config: Path | None = find_config_file(target_path if target_path.is_dir() else target_path.parent)
-            if found_config:
-                if verbose:
-                    console.print(f"[blue]Using configuration from: {found_config}[/blue]")
-                sections_config: list[SectionConfig] = load_config(found_config)
-            else:
-                if verbose:
-                    console.print("[blue]Using default configuration[/blue]")
-                sections_config: list[SectionConfig] = load_config()
-    except Exception as e:
-        console.print(f"[red]Error loading configuration: {e}[/red]")
-        raise typer.Exit(1)
-
-    # Initialize checker
-    checker = DocstringChecker(sections_config)
-
-    # Check files
-    try:
-        if target_path.is_file():
-            if verbose:
-                console.print(f"[blue]Checking file: {target_path}[/blue]")
-            errors: list[DocstringError] = checker.check_file(target_path)
-            results: dict[str, list[DocstringError]] = {str(target_path): errors} if errors else {}
-        else:
-            if verbose:
-                console.print(f"[blue]Checking directory: {target_path} (recursive={recursive})[/blue]")
-            results: dict[str, list[DocstringError]] = checker.check_directory(
-                target_path, recursive=recursive, exclude_patterns=exclude
-            )
-    except Exception as e:
-        console.print(f"[red]Error during checking: {e}[/red]")
-        raise typer.Exit(1)
-
-    # Display results
-    exit_code: int = _display_results(results, quiet, verbose)
-
-    if exit_code != 0:
-        raise typer.Exit(exit_code)
-
-
-# Simple callback that only handles global options and delegates to subcommands
-@app.callback(invoke_without_command=True)
-def main(
-    ctx: typer.Context,
-    version: Optional[bool] = typer.Option(
-        None,
-        "--version",
-        "-v",
-        callback=version_callback,
-        is_eager=True,
-        help="Show version and exit",
-    ),
-    examples: Optional[bool] = typer.Option(
-        None,
-        "--examples",
-        "-e",
-        callback=show_examples_callback,
-        is_eager=True,
-        help="Show usage examples and exit",
-    ),
-    help_flag: Optional[bool] = typer.Option(
-        None,
-        "--help",
-        "-h",
-        callback=help_callback,
-        is_eager=True,
-        help="Show this message and exit",
-    ),
-) -> None:
-    """
-    Check Python docstring formatting and completeness.
-
-    This tool analyzes Python files and validates that functions, methods, and classes
-    have properly formatted docstrings according to the configured sections.
-    """
-    # If no subcommand is provided, show help
-    if ctx.invoked_subcommand is None:
-        typer.echo(ctx.get_help())
-        raise typer.Exit()
-
-
-@app.command(
-    rich_help_panel="Commands",
-    add_help_option=False,  # Disable automatic help so we can add our own with -h
-)
-def check(
-    path: str = typer.Argument(..., help="Path to Python file or directory to check"),
-    config: Optional[str] = typer.Option(None, "--config", "-c", help="Path to configuration file (TOML format)"),
-    recursive: str = typer.Option(
-        "true",
-        "--recursive",
-        "-r",
-        help="Check directories recursively (default: true). " "Accepts: true/false, t/f, yes/no, y/n, 1/0, on/off",
-    ),
-    exclude: Optional[list[str]] = typer.Option(
-        None,
-        "--exclude",
-        "-x",
-        help="Glob patterns to exclude (can be used multiple times)",
-    ),
-    quiet: bool = typer.Option(False, "--quiet", "-q", help="Only show errors, no success messages"),
-    verbose: bool = typer.Option(False, "--verbose", "-n", help="Show detailed output"),
-    examples: Optional[bool] = typer.Option(
-        None,
-        "--examples",
-        "-e",
-        callback=show_check_examples_callback,
-        is_eager=True,
-        help="Show usage examples and exit",
-    ),
-    help_flag: Optional[bool] = typer.Option(
-        None,
-        "--help",
-        "-h",
-        callback=help_callback,
-        is_eager=True,
-        help="Show this message and exit",
-    ),
-) -> None:
-    """Check docstrings in Python files."""
-    # Parse the recursive string value into a boolean
-    try:
-        recursive_bool: bool = parse_recursive_flag(recursive)
-    except ValueError as e:
-        raise typer.BadParameter(
-            f"Invalid value for --recursive: '{recursive}'. " "Use true/false, t/f, yes/no, y/n, 1/0, or on/off."
-        ) from e
-    check_docstrings(path, config, recursive_bool, exclude, quiet, verbose)
 
 
 def _display_results(results: dict[str, list[DocstringError]], quiet: bool, verbose: bool) -> int:
@@ -394,8 +225,8 @@ def _display_results(results: dict[str, list[DocstringError]], quiet: bool, verb
                     error.item_type,
                     error.message,
                 )
-
         console.print(table)
+
     else:
         # Show compact output
         for file_path, errors in results.items():
@@ -414,6 +245,171 @@ def _display_results(results: dict[str, list[DocstringError]], quiet: bool, verb
     return 1
 
 
+# ---------------------------------------------------------------------------- #
+#                                                                              #
+#     Main Logic                                                            ####
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+
+
+# This will be the default behavior when no command is specified
+def _check_docstrings(
+    path: str,
+    config: Optional[str] = None,
+    recursive: bool = True,
+    exclude: Optional[list[str]] = None,
+    quiet: bool = False,
+    verbose: bool = False,
+) -> None:
+    """Core logic for checking docstrings."""
+    target_path = Path(path)
+
+    # Validate target path
+    if not target_path.exists():
+        console.print(f"[red]Error: Path does not exist: {path}[/red]")
+        raise typer.Exit(1)
+
+    # Load configuration
+    try:
+        if config:
+            config_path = Path(config)
+            if not config_path.exists():
+                console.print(f"[red]Error: Configuration file does not exist: {config}[/red]")
+                raise typer.Exit(1)
+            sections_config = load_config(config_path)
+        else:
+            # Try to find config file automatically
+            found_config: Path | None = find_config_file(target_path if target_path.is_dir() else target_path.parent)
+            if found_config:
+                if verbose:
+                    console.print(f"[blue]Using configuration from: {found_config}[/blue]")
+                sections_config: list[SectionConfig] = load_config(found_config)
+            else:
+                if verbose:
+                    console.print("[blue]Using default configuration[/blue]")
+                sections_config: list[SectionConfig] = load_config()
+
+    except Exception as e:
+        console.print(f"[red]Error loading configuration: {e}[/red]")
+        raise typer.Exit(1)
+
+    # Initialize checker
+    checker = DocstringChecker(sections_config)
+
+    # Check files
+    try:
+        if target_path.is_file():
+            if verbose:
+                console.print(f"[blue]Checking file: {target_path}[/blue]")
+            errors: list[DocstringError] = checker.check_file(target_path)
+            results: dict[str, list[DocstringError]] = {str(target_path): errors} if errors else {}
+        else:
+            if verbose:
+                console.print(f"[blue]Checking directory: {target_path} (recursive={recursive})[/blue]")
+            results: dict[str, list[DocstringError]] = checker.check_directory(
+                target_path, recursive=recursive, exclude_patterns=exclude
+            )
+    except Exception as e:
+        console.print(f"[red]Error during checking: {e}[/red]")
+        raise typer.Exit(1)
+
+    # Display results
+    exit_code: int = _display_results(results, quiet, verbose)
+
+    if exit_code != 0:
+        raise typer.Exit(exit_code)
+
+
+# Simple callback that only handles global options and delegates to subcommands
+@app.callback(invoke_without_command=True)
+def main(
+    ctx: typer.Context,
+    version: Optional[bool] = typer.Option(
+        None,
+        "--version",
+        "-v",
+        callback=_version_callback,
+        is_eager=True,
+        help="Show version and exit",
+    ),
+    examples: Optional[bool] = typer.Option(
+        None,
+        "--examples",
+        "-e",
+        callback=_show_examples_callback,
+        is_eager=True,
+        help="Show usage examples and exit",
+    ),
+    help_flag: Optional[bool] = typer.Option(
+        None,
+        "--help",
+        "-h",
+        callback=_help_callback,
+        is_eager=True,
+        help="Show this message and exit",
+    ),
+) -> None:
+    """
+    Check Python docstring formatting and completeness.
+
+    This tool analyzes Python files and validates that functions, methods, and classes
+    have properly formatted docstrings according to the configured sections.
+    """
+    # If no subcommand is provided, show help
+    if ctx.invoked_subcommand is None:
+        typer.echo(ctx.get_help())
+        raise typer.Exit()
+
+
+@app.command(
+    rich_help_panel="Commands",
+    add_help_option=False,  # Disable automatic help so we can add our own with -h
+)
+def check(
+    path: str = typer.Argument(..., help="Path to Python file or directory to check"),
+    config: Optional[str] = typer.Option(None, "--config", "-c", help="Path to configuration file (TOML format)"),
+    recursive: str = typer.Option(
+        "true",
+        "--recursive",
+        "-r",
+        help="Check directories recursively (default: true). " "Accepts: true/false, t/f, yes/no, y/n, 1/0, on/off",
+    ),
+    exclude: Optional[list[str]] = typer.Option(
+        None,
+        "--exclude",
+        "-x",
+        help="Glob patterns to exclude (can be used multiple times)",
+    ),
+    quiet: bool = typer.Option(False, "--quiet", "-q", help="Only show errors, no success messages"),
+    verbose: bool = typer.Option(False, "--verbose", "-n", help="Show detailed output"),
+    examples: Optional[bool] = typer.Option(
+        None,
+        "--examples",
+        "-e",
+        callback=_show_check_examples_callback,
+        is_eager=True,
+        help="Show usage examples and exit",
+    ),
+    help_flag: Optional[bool] = typer.Option(
+        None,
+        "--help",
+        "-h",
+        callback=_help_callback,
+        is_eager=True,
+        help="Show this message and exit",
+    ),
+) -> None:
+    """Check docstrings in Python files."""
+    # Parse the recursive string value into a boolean
+    try:
+        recursive_bool: bool = _parse_recursive_flag(recursive)
+    except ValueError as e:
+        raise typer.BadParameter(
+            f"Invalid value for --recursive: '{recursive}'. Use true/false, t/f, yes/no, y/n, 1/0, or on/off."
+        ) from e
+    _check_docstrings(path, config, recursive_bool, exclude, quiet, verbose)
+
+
 @app.command(
     rich_help_panel="Commands",
     add_help_option=False,  # Disable automatic help so we can add our own with -h
@@ -423,7 +419,7 @@ def config_example(
         None,
         "--help",
         "-h",
-        callback=help_callback,
+        callback=_help_callback,
         is_eager=True,
         help="Show this message and exit",
     ),
