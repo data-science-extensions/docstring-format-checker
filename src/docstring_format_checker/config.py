@@ -234,6 +234,7 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> list[SectionC
         (ValueError):
             If the configuration is invalid.
     """
+
     if config_path is None:
         # Look for pyproject.toml in current directory
         pyproject_path: Path = Path.cwd().joinpath("pyproject.toml")
@@ -250,7 +251,7 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> list[SectionC
         with open(config_path, "rb") as f:
             config_data: dict[str, Any] = tomllib.load(f)
     except Exception as e:
-        raise ValueError(f"Failed to parse TOML file {config_path}: {e}") from e
+        raise InvalidConfig(f"Failed to parse TOML file {config_path}: {e}") from e
 
     # Try to find configuration under [tool.dfc] or [tool.docstring-format-checker]
     tool_config = None
@@ -278,8 +279,8 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> list[SectionC
                     required=section_data.get("required", False),
                 )
                 sections_config.append(section)
-            except (KeyError, TypeError, ValueError) as e:
-                raise ValueError(f"Invalid section configuration: {section_data}. Error: {e}") from e
+            except (KeyError, TypeError, ValueError, InvalidTypeValues) as e:
+                raise InvalidConfig(f"Invalid section configuration: {section_data}. Error: {e}") from e
 
     if not sections_config:
         return DEFAULT_CONFIG

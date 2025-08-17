@@ -128,7 +128,7 @@ class DocstringChecker:
             raise FileNotFoundError(f"File not found: {file_path}")
 
         if file_path.suffix != ".py":
-            raise ValueError(f"File must be a Python file (.py): {file_path}")
+            raise FileNotFoundError(f"File must be a Python file (.py): {file_path}")
 
         # Read and parse the file
         try:
@@ -292,7 +292,7 @@ class DocstringChecker:
 
         # Check if any required sections apply to this item type
         requires_docstring = False
-        applicable_sections = []
+        applicable_sections: list[SectionConfig] = []
 
         for section in self.sections_config:
             if section.required:
