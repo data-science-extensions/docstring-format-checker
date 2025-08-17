@@ -28,11 +28,11 @@ from typer.testing import CliRunner
 # ## Local First Party Imports ----
 from docstring_format_checker import __version__
 from docstring_format_checker.cli import (
+    _parse_boolean_flag,
+    _parse_recursive_flag,
+    _version_callback,
     app,
     entry_point,
-    parse_boolean_flag,
-    parse_recursive_flag,
-    version_callback,
 )
 from tests.setup import name_func_flat_list, name_func_nested_list
 
@@ -67,9 +67,9 @@ class TestCLI(TestCase):
         """
         Test version callback functionality.
         """
-
-        with raises(typer.Exit):
-            version_callback(True)
+        result: Result = self.runner.invoke(app, ["--version"])
+        assert result.exit_code == 0
+        assert "docstring-format-checker" in result.output
 
     def test_03_version_option(self) -> None:
         """
@@ -527,14 +527,14 @@ class TestCLI(TestCase):
         mock_param = Mock()
 
         # Test None value (default case)
-        assert parse_boolean_flag(mock_ctx, mock_param, None) == True
+        assert _parse_boolean_flag(mock_ctx, mock_param, None) == True
 
         # Test empty string (flag without value)
-        assert parse_boolean_flag(mock_ctx, mock_param, "") == True
+        assert _parse_boolean_flag(mock_ctx, mock_param, "") == True
 
         # Test invalid value raises exception
         with raises(typer.BadParameter):
-            parse_boolean_flag(mock_ctx, mock_param, "invalid")
+            _parse_boolean_flag(mock_ctx, mock_param, "invalid")
 
     @parameterized.expand(
         input=[
@@ -562,9 +562,9 @@ class TestCLI(TestCase):
         """
         if value == "invalid":
             with raises(ValueError):
-                parse_recursive_flag("invalid")
+                _parse_recursive_flag("invalid")
         else:
-            assert parse_recursive_flag(value) == result
+            assert _parse_recursive_flag(value) == result
 
     def test_25_entry_point_function(self) -> None:
         """
@@ -717,7 +717,7 @@ class TestCLI(TestCase):
             ("OFF", False),
         ]
     )
-    def test_parse_boolean_flag_values(self, value: str, result: bool) -> None:
+    def test_32_parse_boolean_flag_values(self, value: str, expected: bool) -> None:
         """
         Test parse_boolean_flag values.
         """
@@ -725,11 +725,11 @@ class TestCLI(TestCase):
         ctx = MagicMock()
         param = MagicMock()
 
-        # Test each true value individually to ensure the return True line is hit
-        result = parse_boolean_flag(ctx, param, value)
-        assert result is True, f"Failed for value: {value}"
+        # Test each value and check it matches the expected result
+        actual = _parse_boolean_flag(ctx, param, value)
+        assert actual == expected, f"Failed for value: {value}, expected {expected}, got {actual}"
 
-    def test_check_directory_verbose_message(self) -> None:
+    def test_33_check_directory_verbose_message(self) -> None:
         """Test verbose message for directory checking."""
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -762,7 +762,7 @@ class TestCLI(TestCase):
             assert "Checking directory:" in result.output
             assert "recursive=True" in result.output
 
-    def test_check_command_exception_handling(self) -> None:
+    def test_34_check_command_exception_handling(self) -> None:
         """Test exception handling in check command."""
         # Test with a path that will cause an exception
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -785,7 +785,7 @@ class TestCLI(TestCase):
                 assert result.exit_code == 1
                 assert "Error during checking: Test error" in result.output
 
-    def test_check_file_specific_exception_handling(self) -> None:
+    def test_35_check_file_specific_exception_handling(self) -> None:
         """
         Test exception handling for file checking.
         """

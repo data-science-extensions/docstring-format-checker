@@ -25,6 +25,11 @@ from pytest import raises
 
 # ## Local First Party Imports ----
 from docstring_format_checker.config import SectionConfig, find_config_file, load_config
+from docstring_format_checker.utils.exceptions import (
+    InvalidConfig,
+    InvalidConfig_DuplicateOrderValues,
+    InvalidTypeValues,
+)
 
 
 # ---------------------------------------------------------------------------- #
@@ -114,7 +119,7 @@ class TestConfig(TestCase):
         assert config.order == 1
 
         # Invalid type should raise error
-        with pytest.raises(ValueError, match="Invalid section type"):
+        with pytest.raises(InvalidTypeValues, match="Invalid section type"):
             SectionConfig(order=1, name="test", type="invalid_type", required=True)
 
     def test_06_find_config_file(self) -> None:
@@ -163,7 +168,7 @@ class TestConfig(TestCase):
             f.write("invalid toml [[[syntax")
             f.flush()
 
-            with raises(ValueError, match="Failed to parse TOML file"):
+            with raises(InvalidConfig, match="Failed to parse TOML file"):
                 load_config(f.name)
 
     def test_08_load_config_missing_tool_section(self) -> None:
@@ -240,7 +245,7 @@ class TestConfig(TestCase):
 
             f.flush()
 
-            with raises(ValueError, match="Invalid section configuration"):
+            with raises(InvalidConfig, match="Invalid section configuration"):
                 load_config(f.name)
 
         # Test section with invalid type through config loading
@@ -262,7 +267,7 @@ class TestConfig(TestCase):
 
             f.flush()
 
-            with raises(ValueError, match="Invalid section type"):
+            with raises(InvalidConfig, match="Invalid section configuration"):
                 load_config(f.name)
 
     def test_11_alternative_config_file_discovery(self) -> None:
@@ -418,8 +423,84 @@ class TestConfig(TestCase):
                 # ## Local First Party Imports ----
                 from docstring_format_checker import config
 
-                importlib.reload(config)
+                # Store original module reference
+                original_config = config
 
-                # Test that the module still works with mocked tomli
-                assert hasattr(config, "load_config")
-                assert hasattr(config, "DEFAULT_CONFIG")
+                try:
+                    importlib.reload(config)
+
+                    # Test that the module still works with mocked tomli
+                    assert hasattr(config, "load_config")
+                    assert hasattr(config, "DEFAULT_CONFIG")
+                finally:
+                    # Restore the original config module to avoid affecting other tests
+                    importlib.reload(original_config)
+
+    def test_18_duplicate_order_validation(self) -> None:
+        """
+        Test that duplicate order values in configuration raise an error.
+        """
+
+        # Test the validation function directly
+        # ## Local First Party Imports ----
+        from docstring_format_checker.config import _validate_config_order
+
+        # Create config sections with duplicate orders
+        sections = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True),
+            SectionConfig(order=1, name="params", type="list_name_and_type", required=True),
+            SectionConfig(order=2, name="returns", type="list_name_and_type", required=False),
+        ]
+
+        # Should raise InvalidConfig_DuplicateOrderValues
+        with raises(InvalidConfig_DuplicateOrderValues):
+            _validate_config_order(sections)
+
+    def test_19_multiple_duplicate_orders_validation(self) -> None:
+        """
+        Test that multiple duplicate order values are all reported.
+        """
+
+        # Test the validation function directly
+        # ## Local First Party Imports ----
+        from docstring_format_checker.config import _validate_config_order
+
+        # Create config sections with multiple duplicate orders
+        sections = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True),
+            SectionConfig(order=1, name="params", type="list_name_and_type", required=True),
+            SectionConfig(order=2, name="returns", type="list_name_and_type", required=False),
+            SectionConfig(order=2, name="examples", type="free_text", required=False),
+        ]
+
+        # Should raise InvalidConfig_DuplicateOrderValues with multiple duplicates reported
+        with raises(InvalidConfig_DuplicateOrderValues, match="\\[1, 2\\]"):
+            _validate_config_order(sections)
+
+    def test_20_no_duplicate_orders_passes_validation(self) -> None:
+        """
+        Test that configuration with unique order values passes validation.
+        """
+
+        # Test the validation function directly
+        # ## Local First Party Imports ----
+        from docstring_format_checker.config import _validate_config_order
+
+        # Create config sections with unique orders
+        sections = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True),
+            SectionConfig(order=2, name="params", type="list_name_and_type", required=True),
+            SectionConfig(order=3, name="returns", type="list_name_and_type", required=False),
+        ]
+
+        # Should not raise any exception
+        _validate_config_order(sections)
+
+        # Verify sections can be sorted by order
+        sections.sort(key=lambda x: x.order)
+        assert sections[0].order == 1
+        assert sections[0].name == "summary"
+        assert sections[1].order == 2
+        assert sections[1].name == "params"
+        assert sections[2].order == 3
+        assert sections[2].name == "returns"

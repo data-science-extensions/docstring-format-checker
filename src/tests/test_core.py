@@ -375,7 +375,7 @@ class TestDocstringChecker(TestCase):
             f.write("This is not a Python file")
             f.flush()
 
-            with pytest.raises(ValueError):
+            with pytest.raises(FileNotFoundError):
                 self.simple_checker.check_file(f.name)
 
     def test_10_check_nonexistent_file(self) -> None:
@@ -757,7 +757,7 @@ class TestDocstringChecker(TestCase):
             f.write("This is not Python")
             f.flush()
 
-            with pytest.raises(ValueError, match="File must be a Python file"):
+            with pytest.raises(FileNotFoundError, match="File must be a Python file"):
                 self.simple_checker.check_file(f.name)
 
     def test_24_check_directory_error_handling(self) -> None:
@@ -869,7 +869,7 @@ class TestDocstringChecker(TestCase):
                 Summary of the function.
 
                 Raises:
-                    (ValueError):
+                    (FileNotFoundError):
                         When something goes wrong
 
                 Authors:
@@ -1183,7 +1183,7 @@ class TestDocstringChecker(TestCase):
         assert result.returncode == 0
         assert "Usage:" in result.stdout
 
-    def test_unknown_free_text_section_validation(self) -> None:
+    def test_36_unknown_free_text_section_validation(self) -> None:
         """
         Test validation of unknown free text sections.
         """
@@ -1218,7 +1218,7 @@ class TestDocstringChecker(TestCase):
             # This tests the default return True for unknown sections in _validate_section line 398
             assert len(errors) == 0, f"Should not have errors for unknown free text section, got: {errors}"
 
-    def test_summary_section_simple_docstring_validation(self) -> None:
+    def test_37_summary_section_simple_docstring_validation(self) -> None:
         """
         Test that simple docstrings are accepted for summary sections.
         """
@@ -1250,7 +1250,7 @@ class TestDocstringChecker(TestCase):
             # Should validate as true - this tests line 398: return len(docstring.strip()) > 0
             assert len(errors) == 0, f"Should not have errors for simple summary docstring, got: {errors}"
 
-    def test_summary_section_formal_pattern_validation(self) -> None:
+    def test_38_summary_section_formal_pattern_validation(self) -> None:
         """
         Test that formal summary patterns are accepted for summary sections.
         """
