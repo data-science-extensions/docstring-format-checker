@@ -115,11 +115,11 @@ class DocstringChecker:
             List of DocstringError objects for any validation failures.
 
         Raises:
-            FileNotFoundError:
+            (FileNotFoundError):
                 If the file doesn't exist.
-            ValueError:
+            (ValueError):
                 If the file is not a Python file.
-            SyntaxError:
+            (SyntaxError):
                 If the file contains invalid Python syntax.
         """
 

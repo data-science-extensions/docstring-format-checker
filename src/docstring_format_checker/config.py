@@ -218,17 +218,20 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> list[SectionC
     """
     Load configuration from a TOML file or return default configuration.
 
-    Args:
-        config_path:
-            Path to the TOML configuration file. If None, looks for pyproject.toml in current directory.
+    Params:
+        config_path (Optional[Union[str, Path]]):
+            Path to the TOML configuration file.
+            If `None`, looks for `pyproject.toml` in current directory.
+            Default: `None`.
 
     Returns:
-        List of SectionConfig objects defining the docstring sections to check.
+        (list[SectionConfig]):
+            List of SectionConfig objects defining the docstring sections to check.
 
     Raises:
-        FileNotFoundError:
+        (FileNotFoundError):
             If the specified config file doesn't exist.
-        ValueError:
+        (ValueError):
             If the configuration is invalid.
     """
     if config_path is None:
@@ -294,12 +297,15 @@ def find_config_file(start_path: Optional[Path] = None) -> Optional[Path]:
     """
     Find configuration file by searching up the directory tree.
 
-    Args:
-        start_path:
-            Directory to start searching from. Defaults to current directory.
+    Params:
+        start_path (Optional[Path]):
+            Directory to start searching from.
+            If `None`, resolves to current directory.
+            Default: `None`.
 
     Returns:
-        Path to the configuration file if found, None otherwise.
+        (Optional[Path]):
+            Path to the configuration file if found, None otherwise.
     """
     if start_path is None:
         start_path = Path.cwd()
