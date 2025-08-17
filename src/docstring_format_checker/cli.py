@@ -93,12 +93,18 @@ console = Console()
 
 
 def _version_callback(ctx: typer.Context, param: typer.CallbackParam, value: bool) -> None:
+    """
+    Print version and exit.
+    """
     if value:
         typer.echo(f"docstring-format-checker version {__version__}")
         raise typer.Exit()
 
 
 def _help_callback(ctx: typer.Context, param: typer.CallbackParam, value: bool) -> None:
+    """
+    Show help and exit.
+    """
     if not value or ctx.resilient_parsing:
         return
     typer.echo(ctx.get_help())
@@ -106,6 +112,10 @@ def _help_callback(ctx: typer.Context, param: typer.CallbackParam, value: bool) 
 
 
 def _parse_boolean_flag(ctx: typer.Context, param: typer.CallbackParam, value: Optional[str]) -> Optional[bool]:
+    """
+    Parse boolean flag that accepts various true/false values.
+    """
+
     # Handle the case where the flag is provided without a value (e.g., just --recursive or -r)
     # In this case, Typer doesn't call the callback, so we need to handle it differently
     if value is None:
@@ -125,10 +135,17 @@ def _parse_boolean_flag(ctx: typer.Context, param: typer.CallbackParam, value: O
 
 
 def _parse_recursive_flag(value: str) -> bool:
+    """
+    Parse recursive flag using strtobool utility.
+    """
     return strtobool(value)
 
 
 def _show_examples_callback(ctx: typer.Context, param: typer.CallbackParam, value: bool) -> None:
+    """
+    Show examples and exit.
+    """
+
     if not value or ctx.resilient_parsing:
         return
 
@@ -156,6 +173,10 @@ def _show_examples_callback(ctx: typer.Context, param: typer.CallbackParam, valu
 
 
 def _show_check_examples_callback(ctx: typer.Context, param: typer.CallbackParam, value: bool) -> None:
+    """
+    Show check command examples and exit.
+    """
+
     if not value or ctx.resilient_parsing:
         return
 
@@ -261,7 +282,10 @@ def _check_docstrings(
     quiet: bool = False,
     verbose: bool = False,
 ) -> None:
-    """Core logic for checking docstrings."""
+    """
+    Core logic for checking docstrings.
+    """
+
     target_path = Path(path)
 
     # Validate target path
@@ -320,6 +344,13 @@ def _check_docstrings(
         raise typer.Exit(exit_code)
 
 
+# ---------------------------------------------------------------------------- #
+#                                                                              #
+#     App Operators                                                         ####
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+
+
 # Simple callback that only handles global options and delegates to subcommands
 @app.callback(invoke_without_command=True)
 def main(
@@ -372,7 +403,7 @@ def check(
         "true",
         "--recursive",
         "-r",
-        help="Check directories recursively (default: true). " "Accepts: true/false, t/f, yes/no, y/n, 1/0, on/off",
+        help="Check directories recursively (default: true). Accepts: true/false, t/f, yes/no, y/n, 1/0, on/off",
     ),
     exclude: Optional[list[str]] = typer.Option(
         None,
@@ -399,7 +430,9 @@ def check(
         help="Show this message and exit",
     ),
 ) -> None:
-    """Check docstrings in Python files."""
+    """
+    Check docstrings in Python files.
+    """
     # Parse the recursive string value into a boolean
     try:
         recursive_bool: bool = _parse_recursive_flag(recursive)
@@ -424,7 +457,9 @@ def config_example(
         help="Show this message and exit",
     ),
 ) -> None:
-    """Show example configuration file."""
+    """
+    Show example configuration file.
+    """
     example_config: str = dedent(
         """
         # Example configuration for docstring-format-checker
