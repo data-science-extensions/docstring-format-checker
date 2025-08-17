@@ -65,7 +65,12 @@ from toolbox_python.bools import strtobool
 ## --------------------------------------------------------------------------- #
 
 
-__all__: list[str] = ["version_callback", "main", "config_example"]
+__all__: list[str] = [
+    "main",
+    "config_example",
+    "check",
+    "entry_point",
+]
 
 
 # ---------------------------------------------------------------------------- #

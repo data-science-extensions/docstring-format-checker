@@ -48,6 +48,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, Optional, Union
 
+# ## Local First Party Imports ----
+from docstring_format_checker.utils.exceptions import (
+    InvalidConfig,
+    InvalidConfig_DuplicateOrderValues,
+    InvalidTypeValues,
+)
+
 
 if sys.version_info >= (3, 11):
     # ## Python StdLib Imports ----
@@ -57,14 +64,17 @@ else:
     import tomli as tomllib
 
 
-# (No local imports needed)
-
-
 ## --------------------------------------------------------------------------- #
 ##  Exports                                                                 ####
 ## --------------------------------------------------------------------------- #
 
 
+__all__: list[str] = [
+    "SectionConfig",
+    "DEFAULT_CONFIG",
+    "load_config",
+    "find_config_file",
+]
 
 
 ## --------------------------------------------------------------------------- #
