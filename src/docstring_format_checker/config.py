@@ -236,7 +236,7 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> list[SectionC
     """
     if config_path is None:
         # Look for pyproject.toml in current directory
-        pyproject_path: Path = Path.cwd() / "pyproject.toml"
+        pyproject_path: Path = Path.cwd().joinpath("pyproject.toml")
         if pyproject_path.exists():
             config_path = pyproject_path
         else:
@@ -313,7 +313,7 @@ def find_config_file(start_path: Optional[Path] = None) -> Optional[Path]:
     current_path: Path = start_path.resolve()
 
     while current_path != current_path.parent:
-        pyproject_path: Path = current_path / "pyproject.toml"
+        pyproject_path: Path = current_path.joinpath("pyproject.toml")
         if pyproject_path.exists():
             # Check if it contains dfc configuration
             try:
