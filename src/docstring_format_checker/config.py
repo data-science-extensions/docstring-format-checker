@@ -127,6 +127,26 @@ class SectionConfig:
 ## --------------------------------------------------------------------------- #
 
 
+def _validate_config_order(config_sections: list[SectionConfig]) -> None:
+
+    # Validate no duplicate order values
+    order_values: list[int] = [section.order for section in config_sections]
+    seen_orders: set[int] = set()
+    duplicate_orders: set[int] = set()
+
+    for order in order_values:
+        if order in seen_orders:
+            duplicate_orders.add(order)
+        else:
+            seen_orders.add(order)
+
+    if duplicate_orders:
+        raise InvalidConfig_DuplicateOrderValues(
+            f"Configuration contains duplicate order values: {sorted(duplicate_orders)}. "
+            "Each section must have a unique order value."
+        )
+
+
 # ---------------------------------------------------------------------------- #
 #                                                                              #
 #     Main Section                                                          ####
@@ -260,6 +280,9 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> list[SectionC
 
     if not sections_config:
         return DEFAULT_CONFIG
+
+    # Validate no duplicate order values
+    _validate_config_order(config_sections=sections_config)
 
     # Sort by order
     sections_config.sort(key=lambda x: x.order)
