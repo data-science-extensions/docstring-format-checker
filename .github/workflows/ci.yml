@@ -22,7 +22,7 @@ jobs:
         with:
           python-version-file: pyproject.toml
       - name: Install dependencies
-        run: uv sync --no-cache --all-groups --update --reinstall-package=${{ env.PACKAGE_NAME }}
+        run: uv sync --no-cache --all-groups --upgrade --reinstall-package=${{ env.PACKAGE_NAME }}
       - name: Run checks
         run: uv run check
 
@@ -46,6 +46,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
-        run: uv sync --no-cache --all-groups --update --reinstall-package=${{ env.PACKAGE_NAME }}
+        run: uv sync --no-cache --all-groups --upgrade --reinstall-package=${{ env.PACKAGE_NAME }}
       - name: Run checks
         run: uv run check
