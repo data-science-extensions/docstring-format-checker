@@ -11,6 +11,15 @@ from typing import Union
 
 
 ## --------------------------------------------------------------------------- #
+##  Constants                                                               ####
+## --------------------------------------------------------------------------- #
+
+
+PACKAGE_NAME: str = "docstring-format-checker"
+DIRECTORY_NAME: str = "docstring-format-checker".replace("-", "_")
+
+
+## --------------------------------------------------------------------------- #
 ##  Generic                                                                 ####
 ## --------------------------------------------------------------------------- #
 
@@ -91,13 +100,7 @@ def check_blacken_docs() -> None:
 
 
 def check_mypy() -> None:
-    run(
-        "mypy",
-        "--install-types",
-        "--non-interactive",
-        "--config-file=pyproject.toml",
-        "./src/docstring_format_checker",
-    )
+    run(f"mypy --install-types --non-interactive --config-file=pyproject.toml ./src/{DIRECTORY_NAME}")
 
 
 def check_isort() -> None:
@@ -109,7 +112,7 @@ def check_codespell() -> None:
 
 
 def check_pylint() -> None:
-    run("pylint --rcfile=pyproject.toml src/docstring_format_checker")
+    run(f"pylint --rcfile=pyproject.toml src/{DIRECTORY_NAME}")
 
 
 def check_pycln() -> None:
@@ -149,14 +152,8 @@ def check() -> None:
 
 
 def add_git_credentials() -> None:
-    run("git", "config", "--global", "user.name", "github-actions[bot]")
-    run(
-        "git",
-        "config",
-        "--global",
-        "user.email",
-        "github-actions[bot]@users.noreply.github.com",
-    )
+    run("git config --global user.name github-actions[bot]")
+    run("git config --global user.email github-actions[bot]@users.noreply.github.com")
 
 
 def git_refresh_current_branch() -> None:
@@ -169,21 +166,30 @@ def git_refresh_current_branch() -> None:
     run("git tag --list --sort=-creatordate")
 
 
+def git_checkout_branch(branch_name: str) -> None:
+    run(f"git checkout -B {branch_name} --track origin/{branch_name}")
+
+
+def git_switch_to_branch() -> None:
+    if len(sys.argv) < 2:
+        print("Requires argument: <branch_name>")
+        sys.exit(1)
+    git_checkout_branch(sys.argv[2])
+
+
 def git_switch_to_main_branch() -> None:
-    run("git checkout -B main --track origin/main")
+    git_checkout_branch("main")
 
 
 def git_switch_to_docs_branch() -> None:
-    run("git checkout -B docs-site --track origin/docs-site")
+    git_checkout_branch("docs-site")
 
 
 def git_add_coverage_report() -> None:
     run("cp --recursive --update ./cov-report/html/ ./docs/code/coverage/")
     run("git add ./docs/code/coverage/*")
     run(
-        "git",
-        "commit",
-        "--no-verify",
+        "git commit --no-verify",
         '--message="Update coverage report [skip ci]"',
         expand=False,
     )
@@ -194,9 +200,7 @@ def git_update_version(version: str) -> None:
     run(f'echo VERSION="{version}"')
     run("git add .")
     run(
-        "git",
-        "commit",
-        "--allow-empty",
+        "git commit --allow-empty",
         f'--message="Bump to version `{version}` [skip ci]"',
         expand=False,
     )
@@ -265,8 +269,7 @@ def docs_build_versioned_cli() -> None:
 def update_git_docs(version: str) -> None:
     run("git add .")
     run(
-        "git",
-        "commit",
+        "git commit",
         f'--message="Build docs `{version}` [skip ci]"',
         expand=False,
     )
