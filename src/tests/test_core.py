@@ -25,7 +25,11 @@ import pytest
 # ## Local First Party Imports ----
 from docstring_format_checker.config import SectionConfig
 from docstring_format_checker.core import DocstringChecker
-from docstring_format_checker.utils.exceptions import DocstringError
+from docstring_format_checker.utils.exceptions import (
+    DirectoryNotFoundError,
+    DocstringError,
+    InvalidFileError,
+)
 
 
 # ---------------------------------------------------------------------------- #
@@ -375,7 +379,7 @@ class TestDocstringChecker(TestCase):
             f.write("This is not a Python file")
             f.flush()
 
-            with pytest.raises(FileNotFoundError):
+            with pytest.raises(InvalidFileError):
                 self.simple_checker.check_file(f.name)
 
     def test_10_check_nonexistent_file(self) -> None:
@@ -757,7 +761,7 @@ class TestDocstringChecker(TestCase):
             f.write("This is not Python")
             f.flush()
 
-            with pytest.raises(FileNotFoundError, match="File must be a Python file"):
+            with pytest.raises(InvalidFileError, match="File must be a Python file"):
                 self.simple_checker.check_file(f.name)
 
     def test_24_check_directory_error_handling(self) -> None:
@@ -774,7 +778,7 @@ class TestDocstringChecker(TestCase):
             f.write("def test(): pass")
             f.flush()
 
-            with pytest.raises(ValueError):
+            with pytest.raises(DirectoryNotFoundError):
                 self.simple_checker.check_directory(f.name)
 
     def test_25_section_order_validation(self) -> None:

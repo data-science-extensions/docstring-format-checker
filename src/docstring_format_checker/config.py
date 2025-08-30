@@ -50,9 +50,9 @@ from typing import Any, Literal, Optional, Union
 
 # ## Local First Party Imports ----
 from docstring_format_checker.utils.exceptions import (
-    InvalidConfig,
-    InvalidConfig_DuplicateOrderValues,
-    InvalidTypeValues,
+    InvalidConfigError,
+    InvalidConfigError_DuplicateOrderValues,
+    InvalidTypeValuesError,
 )
 
 
@@ -119,7 +119,7 @@ class SectionConfig:
     def __post_init__(self) -> None:
         """Validate configuration after initialization."""
         if self.type not in VALID_TYPES:
-            raise InvalidTypeValues(f"Invalid section type: {self.type}. Valid types: {VALID_TYPES}")
+            raise InvalidTypeValuesError(f"Invalid section type: {self.type}. Valid types: {VALID_TYPES}")
 
 
 ## --------------------------------------------------------------------------- #
@@ -141,7 +141,7 @@ def _validate_config_order(config_sections: list[SectionConfig]) -> None:
             seen_orders.add(order)
 
     if duplicate_orders:
-        raise InvalidConfig_DuplicateOrderValues(
+        raise InvalidConfigError_DuplicateOrderValues(
             f"Configuration contains duplicate order values: {sorted(duplicate_orders)}. "
             "Each section must have a unique order value."
         )
@@ -231,7 +231,7 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> list[SectionC
     Raises:
         (FileNotFoundError):
             If the specified config file doesn't exist.
-        (ValueError):
+        (InvalidConfigError):
             If the configuration is invalid.
     """
 
@@ -251,7 +251,7 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> list[SectionC
         with open(config_path, "rb") as f:
             config_data: dict[str, Any] = tomllib.load(f)
     except Exception as e:
-        raise InvalidConfig(f"Failed to parse TOML file {config_path}: {e}") from e
+        raise InvalidConfigError(f"Failed to parse TOML file {config_path}: {e}") from e
 
     # Try to find configuration under [tool.dfc] or [tool.docstring-format-checker]
     tool_config = None
@@ -279,8 +279,8 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> list[SectionC
                     required=section_data.get("required", False),
                 )
                 sections_config.append(section)
-            except (KeyError, TypeError, ValueError, InvalidTypeValues) as e:
-                raise InvalidConfig(f"Invalid section configuration: {section_data}. Error: {e}") from e
+            except (KeyError, TypeError, ValueError, InvalidTypeValuesError) as e:
+                raise InvalidConfigError(f"Invalid section configuration: {section_data}. Error: {e}") from e
 
     if not sections_config:
         return DEFAULT_CONFIG

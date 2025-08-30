@@ -26,9 +26,9 @@ from pytest import raises
 # ## Local First Party Imports ----
 from docstring_format_checker.config import SectionConfig, find_config_file, load_config
 from docstring_format_checker.utils.exceptions import (
-    InvalidConfig,
-    InvalidConfig_DuplicateOrderValues,
-    InvalidTypeValues,
+    InvalidConfigError,
+    InvalidConfigError_DuplicateOrderValues,
+    InvalidTypeValuesError,
 )
 
 
@@ -119,7 +119,7 @@ class TestConfig(TestCase):
         assert config.order == 1
 
         # Invalid type should raise error
-        with pytest.raises(InvalidTypeValues, match="Invalid section type"):
+        with pytest.raises(InvalidTypeValuesError, match="Invalid section type"):
             SectionConfig(order=1, name="test", type="invalid_type", required=True)
 
     def test_06_find_config_file(self) -> None:
@@ -168,7 +168,7 @@ class TestConfig(TestCase):
             f.write("invalid toml [[[syntax")
             f.flush()
 
-            with raises(InvalidConfig, match="Failed to parse TOML file"):
+            with raises(InvalidConfigError, match="Failed to parse TOML file"):
                 load_config(f.name)
 
     def test_08_load_config_missing_tool_section(self) -> None:
@@ -245,7 +245,7 @@ class TestConfig(TestCase):
 
             f.flush()
 
-            with raises(InvalidConfig, match="Invalid section configuration"):
+            with raises(InvalidConfigError, match="Invalid section configuration"):
                 load_config(f.name)
 
         # Test section with invalid type through config loading
@@ -267,7 +267,7 @@ class TestConfig(TestCase):
 
             f.flush()
 
-            with raises(InvalidConfig, match="Invalid section configuration"):
+            with raises(InvalidConfigError, match="Invalid section configuration"):
                 load_config(f.name)
 
     def test_11_alternative_config_file_discovery(self) -> None:
@@ -453,7 +453,7 @@ class TestConfig(TestCase):
         ]
 
         # Should raise InvalidConfig_DuplicateOrderValues
-        with raises(InvalidConfig_DuplicateOrderValues):
+        with raises(InvalidConfigError_DuplicateOrderValues):
             _validate_config_order(sections)
 
     def test_19_multiple_duplicate_orders_validation(self) -> None:
@@ -474,7 +474,7 @@ class TestConfig(TestCase):
         ]
 
         # Should raise InvalidConfig_DuplicateOrderValues with multiple duplicates reported
-        with raises(InvalidConfig_DuplicateOrderValues, match="\\[1, 2\\]"):
+        with raises(InvalidConfigError_DuplicateOrderValues, match="\\[1, 2\\]"):
             _validate_config_order(sections)
 
     def test_20_no_duplicate_orders_passes_validation(self) -> None:

@@ -51,7 +51,11 @@ from typing import Literal, NamedTuple, Optional, Union
 
 # ## Local First Party Imports ----
 from docstring_format_checker.config import SectionConfig
-from docstring_format_checker.utils.exceptions import DocstringError
+from docstring_format_checker.utils.exceptions import (
+    DirectoryNotFoundError,
+    DocstringError,
+    InvalidFileError,
+)
 
 
 ## --------------------------------------------------------------------------- #
@@ -117,8 +121,10 @@ class DocstringChecker:
         Raises:
             (FileNotFoundError):
                 If the file doesn't exist.
-            (ValueError):
+            (InvalidFileError):
                 If the file is not a Python file.
+            (UnicodeError):
+                If the file can't be decoded.
             (SyntaxError):
                 If the file contains invalid Python syntax.
         """
@@ -128,14 +134,14 @@ class DocstringChecker:
             raise FileNotFoundError(f"File not found: {file_path}")
 
         if file_path.suffix != ".py":
-            raise FileNotFoundError(f"File must be a Python file (.py): {file_path}")
+            raise InvalidFileError(f"File must be a Python file (.py): {file_path}")
 
         # Read and parse the file
         try:
             with open(file_path, encoding="utf-8") as f:
                 content: str = f.read()
         except UnicodeDecodeError as e:
-            raise ValueError(f"Cannot decode file {file_path}: {e}") from e
+            raise UnicodeError(f"Cannot decode file {file_path}: {e}") from e
 
         try:
             tree: ast.Module = ast.parse(content)
@@ -172,6 +178,12 @@ class DocstringChecker:
             exclude_patterns:
                 List of glob patterns to exclude.
 
+        Raises:
+            (FileNotFoundError):
+                If the directory doesn't exist.
+            (DirectoryNotFoundError):
+                If the path is not a directory.
+
         Returns:
             Dictionary mapping file paths to lists of DocstringError objects.
         """
@@ -181,7 +193,7 @@ class DocstringChecker:
             raise FileNotFoundError(f"Directory not found: {directory_path}")
 
         if not directory_path.is_dir():
-            raise ValueError(f"Path is not a directory: {directory_path}")
+            raise DirectoryNotFoundError(f"Path is not a directory: {directory_path}")
 
         # Find all Python files
         if recursive:

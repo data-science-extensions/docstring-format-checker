@@ -19,13 +19,21 @@ class DocstringError(Exception):
         super().__init__(f"Line {line_number}, {item_type} '{item_name}': {message}")
 
 
-class InvalidConfig(Exception):
+class InvalidConfigError(Exception):
     pass
 
 
-class InvalidConfig_DuplicateOrderValues(Exception):
+class InvalidConfigError_DuplicateOrderValues(Exception):
     pass
 
 
-class InvalidTypeValues(Exception):
+class InvalidTypeValuesError(Exception):
+    pass
+
+
+class InvalidFileError(OSError):
+    pass
+
+
+class DirectoryNotFoundError(OSError):
     pass
