@@ -1,0 +1,51 @@
+name: CI
+on: [push, pull_request]
+env:
+  PACKAGE_NAME: docstring-format-checker
+  UV_LINK_MODE: copy
+  UV_NO_SYNC: true
+  UV_INDEX_STRATEGY: unsafe-best-match
+
+jobs:
+
+  check:
+    if: github.ref_type == 'branch' && github.event_name == 'push' && github.ref_name != 'main'
+    name: Run Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Set up UV
+        uses: astral-sh/setup-uv@v6
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: pyproject.toml
+      - name: Install dependencies
+        run: uv sync --no-cache --all-groups --update --reinstall-package=${{ env.PACKAGE_NAME }}
+      - name: Run checks
+        run: uv run check
+
+  ci:
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    strategy:
+      matrix:
+        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
+      fail-fast: false
+      max-parallel: 15
+    name: Run checks on '${{ matrix.os }}' with Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Set up UV
+        uses: astral-sh/setup-uv@v6
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: uv sync --no-cache --all-groups --update --reinstall-package=${{ env.PACKAGE_NAME }}
+      - name: Run checks
+        run: uv run check
