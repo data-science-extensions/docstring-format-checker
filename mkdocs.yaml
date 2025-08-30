@@ -54,6 +54,7 @@ nav:
       - CLI: code/cli.md
       - Config: code/config.md
       - Core: code/core.md
+      - Exceptions: code/exceptions.md
 
 
 markdown_extensions:
