@@ -1180,7 +1180,7 @@ class TestDocstringChecker(TestCase):
             [sys.executable, "-m", "docstring_format_checker.cli", "--help"],
             capture_output=True,
             text=True,
-            cwd="/mnt/c/Users/chris/OneDrive/14 - Git Repos/dse/docstring-format-checker",
+            cwd=Path(__file__).parent.parent.parent.resolve(),
         )
 
         # Should show help and exit with code 0
