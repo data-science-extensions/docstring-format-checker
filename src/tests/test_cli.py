@@ -88,7 +88,10 @@ class TestCLI(TestCase):
         result: Result = self.runner.invoke(app, [])
         assert result.exit_code == 0  # Now shows help successfully
         assert "Usage:" in clean(result.output)
-        assert "A CLI tool to check and validate Python docstring formatting and completeness" in clean(result.output)
+        # More flexible check for the description that handles line wrapping
+        output_clean: str = clean(result.output)
+        assert "A CLI tool to check and validate Python docstring formatting" in output_clean
+        assert "completeness" in output_clean
 
     def test_05_config_example_command(self) -> None:
         """
@@ -670,10 +673,13 @@ class TestCLI(TestCase):
             # Test that config is auto-discovered
             result: Result = self.runner.invoke(app, ["check", str(py_file), "--verbose"])
             assert result.exit_code == 0
-            assert f"Using configuration from:" in clean(result.output)
-            assert str(config_file.resolve().parent) in clean(result.output)
-            assert str(config_file.resolve().stem) in clean(result.output)
-            assert str(config_file.resolve().name) in clean(result.output)
+            output_clean: str = clean(result.output)
+            assert "Using configuration from:" in output_clean
+            # Check for key path components rather than exact path to handle Windows path variations
+            assert "pyproject" in output_clean
+            # Check that temp directory name appears (without full path to avoid Windows path issues)
+            temp_dir_name: str = Path(temp_dir).name
+            assert temp_dir_name in output_clean
 
     def test_29_global_examples_callback(self) -> None:
         """
