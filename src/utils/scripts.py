@@ -121,12 +121,12 @@ def check_pycln() -> None:
 
 def check_build() -> None:
     run("uv build --out-dir=dist")
-    run("rm --recursive dist")
+    run("rm -r dist")
 
 
 def check_mkdocs() -> None:
     run("mkdocs build --site-dir=temp")
-    run("rm --recursive temp")
+    run("rm -r temp")
 
 
 def check_pytest() -> None:
@@ -186,7 +186,7 @@ def git_switch_to_docs_branch() -> None:
 
 
 def git_add_coverage_report() -> None:
-    run("cp --recursive --update ./cov-report/html/ ./docs/code/coverage/")
+    run("cp -r ./cov-report/html/ ./docs/code/coverage/")
     run("git add ./docs/code/coverage/*")
     run(
         "git commit --no-verify",
@@ -335,8 +335,9 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python scripts.py <command> [args...]")
         sys.exit(1)
-    if sys.argv[1] in globals():
-        globals()[sys.argv[1]]()
+    command: str = sys.argv[1].replace("-", "_")
+    if command in globals():
+        globals()[command]()
     else:
         print(f"Unknown command: {sys.argv[1]}")
         sys.exit(1)
