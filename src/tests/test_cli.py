@@ -11,6 +11,7 @@
 
 
 # ## Python StdLib Imports ----
+import re
 import sys
 import tempfile
 from pathlib import Path
