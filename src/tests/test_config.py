@@ -151,12 +151,12 @@ class TestConfig(TestCase):
             )
 
             # Search from subdirectory should find the config
-            found: Optional[Path] = find_config_file(subdir)
-            assert found == pyproject
+            found1: Path = find_config_file(subdir)  # type:ignore
+            assert found1.resolve() == pyproject.resolve()
 
             # Search from non-existent path should return None
-            found: Optional[Path] = find_config_file(temp_path.joinpath("nonexistent"))
-            assert found is None
+            found2: Optional[Path] = find_config_file(temp_path.joinpath("nonexistent"))
+            assert found2 is None
 
     def test_07_load_config_toml_parsing_error(self) -> None:
         """
@@ -297,13 +297,13 @@ class TestConfig(TestCase):
             )
 
             # Should find pyproject.toml
-            found: Optional[Path] = find_config_file(temp_path)
-            assert found == pyproject_config
+            found1: Path = find_config_file(temp_path)  # type:ignore
+            assert found1 == pyproject_config
 
             # Test when no config exists
             pyproject_config.unlink()
-            found = find_config_file(temp_path)
-            assert found is None
+            found2: Optional[Path] = find_config_file(temp_path)
+            assert found2 is None
 
     def test_12_config_python_version_compatibility(self) -> None:
         """
@@ -380,8 +380,8 @@ class TestConfig(TestCase):
                 )
 
                 # Call find_config_file with no arguments (uses cwd)
-                found = find_config_file()
-                assert found == pyproject_path.resolve()
+                found: Path = find_config_file()  # type:ignore
+                assert found.resolve() == pyproject_path.resolve()
 
             finally:
                 os.chdir(original_cwd)
@@ -400,7 +400,7 @@ class TestConfig(TestCase):
             pyproject_path.write_text("invalid toml content [[[")
 
             # Should return None when file can't be parsed
-            found = find_config_file(temp_path)
+            found: Optional[Path] = find_config_file(temp_path)
             assert found is None
 
     def test_17_tomli_import_path_coverage(self) -> None:
