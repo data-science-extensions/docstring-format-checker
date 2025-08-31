@@ -37,6 +37,22 @@ from tests.setup import name_func_flat_list, name_func_nested_list
 
 
 ## --------------------------------------------------------------------------- #
+##  Helper Functions                                                        ####
+## --------------------------------------------------------------------------- #
+
+
+def strip_ansi_codes(text: str) -> str:
+    """
+    Remove ANSI escape sequences from text.
+
+    This is needed for robust testing of CLI output that may contain
+    formatting codes in different environments (e.g., CI vs local).
+    """
+    ansi_escape = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
+    return ansi_escape.sub("", text)
+
+
+## --------------------------------------------------------------------------- #
 ##  Test Class                                                              ####
 ## --------------------------------------------------------------------------- #
 
