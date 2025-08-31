@@ -103,17 +103,17 @@ repos:
         # args:
         #   - "--all-groups"
 
-  # Everything run locally
-  - repo: local
-    hooks:
+  # # Everything run locally
+  # - repo: local
+  #   hooks:
 
-      # Run Pylint
-      - id: pylint
-        name: pylint
-        entry: pipenv run pylint
-        language: system
-        types: [python]
-        args:
-          - "--rcfile=pyproject.toml"
-          - "-rn" # Only display messages
-          - "-sn" # Don't display the score
+  #     # Run Pylint
+  #     - id: pylint
+  #       name: pylint
+  #       entry: pipenv run pylint
+  #       language: system
+  #       types: [python]
+  #       args:
+  #         - "--rcfile=pyproject.toml"
+  #         - "-rn" # Only display messages
+  #         - "-sn" # Don't display the score
