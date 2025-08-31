@@ -51,7 +51,7 @@ class TestCLI(TestCase):
         Set up test fixtures.
         """
 
-        self.runner = CliRunner()
+        self.runner = CliRunner(env={"NO_COLOR": "1"})
 
     def test_01_help_message(self) -> None:
         """
