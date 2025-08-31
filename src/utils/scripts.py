@@ -196,11 +196,7 @@ def git_add_coverage_report() -> None:
 def git_update_version(version: str) -> None:
     run(f'echo VERSION="{version}"')
     run("git add .")
-    run(
-        "git commit --allow-empty",
-        f'--message="Bump to version `{version}` [skip ci]"',
-        expand=False,
-    )
+    run("git", "commit", "--allow-empty", f'--message="Bump to version `{version}` [skip ci]"', expand=False)
     run("git push --force --no-verify")
     run("git status")
 
@@ -265,11 +261,7 @@ def docs_build_versioned_cli() -> None:
 
 def update_git_docs(version: str) -> None:
     run("git add .")
-    run(
-        "git commit",
-        f'--message="Build docs `{version}` [skip ci]"',
-        expand=False,
-    )
+    run("git", "commit", f'--message="Build docs `{version}` [skip ci]"', expand=False)
     run("git push --force --no-verify --push-option ci.skip")
 
 
