@@ -1,0 +1,294 @@
+name: CD
+
+on:
+  # Only trigger when a new release is published
+  release:
+    types: [published]
+  # Allows you to run workflow manually from the Actions tab
+  # workflow_dispatch:
+
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "deployment"
+  cancel-in-progress: true
+
+permissions:
+  contents: write  # <-- to allow assets to be uploaded to the release
+  id-token: write  # <-- to allow access to the tokens
+  pages: write  # <-- to allow publishing to GitHub Pages
+
+env:
+  VERSION: ${{ github.event.release.tag_name }}
+  PACKAGE_NAME: docstring-format-checker
+  UV_LINK_MODE: copy
+  UV_NO_SYNC: true
+  UV_INDEX_STRATEGY: unsafe-best-match
+  GITHUB_ACTOR: ${{ github.actor }}
+  PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  REPOSITORY_NAME: data-science-extensions/docstring-format-checker
+  GIT_BRANCH: ${{ github.event.release.target_commitish }}
+  PYTHON_VERSION: '3.13'
+
+jobs:
+
+  test:
+
+    name: Run Tests
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        id: checkout-repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ env.GIT_BRANCH }}
+
+      - name: Set up UV
+        id: setup-uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          python-version-file: pyproject.toml
+
+      - name: Install Dependencies
+        id: install-dependencies
+        run: uv sync --no-cache --all-groups --upgrade --reinstall-package=${{ env.PACKAGE_NAME }}
+
+      - name: Set up Git
+        id: setup-git
+        run: |
+          uv run ./src/utils/scripts.py add_git_credentials
+          uv run ./src/utils/scripts.py git_switch_to_branch ${{ env.GIT_BRANCH }}
+          uv run ./src/utils/scripts.py git_refresh_current_branch
+
+      - name: Run checks
+        id: run-checks
+        run: uv run ./src/utils/scripts.py check
+
+      - name: Add coverage report
+        id: add-coverage-report
+        run: uv run ./src/utils/scripts.py git_add_coverage_report
+
+      - name: Upload coverage report
+        id: upload-coverage-report
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ env.CODECOV_TOKEN }}
+          files: ./cov-report/xml/cov-report.xml
+          verbose: true
+
+  build-package:
+
+    name: Build Package
+    needs: test
+    if: ${{ always() && needs.test.result == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        id: checkout-repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ env.GIT_BRANCH }}
+
+      - name: Set up UV
+        id: setup-uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          python-version-file: pyproject.toml
+
+      - name: Check VERSION
+        id: check-version
+        run: |
+          if [ -z "${VERSION}" ]; then
+            echo "/$VERSION is missing. Please try again."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        id: install-dependencies
+        run: uv sync --no-cache --upgrade --reinstall-package=${{ env.PACKAGE_NAME }}
+
+      - name: Set up Git
+        id: setup-git
+        run: |
+          uv run ./src/utils/scripts.py add_git_credentials
+          uv run ./src/utils/scripts.py git_switch_to_branch ${{ env.GIT_BRANCH }}
+          uv run ./src/utils/scripts.py git_refresh_current_branch
+
+      - name: Bump Version
+        id: bump-version
+        run: |
+          export VERSION_CLEAN=$(echo "${VERSION}" | awk '{gsub(/v/,"")}1')
+          export VERSION_NO_PATCH="$(echo ${VERSION} | cut -d '.' -f 1-2).*"
+          uv run ./src/utils/bump_version.py --verbose=true ${VERSION}
+
+      - name: Update Git
+        id: update-git
+        run: uv run ./src/utils/scripts.py git_update_version_cli ${VERSION}
+
+      - name: Build package
+        id: build-package
+        run: uv build -out-dir=dist
+
+      - name: Upload Assets
+        id: upload-assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+
+      - name: Upload Artifacts
+        id: upload-artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/*
+          retention-days: 5
+          overwrite: true
+
+      - name: Fix tag reference
+        id: fix-tag-reference
+        run: uv run ./src/utils/scripts.py git_fix_tag_reference_cli ${VERSION}
+
+  deploy-package:
+
+    name: Deploy to PyPI
+    needs: build-package
+    if: ${{ always() && needs.build-package.result == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        id: checkout-repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ env.GIT_BRANCH }}
+
+      - name: Set up UV
+        id: setup-uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          python-version-file: pyproject.toml
+
+      - name: Download Artifacts
+        id: download-artifacts
+        uses: actions/download-artifact@v5
+        with:
+          name: dist
+          path: dist
+
+      - name: Pubhlish Package
+        id: publish-package
+        run: uv publish --token=${{ env.PYPI_TOKEN }} --no-cache dist/*
+
+      - name: Check
+        id: check
+        run: |
+          echo 'Package deployed to PyPI 👉 https://pypi.org/project/${{ env.PACKAGE_NAME }}/'
+          uvx pip install --dry-run --no-deps --no-cache ${{ env.PACKAGE_NAME }}
+
+  install-package:
+
+    needs: deploy-package
+    if: ${{ always() && needs.deploy-package.result == 'success' }}
+    strategy:
+      matrix:
+        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
+      fail-fast: false
+      max-parallel: 15
+    name: Install Package with '${{ matrix.os }}' and Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+      - name: Set up Python
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Package
+        id: install-package
+        run: pip install --no-cache --verbose --no-python-version-warning "${{ env.PACKAGE_NAME }}==${{ env.VERSION }}"
+
+  build-docs:
+
+    needs:
+      - test
+      - deploy-package
+    if: ${{ always() && needs.test.result == 'success' && needs.deploy-package.result == 'success' }}
+    name: Build Docs
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        id: checkout-repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ env.GIT_BRANCH }}
+
+      - name: Set up UV
+        id: setup-uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          python-version-file: pyproject.toml
+
+      - name: Install Dependencies
+        id: install-dependencies
+        run: uv sync --no-cache --upgrade --group=docs --reinstall-package=${{ env.PACKAGE_NAME}}
+
+      - name: Set up Git
+        id: setup-git
+        run: |
+          uv run ./src/utils/scripts.py add_git_credentials
+          uv run ./src/utils/scripts.py git_switch_to_branch ${{ env.GIT_BRANCH }}
+          uv run ./src/utils/scripts.py git_refresh_current_branch
+
+      - name: Generate Changelog
+        id: generate-changelog
+        run: uv run ./src/utils/changelog.py
+
+      - name: Commit Changelog
+        id: commit-changelog
+        run: |
+          git add .
+          git commit --message "Update changelog to \`${VERSION}\` [skip ci]" || echo "No changes to commit"
+          git push --force --no-verify
+          git status
+
+      - name: Build Docs
+        id: build-docs
+        run: uv run ./src/utils/scripts.py build_versioned_docs_cli ${VERSION}
+
+      - name: Fix tag reference
+        id: fix-tag-reference
+        run: uv run ./src/utils/scripts.py git_fix_tag_reference_cli ${VERSION}

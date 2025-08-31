@@ -29,10 +29,9 @@ classifiers = [
 requires-python = ">=3.9"
 dependencies = [
     "typer>=0.9.0",
-    # "tomli>=2.0.0;python_version<'3.11'",
-    # "tomllib-compat>=0.1.0;python_version<'3.11'",
-    # "rich>=13.0.0",
-    # "pathspec>=0.11.0",
+    "tomli>=2.0.0;python_version<'3.11'",
+    "rich>=13.0.0",
+    "toolbox-python==1.*",
 ]
 
 [project.urls]
@@ -43,8 +42,8 @@ Changelog = "https://github.com/data-science-extensions/docstring-format-checker
 Issues = "https://github.com/data-science-extensions/docstring-format-checker/issues"
 
 [project.scripts]
-docstring-format-checker = "docstring_format_checker.cli:main"
-dfc = "docstring_format_checker.cli:main"
+docstring-format-checker = "docstring_format_checker.cli:entry_point"
+dfc = "docstring_format_checker.cli:entry_point"
 
 [dependency-groups]
 dev = [
@@ -58,6 +57,7 @@ dev = [
     "pylint==3.*",
     "pyupgrade==3.*",
     "uv==0.*",
+    "pip==25.*",
 ]
 docs = [
     "black==25.*",
@@ -73,7 +73,7 @@ docs = [
     "pygithub==2.*",
 ]
 test = [
-    "mypy==1.*",
+    "mypy==1.*,!=1.17.*",
     "parameterized==0.*",
     "pytest==8.*",
     "pytest-clarity==1.*",
@@ -105,13 +105,13 @@ exclude = '''
 
 [tool.pytest.ini_options]
 filterwarnings = [
-    "ignore::typeguard.InstrumentationWarning",
+    # "ignore::typeguard.InstrumentationWarning",
     "ignore::DeprecationWarning",
 ]
 addopts = [
     "--verbose",
     "--verbose",
-    "--cov=src/toolbox_python",
+    "--cov=src/docstring_format_checker",
     "--cov-report=term",
     "--cov-report=html:cov-report/html",
     "--cov-report=xml:cov-report/xml/cov-report.xml",
@@ -148,7 +148,7 @@ ignore-words-list = "demog"
 
 [tool.bump_version.replacements]
 files = [
-    { file = "src/toolbox_python/__init__.py", pattern = "__version__ = \"{VERSION}\"" },
+    { file = "src/docstring_format_checker/__init__.py", pattern = "__version__ = \"{VERSION}\"" },
     { file = "src/tests/test_version.py", pattern = "__version__ = \"{VERSION}\"" },
     { file = "pyproject.toml", pattern = "version = \"{VERSION}\"" },
 ]
@@ -175,25 +175,25 @@ required = false
 [[tool.dfc.sections]]
 order = 3
 name = "params"
-type = "name_and_type"
+type = "list_name_and_type"
 required = true
 
 [[tool.dfc.sections]]
 order = 4
 name = "returns"
-type = "name_and_type_optional"
+type = "list_name_and_type"
 required = false
 
 [[tool.dfc.sections]]
 order = 5
 name = "yields"
-type = "type"
+type = "list_type"
 required = false
 
 [[tool.dfc.sections]]
 order = 6
 name = "raises"
-type = "type"
+type = "list_type"
 required = false
 
 [[tool.dfc.sections]]
