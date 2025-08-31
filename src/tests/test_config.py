@@ -298,7 +298,7 @@ class TestConfig(TestCase):
 
             # Should find pyproject.toml
             found1: Path = find_config_file(temp_path)  # type:ignore
-            assert found1 == pyproject_config
+            assert found1.resolve() == pyproject_config.resolve()
 
             # Test when no config exists
             pyproject_config.unlink()
