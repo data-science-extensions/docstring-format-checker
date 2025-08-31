@@ -16,6 +16,7 @@ import sys
 import tempfile
 from pathlib import Path
 from textwrap import dedent
+from typing import Optional
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
@@ -150,11 +151,11 @@ class TestConfig(TestCase):
             )
 
             # Search from subdirectory should find the config
-            found: Path | None = find_config_file(subdir)
+            found: Optional[Path] = find_config_file(subdir)
             assert found == pyproject
 
             # Search from non-existent path should return None
-            found: Path | None = find_config_file(temp_path.joinpath("nonexistent"))
+            found: Optional[Path] = find_config_file(temp_path.joinpath("nonexistent"))
             assert found is None
 
     def test_07_load_config_toml_parsing_error(self) -> None:
@@ -296,7 +297,7 @@ class TestConfig(TestCase):
             )
 
             # Should find pyproject.toml
-            found: Path | None = find_config_file(temp_path)
+            found: Optional[Path] = find_config_file(temp_path)
             assert found == pyproject_config
 
             # Test when no config exists

@@ -115,7 +115,7 @@ def on_page_markdown(markdown: str, *, page: Page, config: MkDocsConfig, files: 
         raise RuntimeError(f"Unknown shortcode: {type}")
 
     # Find and replace all external asset URLs in current page
-    return re.sub(r"<!-- md:(\w+)(.*?) -->", replace, markdown, flags=re.I | re.M)
+    return re.sub(r"<!-- md:(\w+)(.*?) -->", replace, markdown, flags=re.I + re.M)
 
 
 # ---------------------------------------------------------------------------- #

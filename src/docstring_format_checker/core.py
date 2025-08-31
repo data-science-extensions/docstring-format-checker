@@ -290,7 +290,7 @@ class DocstringChecker:
                 """Visit function definition node (sync or async)."""
                 if not node.name.startswith("_"):  # Skip private functions
                     item_type: Literal["function", "method"] = "method" if self.class_stack else "function"
-                    parent_class: str | None = self.class_stack[-1] if self.class_stack else None
+                    parent_class: Optional[str] = self.class_stack[-1] if self.class_stack else None
 
                     items.append(
                         FunctionAndClassDetails(
@@ -325,7 +325,7 @@ class DocstringChecker:
                 Nothing is returned.
         """
 
-        docstring: str | None = ast.get_docstring(item.node)
+        docstring: Optional[str] = ast.get_docstring(item.node)
 
         # Check if any required sections apply to this item type
         requires_docstring = False
@@ -600,7 +600,7 @@ class DocstringChecker:
 
         found_sections: list[tuple[int, str]] = []
         for pattern, section_name in all_patterns:
-            match: re.Match[str] | None = re.search(pattern, docstring, re.IGNORECASE)
+            match: Optional[re.Match[str]] = re.search(pattern, docstring, re.IGNORECASE)
             if match:
                 found_sections.append((match.start(), section_name))
 
