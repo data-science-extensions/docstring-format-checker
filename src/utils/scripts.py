@@ -16,7 +16,7 @@ from typing import Union
 
 
 PACKAGE_NAME: str = "docstring-format-checker"
-DIRECTORY_NAME: str = "docstring-format-checker".replace("-", "_")
+DIRECTORY_NAME: str = PACKAGE_NAME.replace("-", "_")
 
 
 ## --------------------------------------------------------------------------- #
