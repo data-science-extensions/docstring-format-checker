@@ -52,12 +52,12 @@ import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+from toolbox_python.bools import strtobool
 
 # ## Local First Party Imports ----
 from docstring_format_checker import __version__
 from docstring_format_checker.config import SectionConfig, find_config_file, load_config
 from docstring_format_checker.core import DocstringChecker, DocstringError
-from toolbox_python.bools import strtobool
 
 
 ## --------------------------------------------------------------------------- #

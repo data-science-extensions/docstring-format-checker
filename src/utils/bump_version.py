@@ -31,7 +31,7 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
-# ## Local First Party Imports ----
+# ## Python Third Party Imports ----
 from toolbox_python.dictionaries import DotDict
 
 
