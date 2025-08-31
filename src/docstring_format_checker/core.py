@@ -97,10 +97,11 @@ class DocstringChecker:
 
     def __init__(self, sections_config: list[SectionConfig]) -> None:
         """
-        Initialize the docstring checker.
+        !!! note "Summary"
+            Initialize the docstring checker.
 
-        Args:
-            sections_config:
+        Params:
+            sections_config (list[SectionConfig]):
                 List of section configurations to check against.
         """
         self.sections_config: list[SectionConfig] = sections_config
@@ -109,14 +110,16 @@ class DocstringChecker:
 
     def check_file(self, file_path: Union[str, Path]) -> list[DocstringError]:
         """
-        Check docstrings in a Python file.
+        !!! note "Summary"
+            Check docstrings in a Python file.
 
-        Args:
-            file_path:
+        Params:
+            file_path (Union[str, Path]):
                 Path to the Python file to check.
 
         Returns:
-            List of DocstringError objects for any validation failures.
+            (list[DocstringError]):
+                List of DocstringError objects for any validation failures.
 
         Raises:
             (FileNotFoundError):
@@ -168,14 +171,15 @@ class DocstringChecker:
         exclude_patterns: Optional[list[str]] = None,
     ) -> dict[str, list[DocstringError]]:
         """
-        Check docstrings in all Python files in a directory.
+        !!! note "Summary"
+            Check docstrings in all Python files in a directory.
 
-        Args:
-            directory_path:
+        Params:
+            directory_path (Union[str, Path]):
                 Path to the directory to check.
-            recursive:
+            recursive (bool):
                 Whether to check subdirectories recursively.
-            exclude_patterns:
+            exclude_patterns (Optional[list[str]]):
                 List of glob patterns to exclude.
 
         Raises:
@@ -185,7 +189,8 @@ class DocstringChecker:
                 If the path is not a directory.
 
         Returns:
-            Dictionary mapping file paths to lists of DocstringError objects.
+            (dict[str, list[DocstringError]]):
+                Dictionary mapping file paths to lists of DocstringError objects.
         """
 
         directory_path = Path(directory_path)
@@ -239,7 +244,16 @@ class DocstringChecker:
 
     def _extract_items(self, tree: ast.AST) -> list[FunctionAndClassDetails]:
         """
-        Extract all functions and classes from the AST.
+        !!! note "Summary"
+            Extract all functions and classes from the AST.
+
+        Params:
+            tree (ast.AST):
+                The Abstract Syntax Tree (AST) to extract items from.
+
+        Returns:
+            (list[FunctionAndClassDetails]):
+                A list of extracted function and class details.
         """
 
         items: list[FunctionAndClassDetails] = []
@@ -297,7 +311,18 @@ class DocstringChecker:
 
     def _check_single_docstring(self, item: FunctionAndClassDetails, file_path: str) -> None:
         """
-        Check a single function or class docstring.
+        !!! note "Summary"
+            Check a single function or class docstring.
+
+        Params:
+            item (FunctionAndClassDetails):
+                The function or class to check.
+            file_path (str):
+                The path to the file containing the item.
+
+        Returns:
+            (None):
+                Nothing is returned.
         """
 
         docstring: str | None = ast.get_docstring(item.node)
@@ -348,9 +373,27 @@ class DocstringChecker:
         # Validate docstring sections if docstring exists
         self._validate_docstring_sections(docstring, item, file_path)
 
-    def _validate_docstring_sections(self, docstring: str, item: FunctionAndClassDetails, file_path: str) -> None:
+    def _validate_docstring_sections(
+        self,
+        docstring: str,
+        item: FunctionAndClassDetails,
+        file_path: str,
+    ) -> None:
         """
-        Validate the sections within a docstring.
+        !!! note "Summary"
+            Validate the sections within a docstring.
+
+        Params:
+            docstring (str):
+                The docstring to validate.
+            item (FunctionAndClassDetails):
+                The function or class to check.
+            file_path (str):
+                The path to the file containing the item.
+
+        Returns:
+            (None):
+                Nothing is returned.
         """
         errors: list[str] = []
 
@@ -401,7 +444,18 @@ class DocstringChecker:
 
     def _check_free_text_section(self, docstring: str, section: SectionConfig) -> bool:
         """
-        Check if a free text section exists in the docstring.
+        !!! note "Summary"
+            Check if a free text section exists in the docstring.
+
+        Params:
+            docstring (str):
+                The docstring to check.
+            section (SectionConfig):
+                The section configuration to validate.
+
+        Returns:
+            (bool):
+                `True` if the section exists, `False` otherwise.
         """
         if section.admonition and section.prefix:
             # Format like: !!! note "Summary"
@@ -422,7 +476,18 @@ class DocstringChecker:
 
     def _check_params_section(self, docstring: str, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> bool:
         """
-        Check if the Params section exists and documents all parameters.
+        !!! note "Summary"
+            Check if the Params section exists and documents all parameters.
+
+        Params:
+            docstring (str):
+                The docstring to check.
+            node (Union[ast.FunctionDef, ast.AsyncFunctionDef]):
+                The function node to check.
+
+        Returns:
+            (bool):
+                `True` if the section exists and is valid, `False` otherwise.
         """
         # Get function parameters (excluding 'self' for methods)
         params: list[str] = [arg.arg for arg in node.args.args if arg.arg != "self"]
@@ -444,19 +509,46 @@ class DocstringChecker:
 
     def _check_returns_section(self, docstring: str) -> bool:
         """
-        Check if the Returns section exists.
+        !!! note "Summary"
+            Check if the Returns section exists.
+
+        Params:
+            docstring (str):
+                The docstring to check.
+
+        Returns:
+            (bool):
+                `True` if the section exists, `False` otherwise.
         """
         return bool(re.search(r"Returns:", docstring))
 
     def _check_raises_section(self, docstring: str) -> bool:
         """
-        Check if the Raises section exists.
+        !!! note "Summary"
+            Check if the Raises section exists.
+
+        Params:
+            docstring (str):
+                The docstring to check.
+
+        Returns:
+            (bool):
+                `True` if the section exists, `False` otherwise.
         """
         return bool(re.search(r"Raises:", docstring))
 
     def _has_both_returns_and_yields(self, docstring: str) -> bool:
         """
-        Check if docstring has both Returns and Yields sections.
+        !!! note "Summary"
+            Check if docstring has both Returns and Yields sections.
+
+        Params:
+            docstring (str):
+                The docstring to check.
+
+        Returns:
+            (bool):
+                `True` if the section exists, `False` otherwise.
         """
         has_returns = bool(re.search(r"Returns:", docstring))
         has_yields = bool(re.search(r"Yields:", docstring))
@@ -464,7 +556,16 @@ class DocstringChecker:
 
     def _check_section_order(self, docstring: str) -> list[str]:
         """
-        Check that sections appear in the correct order.
+        !!! note "Summary"
+            Check that sections appear in the correct order.
+
+        Params:
+            docstring (str):
+                The docstring to check.
+
+        Returns:
+            (list[str]):
+                A list of error messages, if any.
         """
         # Build expected order from configuration
         section_patterns: list[tuple[str, str]] = []
@@ -538,13 +639,33 @@ class DocstringChecker:
 
     def _check_yields_section(self, docstring: str) -> bool:
         """
-        Check if the Yields section exists.
+        !!! note "Summary"
+            Check if the Yields section exists.
+
+        Params:
+            docstring (str):
+                The docstring to check.
+
+        Returns:
+            (bool):
+                `True` if the section exists, `False` otherwise.
         """
         return bool(re.search(r"Yields:", docstring))
 
     def _check_simple_section(self, docstring: str, section_name: str) -> bool:
         """
-        Check if a simple named section exists.
+        !!! note "Summary"
+            Check if a simple named section exists.
+
+        Params:
+            docstring (str):
+                The docstring to check.
+            section_name (str):
+                The name of the section to check for.
+
+        Returns:
+            (bool):
+                `True` if the section exists, `False` otherwise.
         """
         pattern = rf"{re.escape(section_name)}:"
         return bool(re.search(pattern, docstring, re.IGNORECASE))

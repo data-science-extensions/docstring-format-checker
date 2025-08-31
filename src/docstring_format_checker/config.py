@@ -216,7 +216,8 @@ DEFAULT_CONFIG: list[SectionConfig] = [
 
 def load_config(config_path: Optional[Union[str, Path]] = None) -> list[SectionConfig]:
     """
-    Load configuration from a TOML file or return default configuration.
+    !!! note "Summary"
+        Load configuration from a TOML file or return default configuration.
 
     Params:
         config_path (Optional[Union[str, Path]]):
@@ -296,7 +297,8 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> list[SectionC
 
 def find_config_file(start_path: Optional[Path] = None) -> Optional[Path]:
     """
-    Find configuration file by searching up the directory tree.
+    !!! note "Summary"
+        Find configuration file by searching up the directory tree.
 
     Params:
         start_path (Optional[Path]):
