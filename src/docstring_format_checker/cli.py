@@ -116,7 +116,20 @@ console = Console()
 
 def _version_callback(ctx: Context, param: CallbackParam, value: bool) -> None:
     """
-    Print version and exit.
+    !!! note "Summary"
+        Print version and exit.
+
+    Params:
+        ctx (Context):
+            The context object.
+        param (CallbackParam):
+            The parameter object.
+        value (bool):
+            The boolean value indicating if the flag was set.
+
+    Returns:
+        (None):
+            Nothing is returned.
     """
     if value:
         echo(f"docstring-format-checker version {__version__}")
@@ -125,7 +138,20 @@ def _version_callback(ctx: Context, param: CallbackParam, value: bool) -> None:
 
 def _help_callback(ctx: Context, param: CallbackParam, value: bool) -> None:
     """
-    Show help and exit.
+    !!! note "Summary"
+        Show help and exit.
+
+    Params:
+        ctx (Context):
+            The context object.
+        param (CallbackParam):
+            The parameter object.
+        value (bool):
+            The boolean value indicating if the flag was set.
+
+    Returns:
+        (None):
+            Nothing is returned.
     """
     if not value or ctx.resilient_parsing:
         return
@@ -135,7 +161,20 @@ def _help_callback(ctx: Context, param: CallbackParam, value: bool) -> None:
 
 def _parse_boolean_flag(ctx: Context, param: CallbackParam, value: Optional[str]) -> Optional[bool]:
     """
-    Parse boolean flag that accepts various true/false values.
+    !!! note "Summary"
+        Parse boolean flag that accepts various true/false values.
+
+    Params:
+        ctx (Context):
+            The context object.
+        param (CallbackParam):
+            The parameter object.
+        value (Optional[str]):
+            The string value of the flag.
+
+    Returns:
+        (Optional[bool]):
+            The parsed boolean value or `None` if not provided.
     """
 
     # Handle the case where the flag is provided without a value (e.g., just --recursive or -r)
@@ -161,14 +200,36 @@ def _parse_boolean_flag(ctx: Context, param: CallbackParam, value: Optional[str]
 
 def _parse_recursive_flag(value: str) -> bool:
     """
-    Parse recursive flag using strtobool utility.
+    !!! note "Summary"
+        Parse recursive flag using `strtobool()` utility.
+
+    Params:
+        value (str):
+            The string value of the flag.
+
+    Returns:
+        (bool):
+            The parsed boolean value.
     """
     return strtobool(value)
 
 
 def _show_examples_callback(ctx: Context, param: CallbackParam, value: bool) -> None:
     """
-    Show examples and exit.
+    !!! note "Summary"
+        Show examples and exit.
+
+    Params:
+        ctx (Context):
+            The context object.
+        param (CallbackParam):
+            The parameter object.
+        value (bool):
+            The boolean value indicating if the flag was set.
+
+    Returns:
+        (None):
+            Nothing is returned.
     """
 
     if not value or ctx.resilient_parsing:
@@ -199,7 +260,20 @@ def _show_examples_callback(ctx: Context, param: CallbackParam, value: bool) -> 
 
 def _show_check_examples_callback(ctx: Context, param: CallbackParam, value: bool) -> None:
     """
-    Show check command examples and exit.
+    !!! note "Summary"
+        Show check command examples and exit.
+
+    Params:
+        ctx (Context):
+            The context object.
+        param (CallbackParam):
+            The parameter object.
+        value (bool):
+            The boolean value indicating if the flag was set.
+
+    Returns:
+        (None):
+            Nothing is returned.
     """
 
     if not value or ctx.resilient_parsing:
@@ -230,18 +304,20 @@ def _show_check_examples_callback(ctx: Context, param: CallbackParam, value: boo
 
 def _display_results(results: dict[str, list[DocstringError]], quiet: bool, verbose: bool) -> int:
     """
-    Display the results of docstring checking.
+    !!! note "Summary"
+        Display the results of docstring checking.
 
-    Args:
-        results:
+    Params:
+        results (dict[str, list[DocstringError]]):
             Dictionary mapping file paths to lists of errors
-        quiet:
+        quiet (bool):
             Whether to suppress success messages
-        verbose:
+        verbose (bool):
             Whether to show detailed output
 
     Returns:
-        Exit code (0 for success, 1 for errors found)
+        (int):
+            Exit code (`0` for success, `1` for errors found)
     """
     if not results:
         if not quiet:
@@ -308,7 +384,26 @@ def _check_docstrings(
     verbose: bool = False,
 ) -> None:
     """
-    Core logic for checking docstrings.
+    !!! note "Summary"
+        Core logic for checking docstrings.
+
+    Params:
+        path (str):
+            The path to the file or directory to check.
+        config (Optional[str]):
+            The path to the configuration file.
+        recursive (bool):
+            Whether to check files recursively.
+        exclude (Optional[list[str]]):
+            List of glob patterns to exclude from checking.
+        quiet (bool):
+            Whether to suppress output.
+        verbose (bool):
+            Whether to show detailed output.
+
+    Returns:
+        (None):
+            Nothing is returned.
     """
 
     target_path = Path(path)
@@ -406,10 +501,25 @@ def main(
     ),
 ) -> None:
     """
-    Check Python docstring formatting and completeness.
+    !!! note "Summary"
+        Check Python docstring formatting and completeness.
 
-    This tool analyzes Python files and validates that functions, methods, and classes
-    have properly formatted docstrings according to the configured sections.
+    ???+ abstract "Details"
+        This tool analyzes Python files and validates that functions, methods, and classes have properly formatted docstrings according to the configured sections.
+
+    Params:
+        ctx (Context):
+            The context object for the command.
+        version (Optional[bool]):
+            Show version and exit.
+        examples (Optional[bool]):
+            Show usage examples and exit.
+        help_flag (Optional[bool]):
+            Show help message and exit.
+
+    Returns:
+        (None):
+            Nothing is returned.
     """
     # If no subcommand is provided, show help
     if ctx.invoked_subcommand is None:
@@ -456,7 +566,33 @@ def check(
     ),
 ) -> None:
     """
-    Check docstrings in Python files.
+    !!! note "Summary"
+        Check docstrings in Python files.
+
+    ???+ abstract "Details"
+        This command checks the docstrings in the specified Python file or directory.
+
+    Params:
+        path (str):
+            The path to the Python file or directory to check.
+        config (Optional[str]):
+            The path to the configuration file (TOML format).
+        recursive (bool):
+            Whether to check directories recursively.
+        exclude (list[str]):
+            Glob patterns to exclude (can be used multiple times).
+        quiet (bool):
+            Whether to only show errors, no success messages.
+        verbose (bool):
+            Whether to show detailed output.
+        examples (Optional[bool]):
+            Show usage examples and exit.
+        help_flag (Optional[bool]):
+            Show help message and exit.
+
+    Returns:
+        (None):
+            Nothing is returned.
     """
     # Parse the recursive string value into a boolean
     try:
@@ -486,7 +622,16 @@ def config_example(
     ),
 ) -> None:
     """
-    Show example configuration file.
+    !!! note "Summary"
+        Show example configuration file.
+
+    Params:
+        help_flag (Optional[bool]):
+            Show help message and exit.
+
+    Returns:
+        (None):
+            Nothing is returned.
     """
     example_config: str = dedent(
         """
@@ -558,7 +703,10 @@ def config_example(
 
 
 def entry_point() -> None:
-    """Entry point for the CLI scripts defined in pyproject.toml."""
+    """
+    !!! note "Summary"
+        Entry point for the CLI scripts defined in pyproject.toml.
+    """
     app()
 
 
