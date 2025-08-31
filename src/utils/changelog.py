@@ -23,6 +23,7 @@
 import os
 import re
 from pathlib import Path
+from typing import Optional
 
 # ## Python Third Party Imports ----
 from github import Auth, Github
@@ -39,8 +40,8 @@ from github.Repository import Repository
 
 
 ### Environment Variables ----
-TOKEN: str | None = os.environ.get("GITHUB_TOKEN")
-REPOSITORY_NAME: str | None = os.environ.get("REPOSITORY_NAME")
+TOKEN: Optional[str] = os.environ.get("GITHUB_TOKEN")
+REPOSITORY_NAME: Optional[str] = os.environ.get("REPOSITORY_NAME")
 if TOKEN is None:
     raise RuntimeError("Environment variable `GITHUB_TOKEN` is not set. Please set it before running the script.")
 if REPOSITORY_NAME is None:

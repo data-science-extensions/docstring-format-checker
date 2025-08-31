@@ -45,7 +45,7 @@
 # ## Python StdLib Imports ----
 from pathlib import Path
 from textwrap import dedent
-from typing import Optional
+from typing import Optional, Union
 
 # ## Python Third Party Imports ----
 from rich.console import Console
@@ -423,7 +423,9 @@ def _check_docstrings(
             sections_config = load_config(config_path)
         else:
             # Try to find config file automatically
-            found_config: Path | None = find_config_file(target_path if target_path.is_dir() else target_path.parent)
+            found_config: Union[Path, None] = find_config_file(
+                target_path if target_path.is_dir() else target_path.parent
+            )
             if found_config:
                 if verbose:
                     console.print(f"[blue]Using configuration from: {found_config}[/blue]")

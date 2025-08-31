@@ -35,7 +35,7 @@ __all__: list[str] = [
 def name_func_flat_list(
     func: Callable,
     idx: int,
-    params: tuple[Any, ...] | list[Any],
+    params: Union[tuple[Any, ...], list[Any]],
 ) -> str:
     return f"{func.__name__}_{int(idx)+1:02}_{'_'.join([str(param) for param in params[0]])}"
 
@@ -43,7 +43,10 @@ def name_func_flat_list(
 def name_func_nested_list(
     func: Callable,
     idx: int,
-    params: Union[list[tuple[Any, ...] | list[Any]], tuple[tuple[Any, ...] | list[Any], ...]],
+    params: Union[
+        list[Union[tuple[Any, ...], list[Any]]],
+        tuple[Union[tuple[Any, ...], list[Any]], ...],
+    ],
 ) -> str:
     return f"{func.__name__}_{int(idx)+1:02}_{params[0][0]}_{params[0][1]}"
 
@@ -51,7 +54,7 @@ def name_func_nested_list(
 def name_func_predefined_name(
     func: Callable,
     idx: int,
-    params: tuple[Any, ...] | list[Any],
+    params: Union[tuple[Any, ...], list[Any]],
 ) -> str:
     return f"{func.__name__}_{int(idx)+1:02}_{params[0][0]}"
 
