@@ -114,7 +114,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -143,7 +143,7 @@ class TestDocstringChecker(TestCase):
             """
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -193,7 +193,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -222,7 +222,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -378,7 +378,7 @@ class TestDocstringChecker(TestCase):
             """
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -396,7 +396,7 @@ class TestDocstringChecker(TestCase):
         Test error handling for non-Python files.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary non-Python file
             temp_path = Path(temp_dir)
@@ -442,7 +442,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -458,7 +458,7 @@ class TestDocstringChecker(TestCase):
         Test handling of Unicode decode errors.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a file with invalid UTF-8 content
             temp_path = Path(temp_dir)
@@ -489,7 +489,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -561,7 +561,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -594,7 +594,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -650,7 +650,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -687,7 +687,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -732,7 +732,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -763,7 +763,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -794,7 +794,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -815,7 +815,7 @@ class TestDocstringChecker(TestCase):
             self.simple_checker.check_file("/non/existent/file.py")
 
         # Test with non-Python file
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             txt_file: Path = temp_path.joinpath("test.txt")
             txt_file.write_text("This is not Python")
@@ -836,7 +836,7 @@ class TestDocstringChecker(TestCase):
             self.simple_checker.check_directory("/nonexistent/directory")
 
         # Test with file instead of directory
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             py_file: Path = temp_path.joinpath("test.py")
             py_file.write_text("def test(): pass")
@@ -878,7 +878,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -959,7 +959,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -994,7 +994,7 @@ class TestDocstringChecker(TestCase):
             """
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -1042,7 +1042,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -1081,7 +1081,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -1119,7 +1119,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -1165,7 +1165,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -1198,7 +1198,7 @@ class TestDocstringChecker(TestCase):
             """
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -1248,7 +1248,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -1306,7 +1306,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             temp_path = Path(temp_dir)
             py_file: Path = temp_path.joinpath("test.py")
@@ -1342,7 +1342,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             temp_path = Path(temp_dir)
             py_file = temp_path.joinpath("test.py")
@@ -1378,7 +1378,7 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             temp_path = Path(temp_dir)
             py_file: Path = temp_path.joinpath("test.py")
