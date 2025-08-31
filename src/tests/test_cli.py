@@ -489,10 +489,19 @@ class TestCLI(TestCase):
             result: Result = self.runner.invoke(app, ["check"] + args + [f.name])
 
             # Should fail with appropriate error message
-            assert result.exit_code == 2, f"Should fail for invalid variant: {invalid_variant}"
+            assert result.exit_code == 2, f"Should fail for invalid variant: '{invalid_variant}'"
             # Check for the key error message components (more robust than exact string match)
-            assert "Invalid value" in result.output, f"Should show invalid value error for: {invalid_variant}"
-            assert "--recursive" in result.output, f"Should mention --recursive option for: {invalid_variant}"
+            assert "Invalid value" in result.output, f"Should show invalid value error for: '{invalid_variant}'"
+            # Strip ANSI codes to handle CI environment differences
+            clean_output = strip_ansi_codes(result.output)
+            print(f"{type(result.output)=}")
+            print(result.output)
+            print(f"{type(clean_output)=}")
+            print(clean_output)
+            print(f"{"--recursive" in clean_output=}")
+
+            assert "--recursive" in clean_output, f"Should mention --recursive option for: '{invalid_variant}'"
+            raise RuntimeError()
 
     def test_21_examples_callback(self) -> None:
         """
