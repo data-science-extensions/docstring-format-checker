@@ -11,7 +11,6 @@
 
 
 # ## Python StdLib Imports ----
-import re
 import sys
 import tempfile
 from pathlib import Path
@@ -34,23 +33,7 @@ from docstring_format_checker.cli import (
     app,
     entry_point,
 )
-from tests.setup import name_func_flat_list, name_func_nested_list
-
-
-## --------------------------------------------------------------------------- #
-##  Helper Functions                                                        ####
-## --------------------------------------------------------------------------- #
-
-
-def strip_ansi_codes(text: str) -> str:
-    """
-    Remove ANSI escape sequences from text.
-
-    This is needed for robust testing of CLI output that may contain
-    formatting codes in different environments (e.g., CI vs local).
-    """
-    ansi_escape = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
-    return ansi_escape.sub("", text)
+from tests.setup import name_func_flat_list, name_func_nested_list, strip_ansi_codes
 
 
 ## --------------------------------------------------------------------------- #
@@ -510,18 +493,10 @@ class TestCLI(TestCase):
             # Check for the key error message components (more robust than exact string match)
             assert "Invalid value" in result.output, f"Should show invalid value error for: '{invalid_variant}'"
             # Strip ANSI codes to handle CI environment differences
-            clean_output = strip_ansi_codes(result.output)
-            print(f"{type(result.output)=}")
-            print(f"{type(clean_output)=}")
-            print(result.output)
-            print(clean_output)
-            print(f"{"--recursive" in result.output=}")
-            print(f"{"--recursive" in clean_output=}")
-
+            clean_output: str = strip_ansi_codes(result.output)
             assert "--recursive" in clean_output, f"Should mention --recursive option for: '{invalid_variant}'"
-            raise RuntimeError()
 
-    def test_21_examples_callback(self) -> None:
+    def test_20_examples_callback(self) -> None:
         """
         Test examples callback functionality.
         """
@@ -529,7 +504,7 @@ class TestCLI(TestCase):
         assert result.exit_code == 0
         assert "Example configuration for docstring-format-checker" in result.output
 
-    def test_21b_check_examples_callback(self) -> None:
+    def test_21_check_examples_callback(self) -> None:
         """
         Test check command examples callback functionality.
         """
