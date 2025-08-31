@@ -512,9 +512,10 @@ class TestCLI(TestCase):
             # Strip ANSI codes to handle CI environment differences
             clean_output = strip_ansi_codes(result.output)
             print(f"{type(result.output)=}")
-            print(result.output)
             print(f"{type(clean_output)=}")
+            print(result.output)
             print(clean_output)
+            print(f"{"--recursive" in result.output=}")
             print(f"{"--recursive" in clean_output=}")
 
             assert "--recursive" in clean_output, f"Should mention --recursive option for: '{invalid_variant}'"
