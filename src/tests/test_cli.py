@@ -112,7 +112,7 @@ class TestCLI(TestCase):
         Test checking a valid Python file.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -152,7 +152,7 @@ class TestCLI(TestCase):
         Test checking a Python file with missing docstrings.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -183,7 +183,7 @@ class TestCLI(TestCase):
         Test checking a directory.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a Python file with missing docstrings
             temp_path = Path(temp_dir)
@@ -209,7 +209,7 @@ class TestCLI(TestCase):
         Test checking a directory non-recursively using --recursive=false.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create subdirectory with Python file
             temp_path = Path(temp_dir)
@@ -230,7 +230,7 @@ class TestCLI(TestCase):
         Test excluding files with patterns.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create files
             temp_path = Path(temp_dir)
@@ -254,7 +254,7 @@ class TestCLI(TestCase):
         Test quiet option suppresses success messages.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -285,7 +285,7 @@ class TestCLI(TestCase):
         Test verbose option shows detailed output.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -304,7 +304,7 @@ class TestCLI(TestCase):
         Test using a custom configuration file.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary config file
             temp_path = Path(temp_dir)
@@ -339,7 +339,7 @@ class TestCLI(TestCase):
         Test error handling for nonexistent config file.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -386,7 +386,7 @@ class TestCLI(TestCase):
         Test that various 'true' values work for --recursive option.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create subdirectory with Python file that has docstring issues
             temp_path = Path(temp_dir)
@@ -435,7 +435,7 @@ class TestCLI(TestCase):
         Test that various 'false' values work for --recursive option.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create subdirectory with Python file that has docstring issues
             temp_path = Path(temp_dir)
@@ -456,7 +456,7 @@ class TestCLI(TestCase):
         Test that --recursive defaults to true when no value is provided.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create subdirectory with Python file that has docstring issues
             temp_path = Path(temp_dir)
@@ -489,7 +489,7 @@ class TestCLI(TestCase):
         Test that invalid values for --recursive option raise appropriate errors.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -598,7 +598,7 @@ class TestCLI(TestCase):
         Test configuration error handling in check command.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -623,7 +623,7 @@ class TestCLI(TestCase):
         Test verbose output during config loading.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary Python file
             temp_path = Path(temp_dir)
@@ -644,7 +644,7 @@ class TestCLI(TestCase):
         Test automatic config file discovery.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a Python file
             temp_path = Path(temp_dir)
@@ -687,7 +687,7 @@ class TestCLI(TestCase):
         """
 
         # Test with a directory that causes an error during checking
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a file with invalid syntax to trigger an error during checking
             temp_path = Path(temp_dir)
@@ -705,7 +705,7 @@ class TestCLI(TestCase):
         Test error summary display functionality.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create multiple files with docstring issues
             temp_path = Path(temp_dir)
@@ -762,7 +762,7 @@ class TestCLI(TestCase):
         Test verbose message for directory checking.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a Python file with proper structure
             temp_path = Path(temp_dir)
@@ -799,7 +799,7 @@ class TestCLI(TestCase):
         Test exception handling in check command.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a file that will cause an exception when processed
             temp_path = Path(temp_dir)
@@ -823,7 +823,7 @@ class TestCLI(TestCase):
         Test exception handling for file checking.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a single file
             temp_path = Path(temp_dir)

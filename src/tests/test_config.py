@@ -71,7 +71,7 @@ class TestConfig(TestCase):
             """
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary config file
             temp_path = Path(temp_dir)
@@ -99,7 +99,7 @@ class TestConfig(TestCase):
             """
         )
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary config file
             temp_path = Path(temp_dir)
@@ -174,7 +174,7 @@ class TestConfig(TestCase):
         Test error handling when TOML file has syntax errors.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary config file with invalid TOML content
             temp_path = Path(temp_dir)
@@ -192,7 +192,7 @@ class TestConfig(TestCase):
         Test loading config when [tool.dfc] section doesn't exist.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary config file
             temp_path = Path(temp_dir)
@@ -222,7 +222,7 @@ class TestConfig(TestCase):
         Test loading config when sections array is missing.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary config file
             temp_path = Path(temp_dir)
@@ -249,7 +249,7 @@ class TestConfig(TestCase):
         Test SectionConfig validation with various error conditions.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Test invalid section creation through load_config with bad data
             temp_path = Path(temp_dir)
@@ -330,7 +330,7 @@ class TestConfig(TestCase):
         Test that config loading works with both tomllib and tomli.
         """
 
-        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
 
             # Create a temporary config file
             temp_path = Path(temp_dir)
