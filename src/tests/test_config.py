@@ -121,7 +121,7 @@ class TestConfig(TestCase):
 
         # Invalid type should raise error
         with pytest.raises(InvalidTypeValuesError, match="Invalid section type"):
-            SectionConfig(order=1, name="test", type="invalid_type", required=True)
+            SectionConfig(order=1, name="test", type="invalid_type", required=True)  # type:ignore
 
     def test_06_find_config_file(self) -> None:
         """
