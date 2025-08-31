@@ -97,14 +97,14 @@ Follow these steps to set up your environment:
     ```
 5. **Run tests to verify setup**: Verify your environment is working correctly by running the test suite.
     ```sh
-    uv run check-pytest
+    uv run ./src/utils/scripts.py check_pytest
     ```
 
 ## Testing Your Changes
 
 This project maintains 100% test coverage. When making changes, ensure you:
 
-1. **Run the full test suite**: Use `uv run check-pytest` to run all tests with coverage reporting
+1. **Run the full test suite**: Use `uv run ./src/utils/scripts.py check_pytest` to run all tests with coverage reporting
 2. **Test specific modules**: You can run tests for specific modules:
    ```sh
    uv run pytest src/tests/test_core.py
