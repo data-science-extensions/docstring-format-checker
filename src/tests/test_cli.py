@@ -647,7 +647,9 @@ class TestCLI(TestCase):
             # Test that config is auto-discovered
             result: Result = self.runner.invoke(app, ["check", str(py_file), "--verbose"])
             assert result.exit_code == 0
-            assert f"Using configuration from: {config_file}" in clean(result.output)
+            print(clean(result.output))
+            assert f"Using configuration from: {config_file.resolve()}" in clean(result.output)
+            raise RuntimeError()
 
     def test_29_global_examples_callback(self) -> None:
         """
