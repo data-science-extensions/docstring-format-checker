@@ -33,7 +33,11 @@ from docstring_format_checker.cli import (
     app,
     entry_point,
 )
-from tests.setup import name_func_flat_list, name_func_nested_list, strip_ansi_codes
+from tests.setup import (
+    clean,
+    name_func_flat_list,
+    name_func_nested_list,
+)
 
 
 ## --------------------------------------------------------------------------- #
@@ -60,7 +64,7 @@ class TestCLI(TestCase):
 
         result: Result = self.runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert "A CLI tool to check and validate Python docstring formatting" in result.output
+        assert "A CLI tool to check and validate Python docstring formatting" in clean(result.output)
 
     def test_02_version_callback(self) -> None:
         """
@@ -68,7 +72,7 @@ class TestCLI(TestCase):
         """
         result: Result = self.runner.invoke(app, ["--version"])
         assert result.exit_code == 0
-        assert "docstring-format-checker" in result.output
+        assert "docstring-format-checker" in clean(result.output)
 
     def test_03_version_option(self) -> None:
         """
@@ -77,7 +81,7 @@ class TestCLI(TestCase):
 
         result: Result = self.runner.invoke(app, ["--version"])
         assert result.exit_code == 0
-        assert f"docstring-format-checker version {__version__}" in result.output
+        assert f"docstring-format-checker version {__version__}" in clean(result.output)
 
     def test_04_no_arguments_shows_help(self) -> None:
         """
@@ -86,8 +90,8 @@ class TestCLI(TestCase):
 
         result: Result = self.runner.invoke(app, [])
         assert result.exit_code == 0  # Now shows help successfully
-        assert "Usage:" in result.output
-        assert "A CLI tool to check and validate Python docstring formatting and completeness" in result.output
+        assert "Usage:" in clean(result.output)
+        assert "A CLI tool to check and validate Python docstring formatting and completeness" in clean(result.output)
 
     def test_05_config_example_command(self) -> None:
         """
@@ -95,14 +99,12 @@ class TestCLI(TestCase):
         """
 
         result: Result = self.runner.invoke(app, ["config-example"])
-        print(result)
-        print(result.output)
         if result.exit_code != 0:
             print(f"{result.exit_code=}")
-            print(f"{result.output=}")
+            print(f"{clean(result.output)=}")
         assert result.exit_code == 0
-        assert "[tool.dfc]" in result.output
-        assert "[[tool.dfc.sections]]" in result.output
+        assert "[tool.dfc]" in clean(result.output)
+        assert "[[tool.dfc.sections]]" in clean(result.output)
 
     def test_06_nonexistent_file(self) -> None:
         """
@@ -111,7 +113,7 @@ class TestCLI(TestCase):
 
         result: Result = self.runner.invoke(app, ["check", "nonexistent.py"])
         assert result.exit_code == 1
-        assert "Error: Path does not exist" in result.output
+        assert "Error: Path does not exist" in clean(result.output)
 
     def test_07_check_valid_python_file(self) -> None:
         """
@@ -146,7 +148,7 @@ class TestCLI(TestCase):
 
             result: Result = self.runner.invoke(app, ["check", f.name])
             # Should succeed with default config
-            assert result.exit_code == 0 or "All docstrings are valid" in result.output
+            assert result.exit_code == 0 or "All docstrings are valid" in clean(result.output)
 
     def test_08_check_invalid_python_file(self) -> None:
         """
@@ -174,11 +176,11 @@ class TestCLI(TestCase):
 
             if result.exit_code != 1:
                 print(f"{result.exit_code=}")
-                print(f"{result.output=}")
+                print(f"{clean(result.output)=}")
 
             # Should fail due to missing docstrings
             assert result.exit_code == 1
-            assert "error" in result.output.lower()
+            assert "error" in clean(result.output).lower()
 
     def test_09_check_directory(self) -> None:
         """
@@ -204,7 +206,7 @@ class TestCLI(TestCase):
 
             if result.exit_code != 1:
                 print(f"{result.exit_code=}")
-                print(f"{result.output=}")
+                print(f"{clean(result.output)=}")
 
             # Should find issues in the directory
             assert result.exit_code == 1
@@ -250,7 +252,7 @@ class TestCLI(TestCase):
 
             if result.exit_code != 1:
                 print(f"{result.exit_code=}")
-                print(f"{result.output=}")
+                print(f"{clean(result.output)=}")
 
             # Should only check regular.py and find issues
             assert result.exit_code == 1
@@ -280,7 +282,7 @@ class TestCLI(TestCase):
             result: Result = self.runner.invoke(app, ["check", "--quiet", f.name])
             # Should succeed without any output
             assert result.exit_code == 0
-            assert result.output.strip() == ""
+            assert clean(result.output).strip() == ""
 
     def test_13_verbose_option(self) -> None:
         """
@@ -294,7 +296,7 @@ class TestCLI(TestCase):
 
             result: Result = self.runner.invoke(app, ["check", "--verbose", f.name])
             # Should show detailed output
-            assert "Checking file:" in result.output or "Using" in result.output
+            assert "Checking file:" in clean(result.output) or "Using" in clean(result.output)
 
     def test_14_custom_config_file(self) -> None:
         """
@@ -327,7 +329,7 @@ class TestCLI(TestCase):
 
                 if result.exit_code != 1:
                     print(f"{result.exit_code=}")
-                    print(f"{result.output=}")
+                    print(f"{clean(result.output)=}")
 
                 # Should use the custom config
                 assert result.exit_code == 1  # Missing docstrings
@@ -344,7 +346,7 @@ class TestCLI(TestCase):
 
             result: Result = self.runner.invoke(app, ["check", "--config", "nonexistent.toml", f.name])
             assert result.exit_code == 1
-            assert "Configuration file does not exist" in result.output
+            assert "Configuration file does not exist" in clean(result.output)
 
     @parameterized.expand(
         input=[
@@ -491,10 +493,9 @@ class TestCLI(TestCase):
             # Should fail with appropriate error message
             assert result.exit_code == 2, f"Should fail for invalid variant: '{invalid_variant}'"
             # Check for the key error message components (more robust than exact string match)
-            assert "Invalid value" in result.output, f"Should show invalid value error for: '{invalid_variant}'"
+            assert "Invalid value" in clean(result.output), f"Should show invalid value error for: '{invalid_variant}'"
             # Strip ANSI codes to handle CI environment differences
-            clean_output: str = strip_ansi_codes(result.output)
-            assert "--recursive" in clean_output, f"Should mention --recursive option for: '{invalid_variant}'"
+            assert "--recursive" in clean(result.output), f"Should mention --recursive option for: '{invalid_variant}'"
 
     def test_20_examples_callback(self) -> None:
         """
@@ -502,7 +503,7 @@ class TestCLI(TestCase):
         """
         result: Result = self.runner.invoke(app, ["config-example"])
         assert result.exit_code == 0
-        assert "Example configuration for docstring-format-checker" in result.output
+        assert "Example configuration for docstring-format-checker" in clean(result.output)
 
     def test_21_check_examples_callback(self) -> None:
         """
@@ -510,7 +511,7 @@ class TestCLI(TestCase):
         """
         result: Result = self.runner.invoke(app, ["check", "--examples"])
         assert result.exit_code == 0
-        assert "Check Command Examples" in result.output
+        assert "Check Command Examples" in clean(result.output)
 
     def test_22_help_callback(self) -> None:
         """
@@ -518,7 +519,7 @@ class TestCLI(TestCase):
         """
         result: Result = self.runner.invoke(app, ["check", "--help"])
         assert result.exit_code == 0
-        assert "Check docstrings in Python files" in result.output
+        assert "Check docstrings in Python files" in clean(result.output)
 
     def test_23_parse_boolean_flag_edge_cases(self) -> None:
         """
@@ -599,7 +600,7 @@ class TestCLI(TestCase):
 
                 result: Result = self.runner.invoke(app, ["check", f.name, "--config", config_f.name])
                 assert result.exit_code == 1  # Changed from 2 to 1
-                assert "Error" in result.output or "error" in result.output
+                assert "error" in clean(result.output).lower()
 
     def test_27_verbose_config_loading(self) -> None:
         """
@@ -646,7 +647,7 @@ class TestCLI(TestCase):
             # Test that config is auto-discovered
             result: Result = self.runner.invoke(app, ["check", str(py_file), "--verbose"])
             assert result.exit_code == 0
-            assert f"Using configuration from: {config_file}" in result.output
+            assert f"Using configuration from: {config_file}" in clean(result.output)
 
     def test_29_global_examples_callback(self) -> None:
         """
@@ -654,8 +655,8 @@ class TestCLI(TestCase):
         """
         result: Result = self.runner.invoke(app, ["--examples"])
         assert result.exit_code == 0
-        assert "Examples" in result.output
-        assert "dfc check" in result.output
+        assert "Examples" in clean(result.output)
+        assert "dfc check" in clean(result.output)
 
     def test_30_error_during_checking(self) -> None:
         """
@@ -691,8 +692,8 @@ class TestCLI(TestCase):
 
             # Should find multiple errors and display summary
             assert result.exit_code == 1
-            assert "error(s)" in result.output
-            assert "file(s)" in result.output
+            assert "error(s)" in clean(result.output)
+            assert "file(s)" in clean(result.output)
 
     @parameterized.expand(
         input=[
@@ -761,9 +762,11 @@ class TestCLI(TestCase):
             result: Result = self.runner.invoke(app, ["check", str(temp_path), "--verbose"])
 
             # Should show verbose directory checking message
-            assert result.exit_code == 0, f"Expected exit code 0, got {result.exit_code}. Output: {result.output}"
-            assert "Checking directory:" in result.output
-            assert "recursive=True" in result.output
+            assert (
+                result.exit_code == 0
+            ), f"Expected exit code 0, got {result.exit_code}. Output: {clean(result.output)}"
+            assert "Checking directory:" in clean(result.output)
+            assert "recursive=True" in clean(result.output)
 
     def test_34_check_command_exception_handling(self) -> None:
         """Test exception handling in check command."""
@@ -786,7 +789,7 @@ class TestCLI(TestCase):
 
                 # Should handle the exception and exit with code 1
                 assert result.exit_code == 1
-                assert "Error during checking: Test error" in result.output
+                assert "Error during checking: Test error" in clean(result.output)
 
     def test_35_check_file_specific_exception_handling(self) -> None:
         """
@@ -810,4 +813,4 @@ class TestCLI(TestCase):
 
                 # Should handle the exception and exit with code 1
                 assert result.exit_code == 1
-                assert "Error during checking: File check error" in result.output
+                assert "Error during checking: File check error" in clean(result.output)

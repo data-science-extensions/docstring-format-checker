@@ -24,6 +24,8 @@ __all__: list[str] = [
     "name_func_flat_list",
     "name_func_nested_list",
     "name_func_predefined_name",
+    "name_func_predefined_name",
+    "clean",
 ]
 
 
@@ -114,3 +116,6 @@ def strip_ansi_codes(text: str) -> str:
     """
     ansi_escape: re.Pattern[str] = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
     return ansi_escape.sub("", text)
+
+
+clean = strip_ansi_codes
