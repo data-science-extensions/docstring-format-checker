@@ -61,7 +61,6 @@ class TestCLI(TestCase):
         """
         Test help message is displayed.
         """
-
         result: Result = self.runner.invoke(app, ["--help"])
         assert result.exit_code == 0
         assert "A CLI tool to check and validate Python docstring formatting" in clean(result.output)
@@ -78,7 +77,6 @@ class TestCLI(TestCase):
         """
         Test --version option.
         """
-
         result: Result = self.runner.invoke(app, ["--version"])
         assert result.exit_code == 0
         assert f"docstring-format-checker version {__version__}" in clean(result.output)
@@ -87,7 +85,6 @@ class TestCLI(TestCase):
         """
         Test that no arguments shows help.
         """
-
         result: Result = self.runner.invoke(app, [])
         assert result.exit_code == 0  # Now shows help successfully
         assert "Usage:" in clean(result.output)
@@ -97,11 +94,7 @@ class TestCLI(TestCase):
         """
         Test config-example command.
         """
-
         result: Result = self.runner.invoke(app, ["config-example"])
-        if result.exit_code != 0:
-            print(f"{result.exit_code=}")
-            print(f"{clean(result.output)=}")
         assert result.exit_code == 0
         assert "[tool.dfc]" in clean(result.output)
         assert "[[tool.dfc.sections]]" in clean(result.output)
@@ -110,7 +103,6 @@ class TestCLI(TestCase):
         """
         Test error handling for nonexistent file.
         """
-
         result: Result = self.runner.invoke(app, ["check", "nonexistent.py"])
         assert result.exit_code == 1
         assert "Error: Path does not exist" in clean(result.output)
@@ -120,9 +112,12 @@ class TestCLI(TestCase):
         Test checking a valid Python file.
         """
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            f.write(
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(
                 dedent(
                     '''
                     def good_function() -> None:
@@ -133,7 +128,7 @@ class TestCLI(TestCase):
                         ???+ info "Details"
                             More detailed information here.
 
-                        Args:
+                        Params:
                             None
 
                         Returns:
@@ -144,20 +139,25 @@ class TestCLI(TestCase):
                 )
             )
 
-            f.flush()
-
-            result: Result = self.runner.invoke(app, ["check", f.name])
             # Should succeed with default config
-            assert result.exit_code == 0 or "All docstrings are valid" in clean(result.output)
+            result: Result = self.runner.invoke(app, ["check", str(py_file)])
+            assert result.exit_code == 0
+            assert "All docstrings are valid" in clean(result.output)
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
 
     def test_08_check_invalid_python_file(self) -> None:
         """
         Test checking a Python file with missing docstrings.
         """
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            f.write(
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(
                 dedent(
                     """
                     def bad_function() -> None:
@@ -170,28 +170,23 @@ class TestCLI(TestCase):
                 )
             )
 
-            f.flush()
-
-            result: Result = self.runner.invoke(app, ["check", f.name])
-
-            if result.exit_code != 1:
-                print(f"{result.exit_code=}")
-                print(f"{clean(result.output)=}")
-
             # Should fail due to missing docstrings
+            result: Result = self.runner.invoke(app, ["check", py_file.name])
             assert result.exit_code == 1
             assert "error" in clean(result.output).lower()
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
 
     def test_09_check_directory(self) -> None:
         """
         Test checking a directory.
         """
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-
-            temp_path = Path(temp_dir)
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
             # Create a Python file with missing docstrings
+            temp_path = Path(temp_dir)
             py_file: Path = temp_path.joinpath("test.py")
             py_file.write_text(
                 dedent(
@@ -202,69 +197,69 @@ class TestCLI(TestCase):
                 )
             )
 
-            result: Result = self.runner.invoke(app, ["check", str(temp_path)])
-
-            if result.exit_code != 1:
-                print(f"{result.exit_code=}")
-                print(f"{clean(result.output)=}")
-
             # Should find issues in the directory
+            result: Result = self.runner.invoke(app, ["check", str(temp_path)])
             assert result.exit_code == 1
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
 
     def test_10_check_directory_non_recursive(self) -> None:
         """
         Test checking a directory non-recursively using --recursive=false.
         """
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-
-            temp_path = Path(temp_dir)
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
             # Create subdirectory with Python file
+            temp_path = Path(temp_dir)
             subdir: Path = temp_path.joinpath("subdir")
             subdir.mkdir()
             py_file: Path = subdir.joinpath("test.py")
             py_file.write_text("def func(): pass")
 
-            result: Result = self.runner.invoke(app, ["check", "--recursive=false", str(temp_path)])
-
             # Should succeed because it doesn't check subdirectories
+            result: Result = self.runner.invoke(app, ["check", "--recursive=false", str(temp_path)])
             assert result.exit_code == 0
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
 
     def test_11_exclude_patterns(self) -> None:
         """
         Test excluding files with patterns.
         """
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-
-            temp_path = Path(temp_dir)
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
             # Create files
+            temp_path = Path(temp_dir)
             test_file: Path = temp_path.joinpath("test_something.py")
-            test_file.write_text("def func(): pass")
-
             regular_file: Path = temp_path.joinpath("regular.py")
+
+            # Write to files
+            test_file.write_text("def func(): pass")
             regular_file.write_text("def func(): pass")
 
-            # Exclude test files
-            result: Result = self.runner.invoke(app, ["check", "--exclude", "test_*.py", str(temp_path)])
-
-            if result.exit_code != 1:
-                print(f"{result.exit_code=}")
-                print(f"{clean(result.output)=}")
-
             # Should only check regular.py and find issues
+            result: Result = self.runner.invoke(app, ["check", "--exclude", "test_*.py", str(temp_path)])
             assert result.exit_code == 1
+
+            # Clean up
+            Path(test_file).unlink(missing_ok=True)
+            Path(regular_file).unlink(missing_ok=True)
 
     def test_12_quiet_option(self) -> None:
         """
         Test quiet option suppresses success messages.
         """
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            f.write(
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(
                 dedent(
                     '''
                     def good_function() -> None:
@@ -277,35 +272,44 @@ class TestCLI(TestCase):
                 )
             )
 
-            f.flush()
-
-            result: Result = self.runner.invoke(app, ["check", "--quiet", f.name])
             # Should succeed without any output
+            result: Result = self.runner.invoke(app, ["check", "--quiet", str(py_file)])
             assert result.exit_code == 0
             assert clean(result.output).strip() == ""
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
 
     def test_13_verbose_option(self) -> None:
         """
         Test verbose option shows detailed output.
         """
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            f.write("def func(): pass")
-            f.flush()
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text("def func(): pass")
 
-            result: Result = self.runner.invoke(app, ["check", "--verbose", f.name])
             # Should show detailed output
+            result: Result = self.runner.invoke(app, ["check", "--verbose", str(py_file)])
             assert "Checking file:" in clean(result.output) or "Using" in clean(result.output)
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
 
     def test_14_custom_config_file(self) -> None:
         """
         Test using a custom configuration file.
         """
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=True) as config_f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            config_f.write(
+            # Create a temporary config file
+            temp_path = Path(temp_dir)
+            config_file: Path = temp_path.joinpath("test_config.toml")
+            config_file.write_text(
                 dedent(
                     """
                     [tool.dfc]
@@ -318,35 +322,36 @@ class TestCLI(TestCase):
                 )
             )
 
-            config_f.flush()
+            # Create a temporary Python file
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text("def func(): pass")
 
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as py_f:
+            # Should use the custom config
+            result: Result = self.runner.invoke(app, ["check", "--config", str(config_file), str(py_file)])
+            assert result.exit_code == 1  # Missing docstrings
 
-                py_f.write("def func(): pass")
-                py_f.flush()
-
-                result: Result = self.runner.invoke(app, ["check", "--config", config_f.name, py_f.name])
-
-                if result.exit_code != 1:
-                    print(f"{result.exit_code=}")
-                    print(f"{clean(result.output)=}")
-
-                # Should use the custom config
-                assert result.exit_code == 1  # Missing docstrings
+            # Clean up
+            config_file.unlink(missing_ok=True)
+            py_file.unlink(missing_ok=True)
 
     def test_15_nonexistent_config_file(self) -> None:
         """
         Test error handling for nonexistent config file.
         """
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            f.write("def func(): pass")
-            f.flush()
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text("def func(): pass")
 
-            result: Result = self.runner.invoke(app, ["check", "--config", "nonexistent.toml", f.name])
+            result: Result = self.runner.invoke(app, ["check", "--config", "nonexistent.toml", str(py_file)])
             assert result.exit_code == 1
             assert "Configuration file does not exist" in clean(result.output)
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
 
     @parameterized.expand(
         input=[
@@ -381,10 +386,10 @@ class TestCLI(TestCase):
         Test that various 'true' values work for --recursive option.
         """
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
             # Create subdirectory with Python file that has docstring issues
+            temp_path = Path(temp_dir)
             subdir: Path = temp_path.joinpath("subdir")
             subdir.mkdir()
             py_file: Path = subdir.joinpath("test.py")
@@ -392,9 +397,9 @@ class TestCLI(TestCase):
 
             # Split the variant to handle space-separated arguments
             args: list[str] = true_variant.split()
-            result: Result = self.runner.invoke(app, ["check"] + args + [str(temp_path)])
 
             # Should find issues in subdirectory (recursive=true)
+            result: Result = self.runner.invoke(app, ["check"] + args + [str(temp_path)])
             assert result.exit_code == 1, f"Failed for variant: {true_variant}"
 
     @parameterized.expand(
@@ -430,10 +435,10 @@ class TestCLI(TestCase):
         Test that various 'false' values work for --recursive option.
         """
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
             # Create subdirectory with Python file that has docstring issues
+            temp_path = Path(temp_dir)
             subdir: Path = temp_path.joinpath("subdir")
             subdir.mkdir()
             py_file: Path = subdir.joinpath("test.py")
@@ -441,9 +446,9 @@ class TestCLI(TestCase):
 
             # Split the variant to handle space-separated arguments
             args: list[str] = false_variant.split()
-            result: Result = self.runner.invoke(app, ["check"] + args + [str(temp_path)])
 
             # Should succeed because it doesn't check subdirectories (recursive=false)
+            result: Result = self.runner.invoke(app, ["check"] + args + [str(temp_path)])
             assert result.exit_code == 0, f"Failed for variant: false_{false_variant}"
 
     def test_18_recursive_option_default_behavior(self) -> None:
@@ -451,10 +456,10 @@ class TestCLI(TestCase):
         Test that --recursive defaults to true when no value is provided.
         """
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
             # Create subdirectory with Python file that has docstring issues
+            temp_path = Path(temp_dir)
             subdir: Path = temp_path.joinpath("subdir")
             subdir.mkdir()
             py_file: Path = subdir.joinpath("test.py")
@@ -465,6 +470,9 @@ class TestCLI(TestCase):
 
             # Should find issues in subdirectory (default recursive=true)
             assert result.exit_code == 1
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
 
     @parameterized.expand(
         input=[
@@ -481,21 +489,24 @@ class TestCLI(TestCase):
         Test that invalid values for --recursive option raise appropriate errors.
         """
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            f.write("def func(): pass")
-            f.flush()
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text("def func(): pass")
 
             # Split the variant to handle space-separated arguments
             args: list[str] = invalid_variant.split()
-            result: Result = self.runner.invoke(app, ["check"] + args + [f.name])
+            result: Result = self.runner.invoke(app, ["check"] + args + [str(py_file)])
 
             # Should fail with appropriate error message
             assert result.exit_code == 2, f"Should fail for invalid variant: '{invalid_variant}'"
-            # Check for the key error message components (more robust than exact string match)
             assert "Invalid value" in clean(result.output), f"Should show invalid value error for: '{invalid_variant}'"
-            # Strip ANSI codes to handle CI environment differences
             assert "--recursive" in clean(result.output), f"Should mention --recursive option for: '{invalid_variant}'"
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
 
     def test_20_examples_callback(self) -> None:
         """
@@ -587,44 +598,56 @@ class TestCLI(TestCase):
         Test configuration error handling in check command.
         """
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            f.write("def good_function():\n    '''This has a docstring.'''\n    pass")
-            f.flush()
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text("def good_function():\n    '''This has a docstring.'''\n    pass")
 
             # Test with malformed config file
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=True) as config_f:
+            config_file: Path = temp_path.joinpath("bad_config.toml")
+            config_file.write_text("invalid toml content [[[")
 
-                config_f.write("invalid toml content [[[")
-                config_f.flush()
+            # Invoke the check command with the bad config file
+            result: Result = self.runner.invoke(app, ["check", str(py_file), "--config", str(config_file)])
+            assert result.exit_code == 1  # Changed from 2 to 1
+            assert "error" in clean(result.output).lower()
 
-                result: Result = self.runner.invoke(app, ["check", f.name, "--config", config_f.name])
-                assert result.exit_code == 1  # Changed from 2 to 1
-                assert "error" in clean(result.output).lower()
+            # Clean up
+            py_file.unlink(missing_ok=True)
+            config_file.unlink(missing_ok=True)
 
     def test_27_verbose_config_loading(self) -> None:
         """
         Test verbose output during config loading.
         """
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
-            f.write("def good_function():\n    '''This has a docstring.'''\n    pass")
-            f.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text("def good_function():\n    '''This has a docstring.'''\n    pass")
 
             # Test verbose with default config
-            result: Result = self.runner.invoke(app, ["check", f.name, "--verbose"])
+            result: Result = self.runner.invoke(app, ["check", str(py_file), "--verbose"])
+
             # Check if it passes or has expected content
             assert result.exit_code in [0, 1]  # Allow either success or failure
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
 
     def test_28_auto_config_discovery(self) -> None:
         """
         Test automatic config file discovery.
         """
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
             # Create a Python file
+            temp_path = Path(temp_dir)
             py_file: Path = temp_path.joinpath("test.py")
             py_file.write_text("def good_function():\n    '''This has a docstring.'''\n    pass")
 
@@ -647,8 +670,7 @@ class TestCLI(TestCase):
             # Test that config is auto-discovered
             result: Result = self.runner.invoke(app, ["check", str(py_file), "--verbose"])
             assert result.exit_code == 0
-            assert f"Using configuration from:" in clean(result.output)
-            assert str(config_file.resolve()) in clean(result.output)
+            assert f"Using configuration from: {config_file}" in clean(result.output)
 
     def test_29_global_examples_callback(self) -> None:
         """
@@ -663,11 +685,12 @@ class TestCLI(TestCase):
         """
         Test error handling during file/directory checking.
         """
+
         # Test with a directory that causes an error during checking
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
             # Create a file with invalid syntax to trigger an error during checking
+            temp_path = Path(temp_dir)
             py_file: Path = temp_path.joinpath("invalid.py")
             py_file.write_text("def func(:\n    pass")  # Invalid syntax
 
@@ -681,17 +704,17 @@ class TestCLI(TestCase):
         """
         Test error summary display functionality.
         """
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
+
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
             # Create multiple files with docstring issues
+            temp_path = Path(temp_dir)
             for i in range(3):
                 py_file: Path = temp_path.joinpath(f"test_{i}.py")
                 py_file.write_text("def func(): pass")  # Missing docstring
 
-            result: Result = self.runner.invoke(app, ["check", str(temp_path)])
-
             # Should find multiple errors and display summary
+            result: Result = self.runner.invoke(app, ["check", str(temp_path)])
             assert result.exit_code == 1
             assert "error(s)" in clean(result.output)
             assert "file(s)" in clean(result.output)
@@ -735,11 +758,14 @@ class TestCLI(TestCase):
         assert actual == expected, f"Failed for value: {value}, expected {expected}, got {actual}"
 
     def test_33_check_directory_verbose_message(self) -> None:
-        """Test verbose message for directory checking."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
+        """
+        Test verbose message for directory checking.
+        """
+
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
             # Create a Python file with proper structure
+            temp_path = Path(temp_dir)
             py_file: Path = temp_path.joinpath("test.py")
             py_file.write_text(
                 dedent(
@@ -749,7 +775,7 @@ class TestCLI(TestCase):
                         !!! note "Summary"
                             Valid docstring.
 
-                        Args:
+                        Params:
                             None
 
                         Returns:
@@ -760,9 +786,8 @@ class TestCLI(TestCase):
                 )
             )
 
-            result: Result = self.runner.invoke(app, ["check", str(temp_path), "--verbose"])
-
             # Should show verbose directory checking message
+            result: Result = self.runner.invoke(app, ["check", str(temp_path), "--verbose"])
             assert (
                 result.exit_code == 0
             ), f"Expected exit code 0, got {result.exit_code}. Output: {clean(result.output)}"
@@ -770,25 +795,26 @@ class TestCLI(TestCase):
             assert "recursive=True" in clean(result.output)
 
     def test_34_check_command_exception_handling(self) -> None:
-        """Test exception handling in check command."""
-        # Test with a path that will cause an exception
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
+        """
+        Test exception handling in check command.
+        """
+
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
             # Create a file that will cause an exception when processed
+            temp_path = Path(temp_dir)
             py_file: Path = temp_path.joinpath("test.py")
             py_file.write_text('def func():\n    """Valid docstring."""\n    pass')
 
-            # Mock the DocstringChecker to raise an exception
-
             with patch("docstring_format_checker.cli.DocstringChecker") as mock_checker:
+
+                # Mock the DocstringChecker to raise an exception
                 mock_instance = MagicMock()
                 mock_checker.return_value = mock_instance
                 mock_instance.check_directory.side_effect = Exception("Test error")
 
-                result: Result = self.runner.invoke(app, ["check", str(temp_path)])
-
                 # Should handle the exception and exit with code 1
+                result: Result = self.runner.invoke(app, ["check", str(temp_path)])
                 assert result.exit_code == 1
                 assert "Error during checking: Test error" in clean(result.output)
 
@@ -796,22 +822,22 @@ class TestCLI(TestCase):
         """
         Test exception handling for file checking.
         """
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
+
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
             # Create a single file
+            temp_path = Path(temp_dir)
             py_file: Path = temp_path.joinpath("test.py")
             py_file.write_text('def func():\n    """Valid docstring."""\n    pass')
 
-            # Mock the DocstringChecker to raise an exception for file checking
-
             with patch("docstring_format_checker.cli.DocstringChecker") as mock_checker:
+
+                # Mock the DocstringChecker to raise an exception for file checking
                 mock_instance = MagicMock()
                 mock_checker.return_value = mock_instance
                 mock_instance.check_file.side_effect = Exception("File check error")
 
-                result: Result = self.runner.invoke(app, ["check", str(py_file)])
-
                 # Should handle the exception and exit with code 1
+                result: Result = self.runner.invoke(app, ["check", str(py_file)])
                 assert result.exit_code == 1
                 assert "Error during checking: File check error" in clean(result.output)
