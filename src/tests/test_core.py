@@ -114,13 +114,18 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            f.write(python_content)
-            f.flush()
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
 
-            errors: list[DocstringError] = self.simple_checker.check_file(f.name)
+            errors: list[DocstringError] = self.simple_checker.check_file(str(py_file))
             assert len(errors) == 0
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
 
     def test_02_check_file_with_missing_docstrings(self) -> None:
         """
@@ -138,12 +143,14 @@ class TestDocstringChecker(TestCase):
             """
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            f.write(python_content)
-            f.flush()
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
 
-            errors: list[DocstringError] = self.simple_checker.check_file(f.name)
+            errors: list[DocstringError] = self.simple_checker.check_file(str(py_file))
             assert len(errors) == 2  # function and method missing docstrings
 
             # Check error details
@@ -153,6 +160,9 @@ class TestDocstringChecker(TestCase):
 
             method_error: DocstringError = next(e for e in errors if e.item_name == "bad_method")
             assert method_error.item_type == "method"
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
 
     def test_03_check_file_with_detailed_docstrings(self) -> None:
         """
@@ -183,13 +193,18 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            f.write(python_content)
-            f.flush()
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
 
-            errors: list[DocstringError] = self.detailed_checker.check_file(f.name)
+            errors: list[DocstringError] = self.detailed_checker.check_file(str(py_file))
             assert len(errors) == 0
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
 
     def test_04_check_file_with_incomplete_detailed_docstrings(self) -> None:
         """
@@ -207,14 +222,19 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            f.write(python_content)
-            f.flush()
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
 
-            errors: list[DocstringError] = self.detailed_checker.check_file(f.name)
+            errors: list[DocstringError] = self.detailed_checker.check_file(str(py_file))
             assert len(errors) == 1
             assert "Params" in errors[0].message
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
 
     def test_05_check_directory(self) -> None:
         """
@@ -223,9 +243,8 @@ class TestDocstringChecker(TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
-            temp_path = Path(temp_dir)
-
             # Create test files
+            temp_path = Path(temp_dir)
             temp_path.joinpath("good.py").write_text(
                 dedent(
                     '''
@@ -272,9 +291,8 @@ class TestDocstringChecker(TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
-            temp_path = Path(temp_dir)
-
             # Create test files
+            temp_path = Path(temp_dir)
             temp_path.joinpath("bad.py").write_text(
                 dedent(
                     """
@@ -309,9 +327,8 @@ class TestDocstringChecker(TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
-            temp_path = Path(temp_dir)
-
             # Create test files
+            temp_path = Path(temp_dir)
             temp_path.joinpath("good.py").write_text(
                 dedent(
                     '''
@@ -361,26 +378,36 @@ class TestDocstringChecker(TestCase):
             """
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            f.write(python_content)
-            f.flush()
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
 
             with pytest.raises(SyntaxError):
-                self.simple_checker.check_file(f.name)
+                self.simple_checker.check_file(str(py_file))
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
 
     def test_09_check_non_python_file(self) -> None:
         """
         Test error handling for non-Python files.
         """
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            f.write("This is not a Python file")
-            f.flush()
+            # Create a temporary non-Python file
+            temp_path = Path(temp_dir)
+            txt_file: Path = temp_path.joinpath("test.txt")
+            txt_file.write_text("This is not a Python file")
 
             with pytest.raises(InvalidFileError):
-                self.simple_checker.check_file(f.name)
+                self.simple_checker.check_file(str(txt_file))
+
+            # Clean up
+            txt_file.unlink(missing_ok=True)
 
     def test_10_check_nonexistent_file(self) -> None:
         """
@@ -415,12 +442,14 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            f.write(python_content)
-            f.flush()
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
 
-            errors: list[DocstringError] = self.simple_checker.check_file(f.name)
+            errors: list[DocstringError] = self.simple_checker.check_file(str(py_file))
             # Should only check public_function, ignore private ones
             assert len(errors) == 0
 
@@ -429,15 +458,20 @@ class TestDocstringChecker(TestCase):
         Test handling of Unicode decode errors.
         """
 
-        # Create a file with invalid UTF-8 content
-        with tempfile.NamedTemporaryFile(mode="wb", suffix=".py", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+
+            # Create a file with invalid UTF-8 content
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
 
             # Write invalid UTF-8 bytes
-            f.write(b"def function():\n    '''Invalid \xff\xfe Unicode'''\n    pass")
-            f.flush()
+            py_file.write_bytes(b"def function():\n    '''Invalid \xff\xfe Unicode'''\n    pass")
 
             with pytest.raises(ValueError, match="Cannot decode file"):
-                self.simple_checker.check_file(f.name)
+                self.simple_checker.check_file(str(py_file))
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
 
     def test_13_empty_sections_config(self) -> None:
         """
@@ -445,8 +479,7 @@ class TestDocstringChecker(TestCase):
         """
 
         empty_checker = DocstringChecker([])
-
-        python_content = dedent(
+        python_content: str = dedent(
             '''
             def function_with_docstring():
                 """
@@ -456,13 +489,19 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
-            f.write(python_content)
-            f.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            errors: list[DocstringError] = empty_checker.check_file(f.name)
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+
+            errors: list[DocstringError] = empty_checker.check_file(str(py_file))
             # No sections to check, so no errors
             assert len(errors) == 0
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
 
     def test_14_check_directory_empty(self) -> None:
         """
@@ -493,7 +532,7 @@ class TestDocstringChecker(TestCase):
         Test checking nested class methods.
         """
 
-        python_content = dedent(
+        python_content: str = dedent(
             '''
             class OuterClass:
                 """
@@ -522,12 +561,14 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            f.write(python_content)
-            f.flush()
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
 
-            errors: list[DocstringError] = self.simple_checker.check_file(f.name)
+            errors: list[DocstringError] = self.simple_checker.check_file(str(py_file))
             # Should find one error: missing_docstring_inner
             assert len(errors) == 1
             assert "Missing docstring for method" in errors[0].message
@@ -537,7 +578,7 @@ class TestDocstringChecker(TestCase):
         Test functions with decorators.
         """
 
-        python_content = dedent(
+        python_content: str = dedent(
             '''
             @property
             def decorated_function():
@@ -553,12 +594,14 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            f.write(python_content)
-            f.flush()
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
 
-            errors: list[DocstringError] = self.simple_checker.check_file(f.name)
+            errors: list[DocstringError] = self.simple_checker.check_file(str(py_file))
             # Should find one error: multi_decorated missing docstring
             assert len(errors) == 1
             assert "Missing docstring for function" in errors[0].message
@@ -577,7 +620,7 @@ class TestDocstringChecker(TestCase):
 
         complex_checker = DocstringChecker(complex_sections)
 
-        python_content = dedent(
+        python_content: str = dedent(
             '''
             def complex_function(param1, param2):
                 """
@@ -607,11 +650,14 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
-            f.write(python_content)
-            f.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            errors: list[DocstringError] = complex_checker.check_file(f.name)
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+
+            errors: list[DocstringError] = complex_checker.check_file(str(py_file))
             # Should find errors in incomplete_function
             assert len(errors) > 0
             error_messages: list[str] = [error.message for error in errors]
@@ -641,11 +687,14 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
-            f.write(python_content)
-            f.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            errors: list[DocstringError] = self.detailed_checker.check_file(f.name)
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+
+            errors: list[DocstringError] = self.detailed_checker.check_file(str(py_file))
             # Should handle gracefully and report appropriate errors
             assert isinstance(errors, list)
 
@@ -683,11 +732,14 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
-            f.write(python_content)
-            f.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            errors: list[DocstringError] = self.simple_checker.check_file(f.name)
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+
+            errors: list[DocstringError] = self.simple_checker.check_file(str(py_file))
             # Should find errors for missing docstrings (excluding private methods starting with _)
             # In simple config, private methods are likely ignored, so check dunder methods only
             error_methods: list[str] = [error.message for error in errors]
@@ -711,11 +763,14 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
-            f.write(python_content)
-            f.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            errors: list[DocstringError] = self.simple_checker.check_file(f.name)
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+
+            errors: list[DocstringError] = self.simple_checker.check_file(str(py_file))
             # Should find one error: async_missing_docstring
             assert len(errors) == 1
             assert "Missing docstring for function" in errors[0].message
@@ -739,11 +794,14 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
-            f.write(python_content)
-            f.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            errors: list[DocstringError] = self.simple_checker.check_file(f.name)
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+
+            errors: list[DocstringError] = self.simple_checker.check_file(str(py_file))
             # Should only check regular_function, no errors about lambdas
             assert len(errors) == 0
 
@@ -757,12 +815,16 @@ class TestDocstringChecker(TestCase):
             self.simple_checker.check_file("/non/existent/file.py")
 
         # Test with non-Python file
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=True) as f:
-            f.write("This is not Python")
-            f.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+            temp_path = Path(temp_dir)
+            txt_file: Path = temp_path.joinpath("test.txt")
+            txt_file.write_text("This is not Python")
 
             with pytest.raises(InvalidFileError, match="File must be a Python file"):
-                self.simple_checker.check_file(f.name)
+                self.simple_checker.check_file(str(txt_file))
+
+            # Clean up
+            txt_file.unlink(missing_ok=True)
 
     def test_24_check_directory_error_handling(self) -> None:
         """
@@ -774,12 +836,16 @@ class TestDocstringChecker(TestCase):
             self.simple_checker.check_directory("/nonexistent/directory")
 
         # Test with file instead of directory
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
-            f.write("def test(): pass")
-            f.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text("def test(): pass")
 
             with pytest.raises(DirectoryNotFoundError):
-                self.simple_checker.check_directory(f.name)
+                self.simple_checker.check_directory(str(py_file))
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
 
     def test_25_section_order_validation(self) -> None:
         """
@@ -812,11 +878,14 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
-            f.write(python_content)
-            f.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            errors: list[DocstringError] = ordered_checker.check_file(f.name)
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+
+            errors: list[DocstringError] = ordered_checker.check_file(str(py_file))
             # Should find error about section order
             assert len(errors) > 0
             error_messages: list[str] = [error.message for error in errors]
@@ -866,7 +935,7 @@ class TestDocstringChecker(TestCase):
 
         checker = DocstringChecker(sections)
 
-        python_content = dedent(
+        python_content: str = dedent(
             '''
             def function_with_list_sections():
                 """
@@ -890,11 +959,14 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
-            f.write(python_content)
-            f.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            errors: list[DocstringError] = checker.check_file(f.name)
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+
+            errors: list[DocstringError] = checker.check_file(str(py_file))
             # May have errors for missing sections in the second function
             # This test ensures list_type and list_name sections are processed
             assert isinstance(errors, list)
@@ -922,11 +994,14 @@ class TestDocstringChecker(TestCase):
             """
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
-            f.write(python_content)
-            f.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            errors: list[DocstringError] = checker.check_file(f.name)
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+
+            errors: list[DocstringError] = checker.check_file(str(py_file))
             # Should find errors for missing docstrings
             assert len(errors) >= 2  # Function and class/method
 
@@ -967,11 +1042,14 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
-            f.write(python_content)
-            f.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            errors: list[DocstringError] = checker.check_file(f.name)
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+
+            errors: list[DocstringError] = checker.check_file(str(py_file))
             # Should find errors for missing/invalid sections
             assert len(errors) > 0
 
@@ -1003,11 +1081,14 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
-            f.write(python_content)
-            f.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            errors: list[DocstringError] = checker.check_file(f.name)
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+
+            errors: list[DocstringError] = checker.check_file(str(py_file))
             # Should find error for missing authors section
             assert len(errors) > 0
 
@@ -1038,11 +1119,14 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
-            f.write(python_content)
-            f.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            errors: list[DocstringError] = checker.check_file(f.name)
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+
+            errors: list[DocstringError] = checker.check_file(str(py_file))
             # Should find error for missing yields section
             assert len(errors) > 0
 
@@ -1081,11 +1165,14 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
-            f.write(python_content)
-            f.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            errors: list[DocstringError] = checker.check_file(f.name)
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+
+            errors: list[DocstringError] = checker.check_file(str(py_file))
             # Should find error for having both returns and yields
             assert len(errors) > 0
 
@@ -1111,11 +1198,14 @@ class TestDocstringChecker(TestCase):
             """
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
-            f.write(python_content)
-            f.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            errors: list[DocstringError] = checker.check_file(f.name)
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+
+            errors: list[DocstringError] = checker.check_file(str(py_file))
             # Should find missing docstring error
             assert len(errors) > 0
 
@@ -1158,14 +1248,19 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as f:
-            f.write(python_content)
-            f.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            errors: list[DocstringError] = checker.check_file(f.name)
+            # Create a temporary Python file
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
+
             # Should find error for missing examples section
             assert len(errors) > 0
-
             error_messages: list[str] = [error.message for error in errors]
             assert any("examples" in msg.lower() for msg in error_messages)
 
@@ -1173,8 +1268,8 @@ class TestDocstringChecker(TestCase):
         """
         Test CLI main execution for coverage.
         """
-        # This tests the __main__ execution path
 
+        # This tests the __main__ execution path
         # Test the __main__ execution by running the module
         result: CompletedProcess[str] = subprocess.run(
             [sys.executable, "-m", "docstring_format_checker.cli", "--help"],
@@ -1211,16 +1306,19 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as temp_file:
-            temp_file.write(python_content)
-            temp_file.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            temp_path = Path(temp_file.name)
-            errors: list[DocstringError] = checker.check_file(temp_path)
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
 
             # Should validate as true for unknown free text sections
             # This tests the default return True for unknown sections in _validate_section line 398
             assert len(errors) == 0, f"Should not have errors for unknown free text section, got: {errors}"
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
 
     def test_37_summary_section_simple_docstring_validation(self) -> None:
         """
@@ -1244,15 +1342,18 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as temp_file:
-            temp_file.write(python_content)
-            temp_file.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            temp_path = Path(temp_file.name)
-            errors: list[DocstringError] = checker.check_file(temp_path)
+            temp_path = Path(temp_dir)
+            py_file = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
 
             # Should validate as true - this tests line 398: return len(docstring.strip()) > 0
             assert len(errors) == 0, f"Should not have errors for simple summary docstring, got: {errors}"
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
 
     def test_38_summary_section_formal_pattern_validation(self) -> None:
         """
@@ -1277,12 +1378,15 @@ class TestDocstringChecker(TestCase):
             '''
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=True) as temp_file:
-            temp_file.write(python_content)
-            temp_file.flush()
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            temp_path = Path(temp_file.name)
-            errors: list[DocstringError] = checker.check_file(temp_path)
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
 
             # Should validate as true - this tests line 398: return True for formal pattern
             assert len(errors) == 0, f"Should not have errors for formal summary pattern, got: {errors}"
+
+            # Clean up
+            py_file.unlink(missing_ok=True)

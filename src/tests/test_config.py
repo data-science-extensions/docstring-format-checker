@@ -71,15 +71,20 @@ class TestConfig(TestCase):
             """
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            f.write(toml_content)
-            f.flush()
+            # Create a temporary config file
+            temp_path = Path(temp_dir)
+            config_file: Path = temp_path.joinpath("test_config.toml")
+            config_file.write_text(toml_content)
 
-            config: list[SectionConfig] = load_config(f.name)
+            config: list[SectionConfig] = load_config(str(config_file))
             assert len(config) == 2
             assert config[0].name == "summary"
             assert config[1].name == "params"
+
+            # Clean up
+            config_file.unlink(missing_ok=True)
 
     def test_03_load_config_alternative_table_name(self) -> None:
 
@@ -94,14 +99,19 @@ class TestConfig(TestCase):
             """
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            f.write(toml_content)
-            f.flush()
+            # Create a temporary config file
+            temp_path = Path(temp_dir)
+            config_file: Path = temp_path.joinpath("test_config.toml")
+            config_file.write_text(toml_content)
 
-            config: list[SectionConfig] = load_config(f.name)
+            config: list[SectionConfig] = load_config(str(config_file))
             assert len(config) == 1
             assert config[0].name == "test"
+
+            # Clean up
+            config_file.unlink(missing_ok=True)
 
     def test_04_load_config_file_not_found(self) -> None:
         """
@@ -131,6 +141,7 @@ class TestConfig(TestCase):
         # Create temporary directory structure
         with tempfile.TemporaryDirectory() as temp_dir:
 
+            # Create subdirectory structure
             temp_path = Path(temp_dir)
             subdir: Path = temp_path.joinpath("subdir", "deeper")
             subdir.mkdir(parents=True)
@@ -163,24 +174,30 @@ class TestConfig(TestCase):
         Test error handling when TOML file has syntax errors.
         """
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            # Write invalid TOML content
-            f.write("invalid toml [[[syntax")
-            f.flush()
+            # Create a temporary config file with invalid TOML content
+            temp_path = Path(temp_dir)
+            config_file: Path = temp_path.joinpath("bad_config.toml")
+            config_file.write_text("invalid toml [[[syntax")
 
             with raises(InvalidConfigError, match="Failed to parse TOML file"):
-                load_config(f.name)
+                load_config(str(config_file))
+
+            # Clean up
+            config_file.unlink(missing_ok=True)
 
     def test_08_load_config_missing_tool_section(self) -> None:
         """
         Test loading config when [tool.dfc] section doesn't exist.
         """
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            # Write TOML without tool.dfc section
-            f.write(
+            # Create a temporary config file
+            temp_path = Path(temp_dir)
+            config_file: Path = temp_path.joinpath("no_tool_section.toml")
+            config_file.write_text(
                 dedent(
                     """
                     [build-system]
@@ -192,22 +209,25 @@ class TestConfig(TestCase):
                 ).strip()
             )
 
-            f.flush()
-
             # Should return default config when no dfc section found
-            config: list[SectionConfig] = load_config(f.name)
+            config: list[SectionConfig] = load_config(str(config_file))
             assert isinstance(config, list)
             assert len(config) > 0  # DEFAULT_CONFIG has sections
+
+            # Clean up
+            config_file.unlink(missing_ok=True)
 
     def test_09_load_config_missing_sections_array(self) -> None:
         """
         Test loading config when sections array is missing.
         """
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            # Write TOML with tool.dfc but no sections
-            f.write(
+            # Create a temporary config file
+            temp_path = Path(temp_dir)
+            config_file: Path = temp_path.joinpath("no_sections.toml")
+            config_file.write_text(
                 dedent(
                     """
                     [tool.dfc]
@@ -216,23 +236,25 @@ class TestConfig(TestCase):
                 ).strip()
             )
 
-            f.flush()
-
             # Should return default config when no sections found
-            config: list[SectionConfig] = load_config(f.name)
+            config: list[SectionConfig] = load_config(str(config_file))
             assert isinstance(config, list)
             assert len(config) > 0  # Returns DEFAULT_CONFIG (has 8 sections)
+
+            # Clean up
+            config_file.unlink(missing_ok=True)
 
     def test_10_section_config_validation_errors(self) -> None:
         """
         Test SectionConfig validation with various error conditions.
         """
 
-        # Test invalid section creation through load_config with bad data
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            # Missing required fields
-            f.write(
+            # Test invalid section creation through load_config with bad data
+            temp_path = Path(temp_dir)
+            config_file1: Path = temp_path.joinpath("missing_fields.toml")
+            config_file1.write_text(
                 dedent(
                     """
                     [tool.dfc]
@@ -244,15 +266,12 @@ class TestConfig(TestCase):
                 ).strip()
             )
 
-            f.flush()
-
             with raises(InvalidConfigError, match="Invalid section configuration"):
-                load_config(f.name)
+                load_config(str(config_file1))
 
-        # Test section with invalid type through config loading
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=True) as f:
-
-            f.write(
+            # Test section with invalid type through config loading
+            config_file2: Path = temp_path.joinpath("invalid_type.toml")
+            config_file2.write_text(
                 dedent(
                     """
                     [tool.dfc]
@@ -266,10 +285,12 @@ class TestConfig(TestCase):
                 ).strip()
             )
 
-            f.flush()
-
             with raises(InvalidConfigError, match="Invalid section configuration"):
-                load_config(f.name)
+                load_config(str(config_file2))
+
+            # Clean up
+            config_file1.unlink(missing_ok=True)
+            config_file2.unlink(missing_ok=True)
 
     def test_11_alternative_config_file_discovery(self) -> None:
         """
@@ -278,9 +299,8 @@ class TestConfig(TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
-            temp_path = Path(temp_dir)
-
             # Create pyproject.toml file with dfc config
+            temp_path = Path(temp_dir)
             pyproject_config: Path = temp_path.joinpath("pyproject.toml")
             pyproject_config.write_text(
                 dedent(
@@ -310,9 +330,12 @@ class TestConfig(TestCase):
         Test that config loading works with both tomllib and tomli.
         """
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=True) as f:
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
 
-            f.write(
+            # Create a temporary config file
+            temp_path = Path(temp_dir)
+            config_file: Path = temp_path.joinpath("version_compat.toml")
+            config_file.write_text(
                 dedent(
                     """
                     [tool.dfc]
@@ -326,12 +349,13 @@ class TestConfig(TestCase):
                 ).strip()
             )
 
-            f.flush()
-
             # This should work regardless of Python version
-            config: list[SectionConfig] = load_config(f.name)
+            config: list[SectionConfig] = load_config(str(config_file))
             assert len(config) == 1
             assert config[0].name == "summary"
+
+            # Clean up
+            config_file.unlink(missing_ok=True)
 
     def test_14_load_config_no_pyproject_in_cwd(self) -> None:
         """
@@ -393,9 +417,8 @@ class TestConfig(TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
-            temp_path = Path(temp_dir)
-
             # Create a malformed pyproject.toml
+            temp_path = Path(temp_dir)
             pyproject_path: Path = temp_path.joinpath("pyproject.toml")
             pyproject_path.write_text("invalid toml content [[[")
 
@@ -447,7 +470,7 @@ class TestConfig(TestCase):
         from docstring_format_checker.config import _validate_config_order
 
         # Create config sections with duplicate orders
-        sections = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True),
             SectionConfig(order=1, name="params", type="list_name_and_type", required=True),
             SectionConfig(order=2, name="returns", type="list_name_and_type", required=False),
@@ -467,7 +490,7 @@ class TestConfig(TestCase):
         from docstring_format_checker.config import _validate_config_order
 
         # Create config sections with multiple duplicate orders
-        sections = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True),
             SectionConfig(order=1, name="params", type="list_name_and_type", required=True),
             SectionConfig(order=2, name="returns", type="list_name_and_type", required=False),
@@ -488,7 +511,7 @@ class TestConfig(TestCase):
         from docstring_format_checker.config import _validate_config_order
 
         # Create config sections with unique orders
-        sections = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True),
             SectionConfig(order=2, name="params", type="list_name_and_type", required=True),
             SectionConfig(order=3, name="returns", type="list_name_and_type", required=False),
