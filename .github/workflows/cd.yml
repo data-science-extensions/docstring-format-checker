@@ -73,7 +73,7 @@ jobs:
 
       - name: Run checks
         id: run-checks
-        run: uv run check
+        run: uv run ./src/utils/scripts.py check
 
       - name: Add coverage report
         id: add-coverage-report
