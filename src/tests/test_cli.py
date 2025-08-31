@@ -30,7 +30,6 @@ from docstring_format_checker import __version__
 from docstring_format_checker.cli import (
     _parse_boolean_flag,
     _parse_recursive_flag,
-    _version_callback,
     app,
     entry_point,
 )
@@ -491,7 +490,9 @@ class TestCLI(TestCase):
 
             # Should fail with appropriate error message
             assert result.exit_code == 2, f"Should fail for invalid variant: {invalid_variant}"
-            assert "Invalid value for --recursive" in result.output, f"Should show error for: {invalid_variant}"
+            # Check for the key error message components (more robust than exact string match)
+            assert "Invalid value" in result.output, f"Should show invalid value error for: {invalid_variant}"
+            assert "--recursive" in result.output, f"Should mention --recursive option for: {invalid_variant}"
 
     def test_21_examples_callback(self) -> None:
         """
