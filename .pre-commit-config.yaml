@@ -73,7 +73,7 @@ repos:
       - id: pyupgrade
         name: Upgrade Python features
         args:
-          - "--py39-plus"
+          - "--py37-plus"
 
   # Check spelling
   - repo: https://github.com/codespell-project/codespell
