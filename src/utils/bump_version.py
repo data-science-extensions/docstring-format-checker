@@ -143,3 +143,7 @@ def update_files(files: list[DotDict]) -> None:
 
 def main() -> None:
     update_files(get_config())
+
+
+if __name__ == "__main__":
+    main()
