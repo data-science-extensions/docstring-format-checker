@@ -4,7 +4,7 @@ Docstring Format Checker.
 A CLI tool to check and validate Python docstring formatting and completeness.
 """
 
-__version__ = "0.1.0"
+__version__ = "v0.2.0"
 __author__ = "Chris Mahoney"
 __email__ = "docstring-format-checker@data-science-extensions.com"
 
