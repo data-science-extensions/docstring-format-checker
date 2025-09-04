@@ -199,7 +199,7 @@ jobs:
           name: dist
           path: dist
 
-      - name: Pubhlish Package
+      - name: Publish Package
         id: publish-package
         run: uv publish --token=${{ env.PYPI_TOKEN }} --no-cache dist/*
 
