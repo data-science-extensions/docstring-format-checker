@@ -242,6 +242,28 @@ class DocstringChecker:
 
         return results
 
+    def _is_overload_function(self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> bool:
+        """
+        !!! note "Summary"
+            Check if a function definition is decorated with @overload.
+
+        Params:
+            node (Union[ast.FunctionDef, ast.AsyncFunctionDef]):
+                The function node to check for @overload decorator.
+
+        Returns:
+            (bool):
+                True if the function has @overload decorator, False otherwise.
+        """
+        for decorator in node.decorator_list:
+            # Handle direct name reference: @overload
+            if isinstance(decorator, ast.Name) and decorator.id == "overload":
+                return True
+            # Handle attribute reference: @typing.overload
+            elif isinstance(decorator, ast.Attribute) and decorator.attr == "overload":
+                return True
+        return False
+
     def _extract_items(self, tree: ast.AST) -> list[FunctionAndClassDetails]:
         """
         !!! note "Summary"
@@ -260,8 +282,9 @@ class DocstringChecker:
 
         class ItemVisitor(ast.NodeVisitor):
 
-            def __init__(self) -> None:
+            def __init__(self, checker: DocstringChecker) -> None:
                 self.class_stack: list[str] = []
+                self.checker: DocstringChecker = checker
 
             def visit_ClassDef(self, node: ast.ClassDef) -> None:
                 if not node.name.startswith("_"):  # Skip private classes
@@ -288,23 +311,27 @@ class DocstringChecker:
 
             def _visit_function(self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> None:
                 """Visit function definition node (sync or async)."""
-                if not node.name.startswith("_"):  # Skip private functions
-                    item_type: Literal["function", "method"] = "method" if self.class_stack else "function"
-                    parent_class: Optional[str] = self.class_stack[-1] if self.class_stack else None
 
-                    items.append(
-                        FunctionAndClassDetails(
-                            item_type=item_type,
-                            name=node.name,
-                            node=node,
-                            lineno=node.lineno,
-                            parent_class=parent_class,
+                if not node.name.startswith("_"):  # Skip private functions
+                    # Skip @overload functions - they don't need docstrings
+
+                    if not self.checker._is_overload_function(node):
+                        item_type: Literal["function", "method"] = "method" if self.class_stack else "function"
+                        parent_class: Optional[str] = self.class_stack[-1] if self.class_stack else None
+
+                        items.append(
+                            FunctionAndClassDetails(
+                                item_type=item_type,
+                                name=node.name,
+                                node=node,
+                                lineno=node.lineno,
+                                parent_class=parent_class,
+                            )
                         )
-                    )
 
                 self.generic_visit(node)
 
-        visitor = ItemVisitor()
+        visitor = ItemVisitor(self)
         visitor.visit(tree)
 
         return items
