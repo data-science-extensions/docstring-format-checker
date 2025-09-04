@@ -13,8 +13,8 @@
 # ## Python StdLib Imports ----
 from unittest import TestCase
 
-# ## Python Third Party Imports ----
-from toolbox_python import __version__ as version
+# ## Local First Party Imports ----
+from docstring_format_checker import __version__ as version
 
 
 # ---------------------------------------------------------------------------- #
@@ -22,7 +22,7 @@ from toolbox_python import __version__ as version
 # ---------------------------------------------------------------------------- #
 
 
-__version__ = "v0.2.0"
+__version__ = "v0.1.0"
 
 
 # ---------------------------------------------------------------------------- #
