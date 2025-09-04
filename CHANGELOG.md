@@ -9,6 +9,30 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v0.2.0"
+
+    ## **v0.2.0 - Allow app to properly handle functions with @overload decorator**
+
+    <!-- md:tag v0.2.0 --><br>
+    <!-- md:date 2025-09-04 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v0.2.0](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v0.2.0) -->
+
+    ??? note "Release Notes"
+
+        ### What's Changed        * Fix `@overload` Function Handling: Enhance Docstring Checker to Properly Ignore Function Type Overloads by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/2                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.1.0...v0.2.0
+
+    ??? abstract "Updates"
+
+        * typo (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/a4cde508b5bbf8c3f95f95326e773f9c7aaaf07a)
+
+        * Fix typo (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/42936b4793b043825ed3687209eb568ab23824d9)
+
+        * Fix bug regarding bumping versions during CD workflow (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/36f4d0769ae0762f02d82317c5f9a8a8623b1fd3)
+
+        * Add support for ignoring `@overload` functions in docstring checks (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/6e610c755049b51a9ff39466109a6d68fbd61fb4)
+
+
+
 !!! info "v0.1.0"
 
     ## **v0.1.0 - First Minor Release**
