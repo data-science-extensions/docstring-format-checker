@@ -1390,3 +1390,358 @@ class TestDocstringChecker(TestCase):
 
             # Clean up
             py_file.unlink(missing_ok=True)
+
+    def test_39_overload_functions_ignored(self) -> None:
+        """
+        Test that functions with @overload decorator are ignored.
+        """
+
+        checker: DocstringChecker = simple_checker()
+
+        # Python content with @overload functions
+        python_content: str = dedent(
+            '''
+            from typing import overload, Union
+
+            @overload
+            def example_function(x: int) -> int: ...
+            @overload
+            def example_function(x: str) -> str: ...
+            def example_function(x: Union[int, str]) -> Union[int, str]:
+                """
+                !!! note "Summary"
+                    A function with overloads.
+
+                Params:
+                    x (Union[int, str]):
+                        Input parameter.
+
+                Returns:
+                    (Union[int, str]):
+                        Same type as input.
+                """
+                return x
+
+            def regular_function():
+                """
+                !!! note "Summary"
+                    A regular function with proper docstring.
+                """
+                pass
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+            # Should have no errors - @overload functions are ignored
+            assert len(errors) == 0, f"@overload functions should be ignored, got: {errors}"
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
+
+    def test_40_overload_functions_with_typing_prefix(self) -> None:
+        """
+        Test that functions with @typing.overload decorator are ignored.
+        """
+
+        checker: DocstringChecker = simple_checker()
+
+        # Python content with @typing.overload functions
+        python_content: str = dedent(
+            '''
+            import typing
+
+            @typing.overload
+            def example_function(x: int) -> int: ...
+            @typing.overload
+            def example_function(x: str) -> str: ...
+            def example_function(x: typing.Union[int, str]) -> typing.Union[int, str]:
+                """
+                !!! note "Summary"
+                    A function with overloads using typing.overload.
+
+                Params:
+                    x (typing.Union[int, str]):
+                        Input parameter.
+
+                Returns:
+                    (typing.Union[int, str]):
+                        Same type as input.
+                """
+                return x
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+            # Should have no errors - @typing.overload functions are ignored
+            assert len(errors) == 0, f"@typing.overload functions should be ignored, got: {errors}"
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
+
+    def test_41_overload_missing_implementation_docstring(self) -> None:
+        """
+        Test that missing docstring on implementation function (not @overload) is caught.
+        """
+
+        checker: DocstringChecker = simple_checker()
+
+        # Python content with @overload functions but missing docstring on implementation
+        python_content: str = dedent(
+            """
+            from typing import overload, Union
+
+            @overload
+            def example_function(x: int) -> int: ...
+            @overload
+            def example_function(x: str) -> str: ...
+            def example_function(x: Union[int, str]) -> Union[int, str]:
+                # Missing docstring here
+                return x
+            """
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+            # Should have one error for the implementation function missing docstring
+            assert len(errors) == 1, f"Expected 1 error for missing implementation docstring, got: {len(errors)}"
+            assert "Missing docstring for function" in errors[0].message
+            assert errors[0].item_name == "example_function"
+            # The error should be on the line of the implementation, not the overloads
+            assert errors[0].line_number > 6  # Should be on the implementation line
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
+
+    def test_42_mixed_overload_and_regular_functions(self) -> None:
+        """
+        Test a mix of @overload functions, regular functions with docstrings, and regular functions without.
+        """
+
+        # Use a checker that only requires summary, not params
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True),
+        ]
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Python content mixing overload and regular functions
+        python_content: str = dedent(
+            '''
+            from typing import overload, Union
+
+            @overload
+            def overload_func(x: int) -> int: ...
+            @overload
+            def overload_func(x: str) -> str: ...
+            def overload_func(x: Union[int, str]) -> Union[int, str]:
+                """Implementation of overloaded function."""
+                return x
+
+            def good_regular_function():
+                """A regular function with proper docstring."""
+                pass
+
+            def bad_regular_function():
+                # This one is missing a docstring
+                pass
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+            # Should have one error only for the regular function without docstring
+            assert len(errors) == 1, f"Expected 1 error for bad_regular_function, got: {len(errors)}"
+            assert "Missing docstring for function" in errors[0].message
+            assert errors[0].item_name == "bad_regular_function"
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
+
+    def test_43_async_overload_functions(self) -> None:
+        """
+        Test that async functions with @overload decorator are ignored.
+        """
+
+        checker: DocstringChecker = simple_checker()
+
+        # Python content with async @overload functions
+        python_content: str = dedent(
+            '''
+            from typing import overload, Union
+            import asyncio
+
+            @overload
+            async def async_example(x: int) -> int: ...
+            @overload
+            async def async_example(x: str) -> str: ...
+            async def async_example(x: Union[int, str]) -> Union[int, str]:
+                """
+                !!! note "Summary"
+                    An async function with overloads.
+
+                Params:
+                    x (Union[int, str]):
+                        Input parameter.
+
+                Returns:
+                    (Union[int, str]):
+                        Same type as input.
+                """
+                return x
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+            # Should have no errors - async @overload functions are ignored
+            assert len(errors) == 0, f"Async @overload functions should be ignored, got: {errors}"
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
+
+    def test_44_overload_functions_in_class(self) -> None:
+        """
+        Test that @overload methods in classes are handled correctly.
+        """
+
+        checker: DocstringChecker = simple_checker()
+
+        # Python content with @overload methods in a class
+        python_content: str = dedent(
+            '''
+            from typing import overload, Union
+
+            class ExampleClass:
+                """
+                !!! note "Summary"
+                    Example class with overloaded methods.
+                """
+
+                @overload
+                def method(self, x: int) -> int: ...
+                @overload
+                def method(self, x: str) -> str: ...
+                def method(self, x: Union[int, str]) -> Union[int, str]:
+                    """
+                    !!! note "Summary"
+                        Overloaded method implementation.
+
+                    Params:
+                        x (Union[int, str]):
+                            Input parameter.
+
+                    Returns:
+                        (Union[int, str]):
+                            Same type as input.
+                    """
+                    return x
+
+                def regular_method(self):
+                    """
+                    !!! note "Summary"
+                        A regular method with proper docstring.
+                    """
+                    pass
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+            # Should have no errors - @overload methods are ignored
+            assert len(errors) == 0, f"@overload methods in class should be ignored, got: {errors}"
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
+
+    def test_45_overload_detection_helper_method(self) -> None:
+        """
+        Test the _is_overload_function helper method directly.
+        """
+        # ## Python StdLib Imports ----
+        import ast
+
+        checker: DocstringChecker = simple_checker()
+
+        # Test direct @overload
+        overload_code = dedent(
+            """
+            from typing import overload
+
+            @overload
+            def func(x: int) -> int: ...
+        """
+        ).strip()
+
+        tree = ast.parse(overload_code)
+        func_node = tree.body[1]  # Second node is the function
+        assert isinstance(func_node, ast.FunctionDef)
+        assert checker._is_overload_function(func_node), "Should detect @overload decorator"
+
+        # Test @typing.overload
+        typing_overload_code = dedent(
+            """
+            import typing
+
+            @typing.overload
+            def func(x: int) -> int: ...
+        """
+        ).strip()
+
+        tree = ast.parse(typing_overload_code)
+        func_node = tree.body[1]  # Second node is the function
+        assert isinstance(func_node, ast.FunctionDef)
+        assert checker._is_overload_function(func_node), "Should detect @typing.overload decorator"
+
+        # Test regular function without @overload
+        regular_code = dedent(
+            """
+            def func(x: int) -> int:
+                return x
+        """
+        ).strip()
+
+        tree = ast.parse(regular_code)
+        func_node = tree.body[0]  # First node is the function
+        assert isinstance(func_node, ast.FunctionDef)
+        assert not checker._is_overload_function(func_node), "Should not detect @overload on regular function"
+
+        # Test function with other decorator
+        other_decorator_code = dedent(
+            """
+            @property
+            def func(self):
+                return self._value
+        """
+        ).strip()
+
+        tree = ast.parse(other_decorator_code)
+        func_node = tree.body[0]  # First node is the function
+        assert isinstance(func_node, ast.FunctionDef)
+        assert not checker._is_overload_function(
+            func_node
+        ), "Should not detect @overload on function with other decorators"
