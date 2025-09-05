@@ -47,7 +47,7 @@ import ast
 import fnmatch
 import re
 from pathlib import Path
-from typing import Literal, NamedTuple, Optional, Union
+from typing import Iterator, Literal, NamedTuple, Optional, Union
 
 # ## Local First Party Imports ----
 from docstring_format_checker.config import SectionConfig
@@ -459,6 +459,14 @@ class DocstringChecker:
         if self._has_both_returns_and_yields(docstring):
             errors.append("Docstring cannot have both Returns and Yields sections")
 
+        # Check for undefined sections in docstring
+        undefined_errors: list[str] = self._check_undefined_sections(docstring)
+        errors.extend(undefined_errors)
+
+        # Check admonition values match configuration
+        admonition_errors: list[str] = self._check_admonition_values(docstring)
+        errors.extend(admonition_errors)
+
         if errors:
             combined_message: str = "; ".join(errors)
             raise DocstringError(
@@ -694,5 +702,95 @@ class DocstringChecker:
             (bool):
                 `True` if the section exists, `False` otherwise.
         """
-        pattern = rf"{re.escape(section_name)}:"
+        pattern: str = rf"{re.escape(section_name)}:"
         return bool(re.search(pattern, docstring, re.IGNORECASE))
+
+    def _check_undefined_sections(self, docstring: str) -> list[str]:
+        """
+        !!! note "Summary"
+            Check for sections in docstring that are not defined in configuration.
+
+        Params:
+            docstring (str):
+                The docstring to check.
+
+        Returns:
+            (list[str]):
+                A list of error messages for undefined sections.
+        """
+        errors: list[str] = []
+
+        # Get all configured section names (case-insensitive)
+        configured_sections: set[str] = {section.name.lower() for section in self.sections_config}
+
+        # Common patterns for different section types
+        section_patterns: list[tuple[str, str]] = [
+            # Standard sections with colons
+            (r"(\w+):\s*", "colon"),
+            # Admonition sections with various prefixes
+            (r"(?:\?\?\?[+]?|!!!)\s+\w+\s+\"([^\"]+)\"", "admonition"),
+        ]
+
+        found_sections: set[str] = set()
+
+        for pattern, pattern_type in section_patterns:
+            matches: Iterator[re.Match[str]] = re.finditer(pattern, docstring, re.IGNORECASE | re.MULTILINE)
+            for match in matches:
+                section_name: str = match.group(1).lower().strip()
+
+                # Skip empty matches or common docstring content
+                if not section_name or section_name in ["", "py", "python", "sh", "shell"]:
+                    continue
+
+                # Skip code blocks and inline code
+                if any(char in section_name for char in ["`", ".", "/", "\\"]):
+                    continue
+
+                found_sections.add(section_name)
+
+        # Check which found sections are not configured
+        for section_name in found_sections:
+            if section_name not in configured_sections:
+                errors.append(f"Section '{section_name}' found in docstring but not defined in configuration")
+
+        return errors
+
+    def _check_admonition_values(self, docstring: str) -> list[str]:
+        """
+        !!! note "Summary"
+            Check that admonition values in docstring match configuration.
+
+        Params:
+            docstring (str):
+                The docstring to check.
+
+        Returns:
+            (list[str]):
+                A list of error messages for mismatched admonitions.
+        """
+        errors: list[str] = []
+
+        # Create mapping of section names to expected admonitions
+        section_admonitions: dict[str, str] = {}
+        for section in self.sections_config:
+            if section.type == "free_text" and section.admonition:
+                section_admonitions[section.name.lower()] = section.admonition.lower()
+
+        # Pattern to find all admonition sections
+        admonition_pattern = r"(?:\?\?\?[+]?|!!!)\s+(\w+)\s+\"([^\"]+)\""
+        matches: Iterator[re.Match[str]] = re.finditer(admonition_pattern, docstring, re.IGNORECASE)
+
+        for match in matches:
+            actual_admonition: str = match.group(1).lower()
+            section_title: str = match.group(2).lower()
+
+            # Check if this section is configured with a specific admonition
+            if section_title in section_admonitions:
+                expected_admonition: str = section_admonitions[section_title]
+                if actual_admonition != expected_admonition:
+                    errors.append(
+                        f"Section '{section_title}' has incorrect admonition '{actual_admonition}', "
+                        f"expected '{expected_admonition}'"
+                    )
+
+        return errors
