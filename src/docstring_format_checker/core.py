@@ -506,9 +506,12 @@ class DocstringChecker:
             (bool):
                 `True` if the section exists, `False` otherwise.
         """
-        if section.admonition and section.prefix:
+
+        if isinstance(section.admonition, str) and section.admonition and section.prefix:
             # Format like: !!! note "Summary"
-            pattern = rf'{re.escape(section.prefix)}\s+{re.escape(section.admonition)}\s+".*{re.escape(section.name)}"'
+            # Make the section name part case-insensitive too
+            escaped_name = re.escape(section.name)
+            pattern = rf'{re.escape(section.prefix)}\s+{re.escape(section.admonition)}\s+"[^"]*{escaped_name}[^"]*"'
             return bool(re.search(pattern, docstring, re.IGNORECASE))
         elif section.name.lower() in ["summary"]:
             # For summary, accept either formal format or simple docstring
@@ -624,7 +627,12 @@ class DocstringChecker:
         # Build expected order from configuration
         section_patterns: list[tuple[str, str]] = []
         for section in sorted(self.sections_config, key=lambda x: x.order):
-            if section.type == "free_text" and section.admonition and section.prefix:
+            if (
+                section.type == "free_text"
+                and isinstance(section.admonition, str)
+                and section.admonition
+                and section.prefix
+            ):
                 pattern: str = (
                     rf'{re.escape(section.prefix)}\s+{re.escape(section.admonition)}\s+".*{re.escape(section.name)}"'
                 )
@@ -747,8 +755,8 @@ class DocstringChecker:
 
         # Common patterns for different section types
         section_patterns: list[tuple[str, str]] = [
-            # Standard sections with colons
-            (r"(\w+):\s*", "colon"),
+            # Standard sections with colons (but not inside quotes)
+            (r"^(\w+):\s*", "colon"),
             # Admonition sections with various prefixes
             (r"(?:\?\?\?[+]?|!!!)\s+\w+\s+\"([^\"]+)\"", "admonition"),
         ]
@@ -759,6 +767,9 @@ class DocstringChecker:
             matches: Iterator[re.Match[str]] = re.finditer(pattern, docstring, re.IGNORECASE | re.MULTILINE)
             for match in matches:
                 section_name: str = match.group(1).lower().strip()
+
+                # Remove colon if present (for colon pattern matches)
+                section_name = section_name.rstrip(":")
 
                 # Skip empty matches or common docstring content
                 if not section_name or section_name in ["", "py", "python", "sh", "shell"]:
@@ -796,7 +807,7 @@ class DocstringChecker:
         # Create mapping of section names to expected admonitions
         section_admonitions: dict[str, str] = {}
         for section in self.sections_config:
-            if section.type == "free_text" and section.admonition:
+            if section.type == "free_text" and isinstance(section.admonition, str) and section.admonition:
                 section_admonitions[section.name.lower()] = section.admonition.lower()
 
         # Pattern to find all admonition sections
@@ -815,6 +826,13 @@ class DocstringChecker:
                         f"Section '{section_title}' has incorrect admonition '{actual_admonition}', "
                         f"expected '{expected_admonition}'"
                     )
+
+            # Check if section shouldn't have admonition but does
+            section_config: Optional[SectionConfig] = next(
+                (s for s in self.sections_config if s.name.lower() == section_title), None
+            )
+            if section_config and section_config.admonition is False:
+                errors.append(f"Section '{section_title}' is configured as non-admonition but found as admonition")
 
         return errors
 
