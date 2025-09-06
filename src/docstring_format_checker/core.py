@@ -469,6 +469,10 @@ class DocstringChecker:
         admonition_errors: list[str] = self._check_admonition_values(docstring)
         errors.extend(admonition_errors)
 
+        # Check colon usage for admonition vs non-admonition sections
+        colon_errors: list[str] = self._check_colon_usage(docstring)
+        errors.extend(colon_errors)
+
         if errors:
             combined_message: str = "; ".join(errors)
             raise DocstringError(
@@ -803,5 +807,54 @@ class DocstringChecker:
                         f"Section '{section_title}' has incorrect admonition '{actual_admonition}', "
                         f"expected '{expected_admonition}'"
                     )
+
+        return errors
+
+    def _check_colon_usage(self, docstring: str) -> list[str]:
+        """
+        Check that colons are used correctly for admonition vs non-admonition sections.
+        """
+
+        errors: list[str] = []
+
+        # Check admonition sections (should not end with colon)
+        admonition_pattern = r"(?:\?\?\?[+]?|!!!)\s+\w+\s+\"([^\"]+)\""
+        matches: Iterator[re.Match[str]] = re.finditer(admonition_pattern, docstring, re.IGNORECASE)
+
+        for match in matches:
+            section_title: str = match.group(1)
+            has_colon: bool = section_title.endswith(":")
+            section_title_clean: str = section_title.rstrip(":").lower()
+
+            # Find config for this section
+            section_config: Optional[SectionConfig] = next(
+                (s for s in self.sections_config if s.name.lower() == section_title_clean), None
+            )
+            if section_config and isinstance(section_config.admonition, str) and section_config.admonition:
+                if has_colon:
+                    errors.append(
+                        f"Section '{section_title_clean}' is an admonition, therefore it should not end with ':', "
+                        f"see: {match.group(0)}"
+                    )
+
+        # Check non-admonition sections (should end with colon)
+        non_admonition_pattern = r"^(\w+)(:?)$"
+        for line in docstring.split("\n"):
+            line: str = line.strip()
+            match: Optional[re.Match[str]] = re.match(non_admonition_pattern, line)
+            if match:
+                section_name: str = match.group(1).lower()
+                has_colon: bool = match.group(2) == ":"
+
+                # Find config for this section
+                section_config = next((s for s in self.sections_config if s.name.lower() == section_name), None)
+                if section_config and section_config.admonition is False:
+                    if not has_colon:
+                        errors.append(
+                            f"Section '{section_name}' is non-admonition, therefore it must end with ':', "
+                            f"see: {line}"
+                        )
+
+        return errors
 
         return errors
