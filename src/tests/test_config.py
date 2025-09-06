@@ -577,4 +577,48 @@ class TestConfig(TestCase):
         assert isinstance(processed_empty, bool)
         assert isinstance(processed_none, bool)
 
-    # Empty string test removed due to test ordering issues - functionality still tested
+    def test_23_load_config_explicit_empty_string_admonition_edge_case(self) -> None:
+        """
+        Test loading config with explicit empty string admonition to trigger line 306.
+        This ensures line 306 in config.py is covered by testing the empty string branch.
+        """
+        # ## Python StdLib Imports ----
+        import os
+        import tempfile
+        from pathlib import Path
+
+        config_content = dedent(
+            """
+            [tool.dfc]
+            [[tool.dfc.sections]]
+            order = 1
+            name = "test_section"
+            type = "free_text"
+            required = true
+            admonition = ""
+            """
+        ).strip()
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
+            f.write(config_content)
+            f.flush()
+            temp_file: str = f.name
+
+        try:
+            # Force loading from this specific file to trigger the empty string logic
+            config: list[SectionConfig] = load_config(Path(temp_file))
+
+            # Should process the empty string and convert to False (line 306)
+            assert len(config) >= 1
+            test_section = None
+            for section in config:
+                if section.name == "test_section":
+                    test_section: SectionConfig = section
+                    break
+
+            # The admonition should be False due to empty string conversion
+            if test_section:
+                assert test_section.admonition is False
+
+        finally:
+            os.unlink(temp_file)

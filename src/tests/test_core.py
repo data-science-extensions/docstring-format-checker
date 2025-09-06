@@ -1351,7 +1351,7 @@ class TestDocstringChecker(TestCase):
             py_file.write_text(python_content)
             errors: list[DocstringError] = checker.check_file(str(py_file))
 
-            # Should validate as true - this tests line 398: return len(docstring.strip()) > 0
+            # Should validate as true - this tests when: return len(docstring.strip()) > 0
             assert len(errors) == 0, f"Should not have errors for simple summary docstring, got: {errors}"
 
             # Clean up
@@ -1387,7 +1387,7 @@ class TestDocstringChecker(TestCase):
             py_file.write_text(python_content)
             errors: list[DocstringError] = checker.check_file(str(py_file))
 
-            # Should validate as true - this tests line 398: return True for formal pattern
+            # Should validate as true - this tests when: return True for formal pattern
             assert len(errors) == 0, f"Should not have errors for formal summary pattern, got: {errors}"
 
             # Clean up
@@ -2423,11 +2423,9 @@ class TestDocstringChecker(TestCase):
             # Should have no errors - all the problematic sections should be filtered out
             assert len(errors) == 0, f"Expected no errors, code blocks should be filtered out, got: {errors}"
 
-    # Test removed - line 775 is code that may not be hit under specific test conditions
-
     def test_64_summary_section_simple_content_validation(self) -> None:
         """
-        Test that summary section validation accepts simple docstring content (line 520 coverage).
+        Test that summary section validation accepts simple docstring content (not just admonitions).
         """
         # Config with just a summary section (non-admonition)
         summary_config: list[SectionConfig] = [
@@ -2457,7 +2455,7 @@ class TestDocstringChecker(TestCase):
 
     def test_65_config_empty_string_admonition_handling(self) -> None:
         """
-        Test that empty string admonition values are properly handled (line 306 coverage).
+        Test that empty string admonition values are properly handled as False.
         """
         # Create a SectionConfig with an empty string admonition value directly
         # This bypasses the TOML loading to test the empty string handling logic
@@ -2476,7 +2474,7 @@ class TestDocstringChecker(TestCase):
             if admonition_value is None:
                 admonition_value = False  # Use SectionConfig default
             elif isinstance(admonition_value, str) and admonition_value == "":
-                admonition_value = False  # This is line 306 - treat empty string as False
+                admonition_value = False  # Treat empty string as False
 
             # Create the section config with the processed value
             section = SectionConfig(
@@ -2497,7 +2495,6 @@ class TestDocstringChecker(TestCase):
     def test_66_summary_section_simple_content_acceptance(self) -> None:
         """
         Test that summary sections accept simple content without formal patterns.
-        This covers line 520 in core.py.
         """
         # Custom config with summary section
         custom_config: list[SectionConfig] = [
@@ -2505,10 +2502,10 @@ class TestDocstringChecker(TestCase):
         ]
         checker = DocstringChecker(custom_config)
 
-        # Test the _check_free_text_section method directly to cover line 520
+        # Test the _check_free_text_section method directly
         section_config = SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False)
 
-        # This should trigger line 520 (return len(docstring.strip()) > 0)
+        # This should trigger: (return len(docstring.strip()) > 0)
         simple_docstring = "This is just simple content without formal patterns."
         result: bool = checker._check_free_text_section(simple_docstring, section_config)
 
@@ -2518,7 +2515,6 @@ class TestDocstringChecker(TestCase):
     def test_67_undefined_sections_special_char_skip(self) -> None:
         """
         Test that undefined sections validation skips entries with special characters.
-        This covers line 776 in core.py.
         """
         # Custom config with only summary defined
         custom_config: list[SectionConfig] = [
@@ -2529,7 +2525,7 @@ class TestDocstringChecker(TestCase):
         # Test docstring with special characters that should be skipped
         test_docstring = "Summary:\nContent\nfile.txt:\nSkipped\nbackslash\\path:\nSkipped\n`code`:\nSkipped"
 
-        # This should cover the special character skipping logic (line 776)
+        # This should cover the special character skipping logic
         undefined_errors: list[str] = checker._check_undefined_sections(test_docstring)
 
         # No errors should be returned because special character sections are skipped
@@ -2538,7 +2534,6 @@ class TestDocstringChecker(TestCase):
     def test_68_undefined_sections_detection_with_found_sections(self) -> None:
         """
         Test the logic for detecting which sections are not configured.
-        This covers line 780 in core.py.
         """
         # Custom config with only summary defined
         custom_config: list[SectionConfig] = [
@@ -2549,7 +2544,7 @@ class TestDocstringChecker(TestCase):
         # Test docstring with an undefined section
         test_docstring = "Summary:\nContent\nUndefined:\nContent"
 
-        # This should cover the loop that checks found sections (line 780)
+        # This should cover the loop that checks found sections
         undefined_errors: list[str] = checker._check_undefined_sections(test_docstring)
 
         # Should find one undefined section
@@ -2559,7 +2554,6 @@ class TestDocstringChecker(TestCase):
     def test_69_code_block_character_skipping(self) -> None:
         """
         Test that sections with special characters are skipped.
-        This covers line 780 in core.py for the character checking logic.
         """
         custom_config: list[SectionConfig] = []
         checker = DocstringChecker(custom_config)
@@ -2601,7 +2595,6 @@ class TestDocstringChecker(TestCase):
     def test_70_examples_section_pattern_matching(self) -> None:
         """
         Test the examples section pattern matching.
-        This covers line 520 in core.py.
         """
         # Create a minimal checker to test the specific method
         minimal_config: list[SectionConfig] = [
@@ -2612,7 +2605,7 @@ class TestDocstringChecker(TestCase):
         # Create section config for examples
         section = SectionConfig(order=1, name="examples", type="free_text", required=True, admonition=False)
 
-        # Test docstring with examples section (covers line 520)
+        # Test docstring with examples section
         docstring_with_examples = """
         This is a test function.
 
@@ -2620,7 +2613,7 @@ class TestDocstringChecker(TestCase):
             This is an example.
         """
 
-        # This should match the examples pattern on line 520
+        # This should match the examples patterns
         result: bool = checker._check_free_text_section(docstring_with_examples, section)
         assert result is True
 
@@ -2635,7 +2628,6 @@ class TestDocstringChecker(TestCase):
     def test_71_empty_section_name_skipping(self) -> None:
         """
         Test that empty section names and code language markers are skipped.
-        This covers line 776 in core.py.
         """
         custom_config: list[SectionConfig] = []
         checker = DocstringChecker(custom_config)
@@ -2677,3 +2669,160 @@ class TestDocstringChecker(TestCase):
         assert "python" not in error_text
         assert "sh" not in error_text
         assert "shell" not in error_text
+
+    def test_72_examples_section_exact_pattern_matching(self) -> None:
+        """
+        This covers the specific regex pattern for examples sections.
+        """
+        # Create a section config specifically for examples
+        examples_section = SectionConfig(order=1, name="examples", type="free_text", required=False, admonition=False)
+
+        checker = DocstringChecker([examples_section])
+
+        # Test docstring with the exact pattern that should trigger
+        docstring_with_examples: str = dedent(
+            """
+            This is a test function.
+
+            ???+ example "Examples"
+                This is an example.
+            """
+        )
+
+        # This should match the examples pattern
+        result: bool = checker._check_free_text_section(docstring_with_examples, examples_section)
+        assert result is True
+
+        # Test docstring without the examples pattern
+        docstring_without_examples: str = dedent(
+            """
+            This is a test function.
+
+            Some other content but no examples section.
+            """
+        )
+
+        result = checker._check_free_text_section(docstring_without_examples, examples_section)
+        assert result is False
+
+        # Test with case variations to ensure case insensitive matching
+        docstring_case_variant: str = dedent(
+            """
+            This is a test function.
+
+            ???+ EXAMPLE "Examples"
+                This is an example.
+            """
+        )
+
+        result = checker._check_free_text_section(docstring_case_variant, examples_section)
+        assert result is True
+
+    def test_73_special_characters_continue_logic(self) -> None:
+        """
+        Test that sections with special characters trigger the continue statement.
+        """
+        custom_config: list[SectionConfig] = []
+        checker = DocstringChecker(custom_config)
+
+        # Test docstring with admonition sections that will be found by the regex but filtered out by special chars
+        test_docstring: str = dedent(
+            """
+            Regular section here.
+
+            !!! note "Summary"
+                This should be detected
+
+            !!! note "Code.File"
+                This should be skipped due to dot
+
+            !!! note "path/to/file"
+                This should be skipped due to slash
+
+            !!! note "code`block"
+                This should be skipped due to backtick
+
+            !!! note "back\\slash"
+                This should be skipped due to backslash
+
+            !!! note "Valid_Section"
+                This should be detected
+            """
+        )
+
+        # Check undefined sections - the special character ones should be skipped by the continue statement
+        undefined_errors: list[str] = checker._check_undefined_sections(test_docstring)
+
+        # Should only find Summary and Valid_Section as undefined (since we have no config)
+        # The special character sections should be filtered out
+        assert len(undefined_errors) == 2
+        error_text: str = " ".join(undefined_errors).lower()
+
+        # These should be found
+        assert "summary" in error_text
+        assert "valid_section" in error_text
+
+        # These should NOT appear because they have special chars and hit the continue statement
+        assert "code.file" not in error_text
+        assert "path/to/file" not in error_text
+        assert "code`block" not in error_text
+        assert "back\\slash" not in error_text
+
+    def test_74_examples_regex_pattern_coverage(self) -> None:
+        """
+        Test to specifically cover the examples regex pattern.
+        """
+        examples_section = SectionConfig(
+            name="example", required=True, type="free_text", order=1, admonition="example", prefix="???+"
+        )
+        checker = DocstringChecker([examples_section])
+
+        # This should match the regex pattern
+        docstring_with_examples: str = dedent(
+            """
+            This is a test function.
+
+            ???+ example "Examples"
+                This is an example.
+            """
+        )
+
+        # This should return True
+        result: bool = checker._check_free_text_section(docstring_with_examples, examples_section)
+        assert result is True
+
+    def test_75_summary_section_formal_and_simple_patterns(self) -> None:
+        """
+        Test summary section validation with both formal and simple docstring patterns.
+        Covers formal pattern matching and simple content validation for summary sections.
+        """
+        # Create a section config that matches the condition for "summary"
+        summary_section = SectionConfig(
+            name="summary",  # Must be "summary" to hit the summary section validation
+            required=True,
+            type="free_text",
+            order=1,
+            admonition=False,  # Not a string admonition, so first condition fails
+            prefix="",
+        )
+        checker = DocstringChecker([summary_section])
+
+        # Test formal pattern match should return True
+        formal_docstring = """
+        This is a function.
+
+        !!! note "Summary"
+            This is a formal summary.
+        """
+        result_formal: bool = checker._check_free_text_section(formal_docstring, summary_section)
+        assert result_formal is True, "Formal summary pattern should be recognized"
+
+        # Test simple docstring content check
+        simple_docstring = "This is a simple docstring without formal formatting."
+        result_simple: bool = checker._check_free_text_section(simple_docstring, summary_section)
+        assert result_simple is True, "Simple docstring should satisfy summary requirement"
+
+        # Test with empty docstring to also cover the False case
+        empty_docstring: str = ""
+        result_empty: bool = checker._check_free_text_section(empty_docstring, summary_section)
+        assert result_empty is False, "Empty docstring should not satisfy summary requirement"
