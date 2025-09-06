@@ -302,6 +302,29 @@ def _show_check_examples_callback(ctx: Context, param: CallbackParam, value: boo
     raise Exit()
 
 
+def _format_error_messages(error_message: str) -> str:
+    """
+    !!! note "Summary"
+        Format error messages for better readability in CLI output.
+
+    Params:
+        error_message (str):
+            The raw error message that may contain semicolon-separated errors
+
+    Returns:
+        (str):
+            Formatted error message with each error prefixed with "- " and separated by ";\n"
+    """
+    if "; " in error_message:
+        # Split by semicolon and rejoin with proper formatting
+        errors: list[str] = error_message.split("; ")
+        formatted_errors: list[str] = [f"- {error.strip()}" for error in errors if error.strip()]
+        return ";\n".join(formatted_errors) + "."
+    else:
+        # Single error message
+        return f"- {error_message.strip()}."
+
+
 def _display_results(results: dict[str, list[DocstringError]], quiet: bool, verbose: bool) -> int:
     """
     !!! note "Summary"
@@ -340,12 +363,16 @@ def _display_results(results: dict[str, list[DocstringError]], quiet: bool, verb
         for file_path, errors in results.items():
             for i, error in enumerate(errors):
                 file_display: str = file_path if i == 0 else ""
+
+                # Format error message with improved formatting
+                formatted_error_message: str = _format_error_messages(error.message)
+
                 table.add_row(
                     file_display,
                     str(error.line_number) if error.line_number > 0 else "",
                     error.item_name,
                     error.item_type,
-                    error.message,
+                    formatted_error_message,
                 )
         console.print(table)
 
@@ -354,12 +381,15 @@ def _display_results(results: dict[str, list[DocstringError]], quiet: bool, verb
         for file_path, errors in results.items():
             console.print(f"{NEW_LINE}[cyan]{file_path}[/cyan]")
             for error in errors:
+                # Format error message with improved formatting
+                formatted_error_message: str = _format_error_messages(error.message)
+
                 if error.line_number > 0:
                     console.print(
-                        f"  [red]Line {error.line_number}[/red] - {error.item_type} '{error.item_name}': {error.message}"
+                        f"  [red]Line {error.line_number}[/red] - {error.item_type} '{error.item_name}': {formatted_error_message}"
                     )
                 else:
-                    console.print(f"  [red]Error[/red]: {error.message}")
+                    console.print(f"  [red]Error[/red]: {formatted_error_message}")
 
     # Summary
     console.print(f"{NEW_LINE}[red]Found {total_errors} error(s) in {total_files} file(s)[/red]")

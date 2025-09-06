@@ -2379,13 +2379,14 @@ class TestDocstringChecker(TestCase):
         """
         Test that _check_undefined_sections skips empty matches and code blocks.
         """
+
         config: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
         ]
         checker: DocstringChecker = DocstringChecker(config)
 
         python_content: str = dedent(
-            '''
+            r'''
             def test_function():
                 """
                 Summary:
