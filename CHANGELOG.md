@@ -9,6 +9,45 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v0.3.0"
+
+    ## **v0.3.0 - Enhance Validation & Configuration Rules**
+
+    <!-- md:tag v0.3.0 --><br>
+    <!-- md:date 2025-09-06 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v0.3.0](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v0.3.0) -->
+
+    ??? note "Release Notes"
+
+        ### What's Changed        * Comprehensive Docstring Validation Enhancement: Introduce Advanced Rule Enforcement and Achieve 100% Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/3                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.2.0...v0.3.0
+
+    ??? abstract "Updates"
+
+        * Fix typo (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/c7ada96a7b74bb77b2027cadf57b1953c7991286)
+
+        * Add additional unit tests to check more edge cases (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/66de3cf68ee2ad2a56da67cd095dabe47a110de8)
+
+        * Add more unit tests for edge cases (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/1f35cc28bd1cafe00e6b6d086fccd43473cddfd5)
+
+        * Enhance admonition validation by ensuring admonition is a string and refining section name matching patterns (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/1110894183f3db53d602849e23bab88d9ffc4592)
+
+        * Add parentheses validation for list type sections in docstring checks (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/2e656f1a17ecc2c5492cd1fc47be459e39ea0673)
+
+        * Add title case validation for non-admonition sections in docstrings (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/2528a63239e0197d673ab8a14ea1fd829aa09799)
+
+        * Add colon usage checks for admonition and non-admonition sections in docstrings (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/186377a6e75f60ba03c1c304821229db96c2d78d)
+
+        * Add blank lines after docstrings for improved readability (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/1881e9012094ad0affc94197e1ebabde74447857)
+
+        * Refactor `SectionConfig()` to enhance admonition validation and type handling (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/ca5bbd904013297417b6f1310ecdadfd5052f580)
+
+        * Extend the `core` module to better handle edge-cases<br>
+            This will now throw errors when:<br>
+            1. When there is a section in a docstring which are not defined in the config<br>
+            2. When the admonition used in the docstring does not match the admonition defined in the config (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/8e3598a711dfd30f3c5c2590b2ecc0ba092c867e)
+
+
+
 !!! info "v0.2.0"
 
     ## **v0.2.0 - Allow app to properly handle functions with @overload decorator**
