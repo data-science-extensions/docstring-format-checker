@@ -9,6 +9,26 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v0.4.0"
+
+    ## **v0.4.0 - Enhance CLI Error Output Formatting**
+
+    <!-- md:tag v0.4.0 --><br>
+    <!-- md:date 2025-09-06 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v0.4.0](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v0.4.0) -->
+
+    ??? note "Release Notes"
+
+        ### What's Changed        * Enhanced CLI Error Output Formatting: Improve Multi-Error Message Presentation and Achieve Comprehensive Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/4                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.3.0...v0.4.0
+
+    ??? abstract "Updates"
+
+        * Fix typo (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/8bf056c3587d5a85b69abe7e67efe352b91b6341)
+
+        * Enhance error message formatting in CLI output and add corresponding unit tests (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/a58c64e7a518111204c8d7dc1bb88cdb5f3c7ecd)
+
+
+
 !!! info "v0.3.0"
 
     ## **v0.3.0 - Enhance Validation & Configuration Rules**
