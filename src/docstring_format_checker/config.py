@@ -302,8 +302,6 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> list[SectionC
                 admonition_value: Union[str, bool] = section_data.get("admonition")
                 if admonition_value is None:
                     admonition_value = False  # Use SectionConfig default
-                elif isinstance(admonition_value, str) and admonition_value == "":
-                    admonition_value = False  # Treat empty string as False
 
                 section = SectionConfig(
                     order=section_data.get("order", 0),
