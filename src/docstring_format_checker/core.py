@@ -860,7 +860,7 @@ class DocstringChecker:
                 if has_colon:
                     errors.append(
                         f"Section '{section_title_clean}' is an admonition, therefore it should not end with ':', "
-                        f"see: {match.group(0)}"
+                        f"see: '{match.group(0)}'"
                     )
 
         # Check non-admonition sections (should end with colon)
@@ -878,7 +878,7 @@ class DocstringChecker:
                     if not has_colon:
                         errors.append(
                             f"Section '{section_name}' is non-admonition, therefore it must end with ':', "
-                            f"see: {line}"
+                            f"see: '{line}'"
                         )
 
         return errors
@@ -976,8 +976,8 @@ class DocstringChecker:
                         # Pattern: name (type): or (type):
                         if not re.search(r"\([^)]+\):", stripped_line):
                             errors.append(
-                                f"Section '{current_section.name}' (type: {current_section.type}) requires "
-                                f"parenthesized types, missing in: '{stripped_line}'"
+                                f"Section '{current_section.name}' (type: '{current_section.type}') requires "
+                                f"parenthesized types, see: '{stripped_line}'"
                             )
 
                     # For list_type sections, check format like "(Type):"
@@ -985,8 +985,8 @@ class DocstringChecker:
                         # Pattern: (Type):
                         if not re.search(r"^\s*\([^)]+\):", stripped_line):
                             errors.append(
-                                f"Section '{current_section.name}' (type: {current_section.type}) requires "
-                                f"parenthesized types, missing in: '{stripped_line}'"
+                                f"Section '{current_section.name}' (type: '{current_section.type}') requires "
+                                f"parenthesized types, see: '{stripped_line}'"
                             )
 
         return errors

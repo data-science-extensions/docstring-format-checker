@@ -28,6 +28,7 @@ from typer.testing import CliRunner
 # ## Local First Party Imports ----
 from docstring_format_checker import __version__
 from docstring_format_checker.cli import (
+    _format_error_messages,
     _parse_boolean_flag,
     _parse_recursive_flag,
     app,
@@ -850,3 +851,30 @@ class TestCLI(TestCase):
                 result: Result = self.runner.invoke(app, ["check", str(py_file)])
                 assert result.exit_code == 1
                 assert "Error during checking: File check error" in clean(result.output)
+
+    def test_23_format_error_messages(self) -> None:
+        """
+        Test that _format_error_messages correctly formats error strings.
+        """
+
+        # Test single error
+        single_error = "Missing required admonition sections: ['Parameters', 'Returns']"
+        expected_single = "- Missing required admonition sections: ['Parameters', 'Returns']."
+        assert _format_error_messages(single_error) == expected_single
+
+        # Test multiple errors separated by semicolons
+        multi_error = (
+            "Missing required admonition sections: ['Parameters', 'Returns']; Expected closing parenthesis ')'"
+        )
+        expected_multi = (
+            "- Missing required admonition sections: ['Parameters', 'Returns'];\n- Expected closing parenthesis ')'."
+        )
+        assert _format_error_messages(multi_error) == expected_multi
+
+        # Test empty string
+        assert _format_error_messages("") == "- ."
+
+        # Test string that already has dash prefix (should not double-prefix)
+        prefixed_error = "Missing required admonition sections: ['Parameters']"
+        expected_prefixed = "- Missing required admonition sections: ['Parameters']."
+        assert _format_error_messages(prefixed_error) == expected_prefixed
