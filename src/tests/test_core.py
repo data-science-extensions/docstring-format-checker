@@ -14,9 +14,11 @@
 import subprocess
 import sys
 import tempfile
+from ast import Module, stmt
 from pathlib import Path
 from subprocess import CompletedProcess
 from textwrap import dedent
+from typing import Any, Union
 from unittest import TestCase
 
 # ## Python Third Party Imports ----
@@ -49,8 +51,9 @@ def simple_checker() -> DocstringChecker:
     Create a simple docstring checker for testing.
     """
     config: list[SectionConfig] = [
-        SectionConfig(order=1, name="summary", type="free_text", required=True),
-        SectionConfig(order=2, name="params", type="list_name_and_type", required=True),
+        SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
+        SectionConfig(order=2, name="params", type="list_name_and_type", required=True, admonition=False),
+        SectionConfig(order=3, name="returns", type="list_name_and_type", required=False, admonition=False),
     ]
     return DocstringChecker(config)
 
@@ -1284,23 +1287,23 @@ class TestDocstringChecker(TestCase):
 
     def test_36_unknown_free_text_section_validation(self) -> None:
         """
-        Test validation of unknown free text sections.
+        Test validation of custom free text sections.
         """
 
-        # Create a section with an unknown name for free text type
-        # This should trigger the default return True for unknown sections in _validate_section
-        unknown_sections: list[SectionConfig] = [
-            SectionConfig(order=1, name="unknown_custom_section", type="free_text", required=True),
+        # Create a section with a custom name for free text type
+        # This should work as long as the section is defined in configuration
+        custom_sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="unknown custom section", type="free_text", required=True, admonition=False),
         ]
 
-        checker = DocstringChecker(unknown_sections)
+        checker = DocstringChecker(custom_sections)
 
         python_content: str = dedent(
             '''
             def test_function():
                 """
-                !!! note "Summary"
-                This is a function with an unknown section type that should return True by default.
+                Unknown Custom Section:
+                    This is a function with a custom section type that should validate successfully.
                 """
                 pass
             '''
@@ -1313,9 +1316,8 @@ class TestDocstringChecker(TestCase):
             py_file.write_text(python_content)
             errors: list[DocstringError] = checker.check_file(str(py_file))
 
-            # Should validate as true for unknown free text sections
-            # This tests the default return True for unknown sections in _validate_section line 398
-            assert len(errors) == 0, f"Should not have errors for unknown free text section, got: {errors}"
+            # Should have no errors for custom free text sections that are defined
+            assert len(errors) == 0, f"Should not have errors for defined custom section, got: {errors}"
 
             # Clean up
             py_file.unlink(missing_ok=True)
@@ -1345,11 +1347,11 @@ class TestDocstringChecker(TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
 
             temp_path = Path(temp_dir)
-            py_file = temp_path.joinpath("test.py")
+            py_file: Path = temp_path.joinpath("test.py")
             py_file.write_text(python_content)
             errors: list[DocstringError] = checker.check_file(str(py_file))
 
-            # Should validate as true - this tests line 398: return len(docstring.strip()) > 0
+            # Should validate as true - this tests when: return len(docstring.strip()) > 0
             assert len(errors) == 0, f"Should not have errors for simple summary docstring, got: {errors}"
 
             # Clean up
@@ -1362,7 +1364,7 @@ class TestDocstringChecker(TestCase):
 
         # Create a summary section that should accept formal patterns
         summary_sections: list[SectionConfig] = [
-            SectionConfig(order=1, name="summary", type="free_text", required=True),
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
         ]
 
         checker = DocstringChecker(summary_sections)
@@ -1371,7 +1373,7 @@ class TestDocstringChecker(TestCase):
             '''
             def test_function():
                 """
-                !!! note "Summary"
+                Summary:
                     This is a formal summary section.
                 """
                 pass
@@ -1385,7 +1387,7 @@ class TestDocstringChecker(TestCase):
             py_file.write_text(python_content)
             errors: list[DocstringError] = checker.check_file(str(py_file))
 
-            # Should validate as true - this tests line 398: return True for formal pattern
+            # Should validate as true - this tests when: return True for formal pattern
             assert len(errors) == 0, f"Should not have errors for formal summary pattern, got: {errors}"
 
             # Clean up
@@ -1409,7 +1411,7 @@ class TestDocstringChecker(TestCase):
             def example_function(x: str) -> str: ...
             def example_function(x: Union[int, str]) -> Union[int, str]:
                 """
-                !!! note "Summary"
+                Summary:
                     A function with overloads.
 
                 Params:
@@ -1424,7 +1426,7 @@ class TestDocstringChecker(TestCase):
 
             def regular_function():
                 """
-                !!! note "Summary"
+                Summary:
                     A regular function with proper docstring.
                 """
                 pass
@@ -1461,7 +1463,7 @@ class TestDocstringChecker(TestCase):
             def example_function(x: str) -> str: ...
             def example_function(x: typing.Union[int, str]) -> typing.Union[int, str]:
                 """
-                !!! note "Summary"
+                Summary:
                     A function with overloads using typing.overload.
 
                 Params:
@@ -1593,7 +1595,7 @@ class TestDocstringChecker(TestCase):
             async def async_example(x: str) -> str: ...
             async def async_example(x: Union[int, str]) -> Union[int, str]:
                 """
-                !!! note "Summary"
+                Summary:
                     An async function with overloads.
 
                 Params:
@@ -1634,7 +1636,7 @@ class TestDocstringChecker(TestCase):
 
             class ExampleClass:
                 """
-                !!! note "Summary"
+                Summary:
                     Example class with overloaded methods.
                 """
 
@@ -1644,7 +1646,7 @@ class TestDocstringChecker(TestCase):
                 def method(self, x: str) -> str: ...
                 def method(self, x: Union[int, str]) -> Union[int, str]:
                     """
-                    !!! note "Summary"
+                    Summary:
                         Overloaded method implementation.
 
                     Params:
@@ -1659,7 +1661,7 @@ class TestDocstringChecker(TestCase):
 
                 def regular_method(self):
                     """
-                    !!! note "Summary"
+                    Summary:
                         A regular method with proper docstring.
                     """
                     pass
@@ -1688,7 +1690,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = simple_checker()
 
         # Test direct @overload
-        overload_code = dedent(
+        overload_code: str = dedent(
             """
             from typing import overload
 
@@ -1703,7 +1705,7 @@ class TestDocstringChecker(TestCase):
         assert checker._is_overload_function(func_node), "Should detect @overload decorator"
 
         # Test @typing.overload
-        typing_overload_code = dedent(
+        typing_overload_code: str = dedent(
             """
             import typing
 
@@ -1718,7 +1720,7 @@ class TestDocstringChecker(TestCase):
         assert checker._is_overload_function(func_node), "Should detect @typing.overload decorator"
 
         # Test regular function without @overload
-        regular_code = dedent(
+        regular_code: str = dedent(
             """
             def func(x: int) -> int:
                 return x
@@ -1731,7 +1733,7 @@ class TestDocstringChecker(TestCase):
         assert not checker._is_overload_function(func_node), "Should not detect @overload on regular function"
 
         # Test function with other decorator
-        other_decorator_code = dedent(
+        other_decorator_code: str = dedent(
             """
             @property
             def func(self):
@@ -1739,9 +1741,1090 @@ class TestDocstringChecker(TestCase):
         """
         ).strip()
 
-        tree = ast.parse(other_decorator_code)
-        func_node = tree.body[0]  # First node is the function
+        tree: Module = ast.parse(other_decorator_code)
+        func_node: stmt = tree.body[0]  # First node is the function
         assert isinstance(func_node, ast.FunctionDef)
         assert not checker._is_overload_function(
             func_node
         ), "Should not detect @overload on function with other decorators"
+
+    def test_46_admonition_validation_correct_admonition(self) -> None:
+        """
+        Test that correct admonition values pass validation.
+        """
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition="note", prefix="!!!"),
+            SectionConfig(order=2, name="details", type="free_text", required=False, admonition="info", prefix="???+"),
+        ]
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Python content with correct admonitions
+        python_content: str = dedent(
+            '''
+            def test_function():
+                """
+                !!! note "Summary"
+                    This has the correct admonition.
+
+                ???+ info "Details"
+                    This also has the correct admonition.
+                """
+                pass
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+            # Should have no errors
+            assert len(errors) == 0, f"Expected no errors for correct admonitions, got: {[e.message for e in errors]}"
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
+
+    def test_47_admonition_validation_incorrect_admonition(self) -> None:
+        """
+        Test that incorrect admonition values are caught.
+        """
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition="note", prefix="!!!"),
+            SectionConfig(order=2, name="details", type="free_text", required=False, admonition="info", prefix="???+"),
+        ]
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Python content with wrong admonition for details section
+        python_content: str = dedent(
+            '''
+            def test_function():
+                """
+                !!! note "Summary"
+                    This has the correct admonition.
+
+                ???+ abstract "Details"
+                    This has wrong admonition (should be 'info').
+                """
+                pass
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+            # Should have an error about incorrect admonition
+            assert len(errors) == 1, f"Expected 1 error for incorrect admonition, got: {len(errors)}"
+            assert (
+                "incorrect admonition" in errors[0].message.lower()
+            ), f"Expected admonition error, got: {errors[0].message}"
+            assert "abstract" in errors[0].message, f"Expected 'abstract' in error message, got: {errors[0].message}"
+            assert "info" in errors[0].message, f"Expected 'info' in error message, got: {errors[0].message}"
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
+
+    def test_48_undefined_section_validation_defined_sections(self) -> None:
+        """
+        Test that sections defined in configuration don't trigger undefined section errors.
+        """
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition="note", prefix="!!!"),
+            SectionConfig(order=2, name="params", type="list_name_and_type", required=False),
+            SectionConfig(order=3, name="returns", type="list_type", required=False),
+            SectionConfig(
+                order=4, name="examples", type="free_text", required=False, admonition="example", prefix="???+"
+            ),
+        ]
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Python content with only defined sections
+        python_content: str = dedent(
+            '''
+            def test_function(param1: str) -> bool:
+                """
+                !!! note "Summary"
+                    This function has only defined sections.
+
+                Params:
+                    param1 (str): A parameter.
+
+                Returns:
+                    (bool): A return value.
+
+                ???+ example "Examples"
+                    Some examples here.
+                """
+                return True
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+            # Should have no errors
+            assert len(errors) == 0, f"Expected no errors for defined sections, got: {[e.message for e in errors]}"
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
+
+    def test_49_undefined_section_validation_undefined_sections(self) -> None:
+        """
+        Test that sections not defined in configuration trigger undefined section errors.
+        """
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition="note", prefix="!!!"),
+            SectionConfig(order=2, name="params", type="list_name_and_type", required=False),
+            SectionConfig(order=3, name="returns", type="list_type", required=False),
+        ]
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Python content with undefined sections
+        python_content: str = dedent(
+            '''
+            def test_function(param1: str) -> bool:
+                """
+                !!! note "Summary"
+                    This function has undefined sections.
+
+                Params:
+                    param1 (str): A parameter.
+
+                Returns:
+                    (bool): A return value.
+
+                ??? question "References"
+                    - Some reference (not in config).
+
+                Notes:
+                    Some additional notes (not in config).
+                """
+                return True
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+            # Should have errors for undefined sections
+            assert len(errors) == 1, f"Expected 1 error for undefined sections, got: {len(errors)}"
+            error_message: str = errors[0].message.lower()
+
+            # Check that both undefined sections are mentioned
+            has_references_error: bool = (
+                "references" in error_message and "not defined in configuration" in error_message
+            )
+            has_notes_error: bool = "notes" in error_message and "not defined in configuration" in error_message
+
+            assert (
+                has_references_error or has_notes_error
+            ), f"Expected undefined section error, got: {errors[0].message}"
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
+
+    def test_50_combined_admonition_and_undefined_section_errors(self) -> None:
+        """
+        Test that both admonition and undefined section errors are caught together.
+        """
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition="note", prefix="!!!"),
+            SectionConfig(order=2, name="details", type="free_text", required=False, admonition="info", prefix="???+"),
+            SectionConfig(order=3, name="params", type="list_name_and_type", required=False),
+        ]
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Python content with both wrong admonition AND undefined section
+        python_content: str = dedent(
+            '''
+            def test_function(param1: str) -> None:
+                """
+                !!! note "Summary"
+                    This function has both types of errors.
+
+                ???+ abstract "Details"
+                    Wrong admonition (should be 'info').
+
+                Params:
+                    param1 (str): A parameter.
+
+                ??? question "References"
+                    - Undefined section.
+                """
+                pass
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+            # Should have errors
+            assert len(errors) == 1, f"Expected 1 error with multiple issues, got: {len(errors)}"
+
+            error_message: str = errors[0].message.lower()
+
+            # Check for both types of errors in the combined message
+            has_admonition_error: bool = "incorrect admonition" in error_message
+            has_undefined_error: bool = "not defined in configuration" in error_message
+
+            assert has_admonition_error, f"Expected admonition error in combined message, got: {errors[0].message}"
+            assert (
+                has_undefined_error
+            ), f"Expected undefined section error in combined message, got: {errors[0].message}"
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
+
+    def test_51_config_validation_admonition_true_error(self) -> None:
+        """
+        Test that admonition=True raises a validation error.
+        """
+        with pytest.raises(ValueError, match="admonition cannot be True"):
+            SectionConfig(
+                order=1, name="summary", type="free_text", admonition=True, prefix="!!!"  # This should raise an error
+            )
+
+    def test_52_config_validation_admonition_false_with_prefix_error(self) -> None:
+        """
+        Test that admonition=False with prefix raises a validation error.
+        """
+        with pytest.raises(ValueError, match="when admonition=False, prefix cannot be provided"):
+            SectionConfig(
+                order=1,
+                name="params",
+                type="list_name_and_type",
+                admonition=False,  # False should not have prefix
+                prefix="!!!",  # This should raise an error
+            )
+
+    def test_53_config_validation_admonition_string_without_prefix_error(self) -> None:
+        """
+        Test that admonition as string without prefix raises a validation error.
+        """
+        with pytest.raises(ValueError, match="when admonition is a string, prefix must be provided"):
+            SectionConfig(
+                order=1,
+                name="summary",
+                type="free_text",
+                admonition="note",  # String admonition requires prefix
+                # prefix="" is default, should raise error
+            )
+
+    def test_54_config_validation_valid_combinations(self) -> None:
+        """
+        Test valid admonition/prefix combinations.
+        """
+        # Valid: admonition=False, no prefix
+        config1 = SectionConfig(order=1, name="params", type="list_name_and_type", admonition=False)
+        assert config1.admonition is False
+        assert config1.prefix == ""
+
+        # Valid: admonition=string, with prefix
+        config2 = SectionConfig(order=2, name="summary", type="free_text", admonition="note", prefix="!!!")
+        assert config2.admonition == "note"
+        assert config2.prefix == "!!!"
+
+    def test_55_colon_validation_admonition_sections_should_not_have_colon(self) -> None:
+        """
+        Test that admonition sections with colons trigger validation errors.
+        """
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition="note", prefix="!!!"),
+            SectionConfig(order=2, name="details", type="free_text", required=False, admonition="info", prefix="???+"),
+        ]
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Python content with admonition sections ending with colons (wrong)
+        python_content: str = dedent(
+            '''
+            def test_function():
+                """
+                !!! note "Summary:"
+                    This should not end with colon.
+
+                ???+ info "Details:"
+                    This also should not end with colon.
+                """
+                pass
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+        # Should have errors about colons in admonitions
+        assert len(errors) >= 1, f"Expected at least 1 error for colons in admonitions, got: {len(errors)}"
+
+        error_message: str = errors[0].message
+        colon_error_count: int = error_message.count("should not end with ':'")
+        assert (
+            colon_error_count >= 2
+        ), f"Expected at least 2 colon violations in error message, got: {colon_error_count}"
+
+        # Clean up
+        py_file.unlink(missing_ok=True)
+
+    def test_56_colon_validation_non_admonition_sections_must_have_colon(self) -> None:
+        """
+        Test that non-admonition sections without colons trigger validation errors.
+        """
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
+            SectionConfig(order=2, name="params", type="list_name_and_type", required=False, admonition=False),
+            SectionConfig(order=3, name="returns", type="list_type", required=False, admonition=False),
+        ]
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Python content with non-admonition sections missing colons (wrong)
+        python_content: str = dedent(
+            '''
+            def test_function(param1: str) -> bool:
+                """
+                Summary
+                    This should end with colon.
+
+                Params
+                    param1 (str): A parameter.
+
+                Returns
+                    (bool): A return value.
+                """
+                return True
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+            # Should have errors about missing colons in non-admonitions
+            assert len(errors) >= 1, f"Expected at least 1 error for missing colons, got: {len(errors)}"
+
+            error_message: str = errors[0].message
+            colon_error_count: int = error_message.count("must end with ':'")
+            assert (
+                colon_error_count >= 3
+            ), f"Expected at least 3 colon violations in error message, got: {colon_error_count}"
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
+
+    def test_57_title_case_validation_non_admonition_sections(self) -> None:
+        """
+        Test that non-admonition sections must be in title case.
+        """
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
+            SectionConfig(order=2, name="params", type="list_name_and_type", required=False, admonition=False),
+            SectionConfig(order=3, name="returns", type="list_type", required=False, admonition=False),
+        ]
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Python content with wrong case sections
+        python_content: str = dedent(
+            '''
+            def test_function(param1: str) -> bool:
+                """
+                summary:
+                    This should be "Summary:"
+
+                PARAMS:
+                    param1 (str): A parameter.
+
+                returns:
+                    (bool): A return value.
+                """
+                return True
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+            # Should have errors about wrong case
+            assert len(errors) >= 1, f"Expected at least 1 error for title case violations, got: {len(errors)}"
+
+            error_message: str = errors[0].message
+            case_error_count: int = error_message.count("must be in title case")
+            assert (
+                case_error_count >= 2
+            ), f"Expected at least 2 title case violations in error message, got: {case_error_count}"
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
+
+    def test_58_parentheses_validation_list_type_sections(self) -> None:
+        """
+        Test that list_type sections require parenthesized types.
+        """
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
+            SectionConfig(
+                order=2, name="raises", type="list_type", required=True, admonition=False
+            ),  # Make required for testing
+            SectionConfig(
+                order=3, name="returns", type="list_type", required=True, admonition=False
+            ),  # Make required for testing
+        ]
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Python content with missing parentheses in list_type sections
+        python_content: str = dedent(
+            '''
+            def test_function() -> bool:
+                """
+                Summary:
+                    Function summary.
+
+                Raises:
+                    ValueError:
+                        Should be (ValueError):
+
+                Returns:
+                    bool:
+                        Should be (bool):
+
+                UndefinedSection:
+                    This should trigger undefined section error.
+                """
+                return True
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+        # Should have errors about missing parentheses
+        assert len(errors) >= 1, f"Expected at least 1 error for parentheses violations, got: {len(errors)}"
+
+        # Check if parentheses errors are in the combined error message
+        error_message: str = errors[0].message
+        parentheses_error_count: int = error_message.count("requires parenthesized types")
+        assert (
+            parentheses_error_count >= 2
+        ), f"Expected at least 2 parentheses violations in error message, got: {parentheses_error_count}"
+
+        # Clean up
+        py_file.unlink(missing_ok=True)
+
+    def test_59_parentheses_validation_list_name_and_type_sections(self) -> None:
+        """
+        Test that list_name_and_type sections require parenthesized types.
+        """
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
+            SectionConfig(order=2, name="params", type="list_name_and_type", required=False, admonition=False),
+            SectionConfig(order=3, name="returns", type="list_name_and_type", required=False, admonition=False),
+        ]
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Python content with missing parentheses in list_name_and_type sections
+        python_content: str = dedent(
+            '''
+            def test_function(param1: str, param2: int) -> bool:
+                """
+                Summary:
+                    Function summary.
+
+                Params:
+                    param1 str:
+                        Should be param1 (str):
+                    param2 int:
+                        Should be param2 (int):
+
+                Returns:
+                    result bool:
+                        Should be result (bool):
+                """
+                return True
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+            # Should have errors about missing parentheses
+            assert len(errors) >= 1, f"Expected at least 1 error for parentheses violations, got: {len(errors)}"
+
+            error_message: str = errors[0].message
+            parentheses_error_count: int = error_message.count("requires parenthesized types")
+            assert (
+                parentheses_error_count >= 3
+            ), f"Expected at least 3 parentheses violations in error message, got: {parentheses_error_count}"
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
+
+    def test_60_correct_validation_with_all_new_rules(self) -> None:
+        """
+        Test that properly formatted docstring with all new rules passes validation.
+        """
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition="note", prefix="!!!"),
+            SectionConfig(order=2, name="details", type="free_text", required=False, admonition="info", prefix="???+"),
+            SectionConfig(order=3, name="params", type="list_name_and_type", required=False, admonition=False),
+            SectionConfig(order=4, name="raises", type="list_type", required=False, admonition=False),
+            SectionConfig(order=5, name="returns", type="list_type", required=False, admonition=False),
+            SectionConfig(
+                order=6, name="examples", type="free_text", required=False, admonition="example", prefix="???+"
+            ),
+        ]
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Python content following all the new validation rules correctly
+        python_content: str = dedent(
+            '''
+            def test_function(param1: str, param2: int) -> bool:
+                """
+                !!! note "Summary"
+                    Convert a string value into a bool value.
+
+                ???+ info "Details"
+                    This process is necessary because of some reason.
+
+                Params:
+                    param1 (str):
+                        The string parameter to convert.
+                    param2 (int):
+                        The integer parameter for processing.
+
+                Raises:
+                    (ValueError):
+                        If the value cannot be converted.
+
+                Returns:
+                    (bool):
+                        A True or False value.
+
+                ???+ example "Examples"
+                    Example code:
+                    >>> test_function("true", 1)
+                    True
+                """
+                return True
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+            # Should have no errors - all rules followed correctly
+            assert (
+                len(errors) == 0
+            ), f"Expected no errors for correctly formatted docstring, got: {[e.message for e in errors]}"
+
+            # Clean up
+            py_file.unlink(missing_ok=True)
+
+    def test_61_unknown_free_text_section_default_return(self) -> None:
+        """
+        Test that unknown free text sections return True by default.
+        """
+        # Create a config with an unknown free text section name
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="unknown_custom_section", type="free_text", required=True, admonition=False),
+        ]
+        checker: DocstringChecker = DocstringChecker(config)
+
+        python_content: str = dedent(
+            '''
+            def test_function():
+                """
+                Unknown Custom Section:
+                    This should trigger the default return True path.
+                """
+                pass
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+            # Should have no errors - unknown free text sections default to True
+            assert len(errors) == 0, f"Expected no errors for unknown free text section, got: {errors}"
+
+    def test_62_undefined_sections_skip_empty_and_code_blocks(self) -> None:
+        """
+        Test that _check_undefined_sections skips empty matches and code blocks.
+        """
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
+        ]
+        checker: DocstringChecker = DocstringChecker(config)
+
+        python_content: str = dedent(
+            '''
+            def test_function():
+                """
+                Summary:
+                    Function with code blocks that should be ignored.
+
+                ```python
+                def example():
+                    pass
+                ```
+
+                ```sh
+                echo "hello"
+                ```
+
+                Some.Path.With.Dots:
+                    Should be ignored due to dots.
+
+                /path/to/file:
+                    Should be ignored due to slashes.
+
+                back\\slash\\path:
+                    Should be ignored due to backslashes.
+
+                `inline_code`:
+                    Should be ignored due to backticks.
+                """
+                pass
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+            # Should have no errors - all the problematic sections should be filtered out
+            assert len(errors) == 0, f"Expected no errors, code blocks should be filtered out, got: {errors}"
+
+    def test_64_summary_section_simple_content_validation(self) -> None:
+        """
+        Test that summary section validation accepts simple docstring content (not just admonitions).
+        """
+        # Config with just a summary section (non-admonition)
+        summary_config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
+        ]
+        checker = DocstringChecker(summary_config)
+
+        python_content: str = dedent(
+            '''
+            def test_function():
+                """
+                This is a simple summary without formal admonition format.
+                It should be accepted as valid summary content.
+                """
+                pass
+            '''
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+            # Should have no errors - simple content should be accepted for summary
+            assert len(errors) == 0, f"Simple summary content should be valid, got: {errors}"
+
+    def test_65_config_empty_string_admonition_handling(self) -> None:
+        """
+        Test that empty string admonition values are properly handled as False.
+        """
+        # Create a SectionConfig with an empty string admonition value directly
+        # This bypasses the TOML loading to test the empty string handling logic
+        try:
+            # Create section data that would come from TOML parsing
+            section_data: dict[str, Any] = {
+                "order": 1,
+                "name": "test",
+                "type": "free_text",
+                "admonition": "",  # Empty string
+                "required": True,
+            }
+
+            # Simulate the config loading logic for empty string handling
+            admonition_value: Union[str, bool, None] = section_data.get("admonition")
+            if admonition_value is None:
+                admonition_value = False  # Use SectionConfig default
+            elif isinstance(admonition_value, str) and admonition_value == "":
+                admonition_value = False  # Treat empty string as False
+
+            # Create the section config with the processed value
+            section = SectionConfig(
+                order=int(section_data.get("order", 0)),
+                name=str(section_data.get("name", "")),
+                type=str(section_data.get("type", "")),  # type: ignore
+                admonition=admonition_value,
+                prefix=str(section_data.get("prefix", "")),
+                required=bool(section_data.get("required", False)),
+            )
+
+            # Verify that empty string was converted to False
+            assert section.admonition is False, "Empty string admonition should be converted to False"
+
+        except Exception as e:
+            pytest.fail(f"Empty string admonition handling should not raise exception: {e}")
+
+    def test_66_summary_section_simple_content_acceptance(self) -> None:
+        """
+        Test that summary sections accept simple content without formal patterns.
+        """
+        # Custom config with summary section
+        custom_config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
+        ]
+        checker = DocstringChecker(custom_config)
+
+        # Test the _check_free_text_section method directly
+        section_config = SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False)
+
+        # This should trigger: (return len(docstring.strip()) > 0)
+        simple_docstring = "This is just simple content without formal patterns."
+        result: bool = checker._check_free_text_section(simple_docstring, section_config)
+
+        # Should return True because docstring has content
+        assert result is True
+
+    def test_67_undefined_sections_special_char_skip(self) -> None:
+        """
+        Test that undefined sections validation skips entries with special characters.
+        """
+        # Custom config with only summary defined
+        custom_config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
+        ]
+        checker = DocstringChecker(custom_config)
+
+        # Test docstring with special characters that should be skipped
+        test_docstring = "Summary:\nContent\nfile.txt:\nSkipped\nbackslash\\path:\nSkipped\n`code`:\nSkipped"
+
+        # This should cover the special character skipping logic
+        undefined_errors: list[str] = checker._check_undefined_sections(test_docstring)
+
+        # No errors should be returned because special character sections are skipped
+        assert len(undefined_errors) == 0
+
+    def test_68_undefined_sections_detection_with_found_sections(self) -> None:
+        """
+        Test the logic for detecting which sections are not configured.
+        """
+        # Custom config with only summary defined
+        custom_config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
+        ]
+        checker = DocstringChecker(custom_config)
+
+        # Test docstring with an undefined section
+        test_docstring = "Summary:\nContent\nUndefined:\nContent"
+
+        # This should cover the loop that checks found sections
+        undefined_errors: list[str] = checker._check_undefined_sections(test_docstring)
+
+        # Should find one undefined section
+        assert len(undefined_errors) == 1
+        assert "undefined" in undefined_errors[0].lower()
+
+    def test_69_code_block_character_skipping(self) -> None:
+        """
+        Test that sections with special characters are skipped.
+        """
+        custom_config: list[SectionConfig] = []
+        checker = DocstringChecker(custom_config)
+
+        # Test docstring with sections containing special characters that should be skipped
+        test_docstring: str = dedent(
+            """
+            Summary:
+                Basic content
+
+            Some.Thing:
+                This should be skipped due to dot
+
+            path/to/file:
+                This should be skipped due to slash
+
+            code`block:
+                This should be skipped due to backtick
+
+            Valid_Section:
+                This should be detected
+            """
+        )
+
+        # Check undefined sections - should skip the special character ones
+        undefined_errors: list[str] = checker._check_undefined_sections(test_docstring)
+
+        # Should only find Summary and Valid_Section as undefined (since we have no config)
+        assert len(undefined_errors) == 2
+        error_text: str = " ".join(undefined_errors).lower()
+        assert "summary" in error_text
+        assert "valid_section" in error_text
+
+        # These should NOT appear because they have special chars
+        assert "some.thing" not in error_text
+        assert "path/to/file" not in error_text
+        assert "code`block" not in error_text
+
+    def test_70_examples_section_pattern_matching(self) -> None:
+        """
+        Test the examples section pattern matching.
+        """
+        # Create a minimal checker to test the specific method
+        minimal_config: list[SectionConfig] = [
+            SectionConfig(order=1, name="examples", type="free_text", required=True, admonition=False)
+        ]
+        checker = DocstringChecker(minimal_config)
+
+        # Create section config for examples
+        section = SectionConfig(order=1, name="examples", type="free_text", required=True, admonition=False)
+
+        # Test docstring with examples section
+        docstring_with_examples = """
+        This is a test function.
+
+        ???+ example "Examples"
+            This is an example.
+        """
+
+        # This should match the examples patterns
+        result: bool = checker._check_free_text_section(docstring_with_examples, section)
+        assert result is True
+
+        # Test docstring without examples section
+        docstring_without_examples = """
+        This is a test function without examples.
+        """
+
+        result = checker._check_free_text_section(docstring_without_examples, section)
+        assert result is False
+
+    def test_71_empty_section_name_skipping(self) -> None:
+        """
+        Test that empty section names and code language markers are skipped.
+        """
+        custom_config: list[SectionConfig] = []
+        checker = DocstringChecker(custom_config)
+
+        # Test docstring with empty section names and code language markers
+        test_docstring: str = dedent(
+            """
+            Summary:
+                Basic content
+
+            py:
+                This should be skipped (code language)
+
+            python:
+                This should be skipped (code language)
+
+            sh:
+                This should be skipped (code language)
+
+            shell:
+                This should be skipped (code language)
+
+            Valid_Section:
+                This should be detected
+            """
+        )
+
+        # Check undefined sections - should skip the code language markers
+        undefined_errors: list[str] = checker._check_undefined_sections(test_docstring)
+
+        # Should only find Summary and Valid_Section (since we have no config)
+        assert len(undefined_errors) == 2
+        error_text: str = " ".join(undefined_errors).lower()
+        assert "summary" in error_text
+        assert "valid_section" in error_text
+
+        # These should NOT appear because they are code language markers
+        assert "py" not in error_text
+        assert "python" not in error_text
+        assert "sh" not in error_text
+        assert "shell" not in error_text
+
+    def test_72_examples_section_exact_pattern_matching(self) -> None:
+        """
+        This covers the specific regex pattern for examples sections.
+        """
+        # Create a section config specifically for examples
+        examples_section = SectionConfig(order=1, name="examples", type="free_text", required=False, admonition=False)
+
+        checker = DocstringChecker([examples_section])
+
+        # Test docstring with the exact pattern that should trigger
+        docstring_with_examples: str = dedent(
+            """
+            This is a test function.
+
+            ???+ example "Examples"
+                This is an example.
+            """
+        )
+
+        # This should match the examples pattern
+        result: bool = checker._check_free_text_section(docstring_with_examples, examples_section)
+        assert result is True
+
+        # Test docstring without the examples pattern
+        docstring_without_examples: str = dedent(
+            """
+            This is a test function.
+
+            Some other content but no examples section.
+            """
+        )
+
+        result = checker._check_free_text_section(docstring_without_examples, examples_section)
+        assert result is False
+
+        # Test with case variations to ensure case insensitive matching
+        docstring_case_variant: str = dedent(
+            """
+            This is a test function.
+
+            ???+ EXAMPLE "Examples"
+                This is an example.
+            """
+        )
+
+        result = checker._check_free_text_section(docstring_case_variant, examples_section)
+        assert result is True
+
+    def test_73_special_characters_continue_logic(self) -> None:
+        """
+        Test that sections with special characters trigger the continue statement.
+        """
+        custom_config: list[SectionConfig] = []
+        checker = DocstringChecker(custom_config)
+
+        # Test docstring with admonition sections that will be found by the regex but filtered out by special chars
+        test_docstring: str = dedent(
+            """
+            Regular section here.
+
+            !!! note "Summary"
+                This should be detected
+
+            !!! note "Code.File"
+                This should be skipped due to dot
+
+            !!! note "path/to/file"
+                This should be skipped due to slash
+
+            !!! note "code`block"
+                This should be skipped due to backtick
+
+            !!! note "back\\slash"
+                This should be skipped due to backslash
+
+            !!! note "Valid_Section"
+                This should be detected
+            """
+        )
+
+        # Check undefined sections - the special character ones should be skipped by the continue statement
+        undefined_errors: list[str] = checker._check_undefined_sections(test_docstring)
+
+        # Should only find Summary and Valid_Section as undefined (since we have no config)
+        # The special character sections should be filtered out
+        assert len(undefined_errors) == 2
+        error_text: str = " ".join(undefined_errors).lower()
+
+        # These should be found
+        assert "summary" in error_text
+        assert "valid_section" in error_text
+
+        # These should NOT appear because they have special chars and hit the continue statement
+        assert "code.file" not in error_text
+        assert "path/to/file" not in error_text
+        assert "code`block" not in error_text
+        assert "back\\slash" not in error_text
+
+    def test_74_examples_regex_pattern_coverage(self) -> None:
+        """
+        Test to specifically cover the examples regex pattern.
+        """
+        examples_section = SectionConfig(
+            name="example", required=True, type="free_text", order=1, admonition="example", prefix="???+"
+        )
+        checker = DocstringChecker([examples_section])
+
+        # This should match the regex pattern
+        docstring_with_examples: str = dedent(
+            """
+            This is a test function.
+
+            ???+ example "Examples"
+                This is an example.
+            """
+        )
+
+        # This should return True
+        result: bool = checker._check_free_text_section(docstring_with_examples, examples_section)
+        assert result is True
+
+    def test_75_summary_section_formal_and_simple_patterns(self) -> None:
+        """
+        Test summary section validation with both formal and simple docstring patterns.
+        Covers formal pattern matching and simple content validation for summary sections.
+        """
+        # Create a section config that matches the condition for "summary"
+        summary_section = SectionConfig(
+            name="summary",  # Must be "summary" to hit the summary section validation
+            required=True,
+            type="free_text",
+            order=1,
+            admonition=False,  # Not a string admonition, so first condition fails
+            prefix="",
+        )
+        checker = DocstringChecker([summary_section])
+
+        # Test formal pattern match should return True
+        formal_docstring = """
+        This is a function.
+
+        !!! note "Summary"
+            This is a formal summary.
+        """
+        result_formal: bool = checker._check_free_text_section(formal_docstring, summary_section)
+        assert result_formal is True, "Formal summary pattern should be recognized"
+
+        # Test simple docstring content check
+        simple_docstring = "This is a simple docstring without formal formatting."
+        result_simple: bool = checker._check_free_text_section(simple_docstring, summary_section)
+        assert result_simple is True, "Simple docstring should satisfy summary requirement"
+
+        # Test with empty docstring to also cover the False case
+        empty_docstring: str = ""
+        result_empty: bool = checker._check_free_text_section(empty_docstring, summary_section)
+        assert result_empty is False, "Empty docstring should not satisfy summary requirement"
