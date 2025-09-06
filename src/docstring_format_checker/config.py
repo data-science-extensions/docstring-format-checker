@@ -111,15 +111,42 @@ class SectionConfig:
     order: int
     name: str
     type: Literal["free_text", "list_name", "list_type", "list_name_and_type"]
-    admonition: str = ""
+    admonition: Union[bool, str] = False
     prefix: str = ""  # Support any prefix string
     required: bool = False
     message: str = ""  # Optional message for validation errors
 
     def __post_init__(self) -> None:
         """Validate configuration after initialization."""
+        self._validate_types()
+        self._validate_admonition_prefix_combination()
+
+    def _validate_types(self) -> None:
+        """Validate the 'type' field."""
         if self.type not in VALID_TYPES:
             raise InvalidTypeValuesError(f"Invalid section type: {self.type}. Valid types: {VALID_TYPES}")
+
+    def _validate_admonition_prefix_combination(self) -> None:
+        """Validate admonition and prefix combination rules."""
+
+        if isinstance(self.admonition, bool):
+            # Rule: admonition cannot be True (only False or string)
+            if self.admonition is True:
+                raise ValueError(f"Section '{self.name}': admonition cannot be True, must be False or a string")
+
+            # Rule: if admonition is False, prefix cannot be provided
+            if self.admonition is False and self.prefix:
+                raise ValueError(f"Section '{self.name}': when admonition=False, prefix cannot be provided")
+
+        elif isinstance(self.admonition, str):
+            # Rule: if admonition is a string, prefix must be provided
+            if not self.prefix:
+                raise ValueError(f"Section '{self.name}': when admonition is a string, prefix must be provided")
+
+        else:
+            raise ValueError(
+                f"Section '{self.name}': admonition must be a boolean or string, got {type(self.admonition)}"
+            )
 
 
 ## --------------------------------------------------------------------------- #
@@ -271,11 +298,18 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> list[SectionC
         sections_data = tool_config["sections"]
         for section_data in sections_data:
             try:
+                # Get admonition value with proper default handling
+                admonition_value: Union[str, bool] = section_data.get("admonition")
+                if admonition_value is None:
+                    admonition_value = False  # Use SectionConfig default
+                elif isinstance(admonition_value, str) and admonition_value == "":
+                    admonition_value = False  # Treat empty string as False
+
                 section = SectionConfig(
                     order=section_data.get("order", 0),
                     name=section_data.get("name", ""),
                     type=section_data.get("type", ""),
-                    admonition=section_data.get("admonition", ""),
+                    admonition=admonition_value,
                     prefix=section_data.get("prefix", ""),
                     required=section_data.get("required", False),
                 )
