@@ -477,6 +477,10 @@ class DocstringChecker:
         title_case_errors: list[str] = self._check_title_case_sections(docstring)
         errors.extend(title_case_errors)
 
+        # Check parentheses for list type sections
+        parentheses_errors: list[str] = self._check_parentheses_validation(docstring)
+        errors.extend(parentheses_errors)
+
         if errors:
             combined_message: str = "; ".join(errors)
             raise DocstringError(
@@ -892,4 +896,79 @@ class DocstringChecker:
                         )
 
         return errors
+
+    def _check_parentheses_validation(self, docstring: str) -> list[str]:
+        """
+        Check that list_type and list_name_and_type sections have proper parentheses.
+        """
+
+        errors: list[str] = []
+
+        # Get sections that require parentheses
+        parentheses_sections: list[SectionConfig] = [
+            s for s in self.sections_config if s.type in ["list_type", "list_name_and_type"]
+        ]
+
+        if not parentheses_sections:
+            return errors
+
+        # Check each line in the docstring
+        lines: list[str] = docstring.split("\n")
+        current_section = None
+
+        for i, line in enumerate(lines):
+            stripped_line: str = line.strip()
+
+            # Detect section headers
+            # Admonition sections
+            admonition_match: Optional[re.Match[str]] = re.match(
+                r"(?:\?\?\?[+]?|!!!)\s+\w+\s+\"([^\"]+)\"", stripped_line, re.IGNORECASE
+            )
+            if admonition_match:
+                section_name: str = admonition_match.group(1).lower()
+                current_section: Optional[SectionConfig] = next(
+                    (s for s in parentheses_sections if s.name.lower() == section_name), None
+                )
+                continue
+
+            # Non-admonition sections - only match actual section headers, not indented content
+            # Section headers should be at the start of the line (no leading whitespace)
+            if not line.startswith((" ", "\t")):  # Not indented
+                simple_section_match: Optional[re.Match[str]] = re.match(r"^(\w+):?$", stripped_line)
+                if simple_section_match:
+                    section_name: str = simple_section_match.group(1).lower()
+                    # Only consider it a section if it matches our known sections
+                    potential_section: Optional[SectionConfig] = next(
+                        (s for s in self.sections_config if s.name.lower() == section_name), None
+                    )
+                    if potential_section:
+                        # This is a real section header
+                        current_section = next(
+                            (s for s in parentheses_sections if s.name.lower() == section_name), None
+                        )
+                        continue
+                    # If it doesn't match a known section, fall through to content processing
+
+            # Check content lines if we're in a parentheses-required section
+            if current_section and stripped_line and not stripped_line.startswith(("!", "?", "#")):
+                # Look for parameter/type definitions
+                if ":" in stripped_line:
+                    # For list_name_and_type sections, check format like "name (type):" or "(type):"
+                    if current_section.type == "list_name_and_type":
+                        # Pattern: name (type): or (type):
+                        if not re.search(r"\([^)]+\):", stripped_line):
+                            errors.append(
+                                f"Section '{current_section.name}' (type: {current_section.type}) requires "
+                                f"parenthesized types, missing in: '{stripped_line}'"
+                            )
+
+                    # For list_type sections, check format like "(Type):"
+                    elif current_section.type == "list_type":
+                        # Pattern: (Type):
+                        if not re.search(r"^\s*\([^)]+\):", stripped_line):
+                            errors.append(
+                                f"Section '{current_section.name}' (type: {current_section.type}) requires "
+                                f"parenthesized types, missing in: '{stripped_line}'"
+                            )
+
         return errors
