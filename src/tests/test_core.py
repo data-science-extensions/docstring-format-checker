@@ -2225,7 +2225,9 @@ class TestDocstringChecker(TestCase):
         parentheses_error_count: int = error_message.count("requires parenthesized types")
         assert (
             parentheses_error_count >= 2
-        ), f"Expected at least 2 parentheses violations in error message, got: {parentheses_error_count}"  # Clean up
+        ), f"Expected at least 2 parentheses violations in error message, got: {parentheses_error_count}"
+
+        # Clean up
         py_file.unlink(missing_ok=True)
 
     def test_59_parentheses_validation_list_name_and_type_sections(self) -> None:
