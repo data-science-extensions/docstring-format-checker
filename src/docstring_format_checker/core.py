@@ -255,6 +255,7 @@ class DocstringChecker:
             (bool):
                 True if the function has @overload decorator, False otherwise.
         """
+
         for decorator in node.decorator_list:
             # Handle direct name reference: @overload
             if isinstance(decorator, ast.Name) and decorator.id == "overload":
@@ -422,6 +423,7 @@ class DocstringChecker:
             (None):
                 Nothing is returned.
         """
+
         errors: list[str] = []
 
         # Check each required section
@@ -524,6 +526,7 @@ class DocstringChecker:
             (bool):
                 `True` if the section exists and is valid, `False` otherwise.
         """
+
         # Get function parameters (excluding 'self' for methods)
         params: list[str] = [arg.arg for arg in node.args.args if arg.arg != "self"]
 
@@ -555,6 +558,7 @@ class DocstringChecker:
             (bool):
                 `True` if the section exists, `False` otherwise.
         """
+
         return bool(re.search(r"Returns:", docstring))
 
     def _check_raises_section(self, docstring: str) -> bool:
@@ -570,6 +574,7 @@ class DocstringChecker:
             (bool):
                 `True` if the section exists, `False` otherwise.
         """
+
         return bool(re.search(r"Raises:", docstring))
 
     def _has_both_returns_and_yields(self, docstring: str) -> bool:
@@ -585,6 +590,7 @@ class DocstringChecker:
             (bool):
                 `True` if the section exists, `False` otherwise.
         """
+
         has_returns = bool(re.search(r"Returns:", docstring))
         has_yields = bool(re.search(r"Yields:", docstring))
         return has_returns and has_yields
@@ -602,6 +608,7 @@ class DocstringChecker:
             (list[str]):
                 A list of error messages, if any.
         """
+
         # Build expected order from configuration
         section_patterns: list[tuple[str, str]] = []
         for section in sorted(self.sections_config, key=lambda x: x.order):
@@ -685,6 +692,7 @@ class DocstringChecker:
             (bool):
                 `True` if the section exists, `False` otherwise.
         """
+
         return bool(re.search(r"Yields:", docstring))
 
     def _check_simple_section(self, docstring: str, section_name: str) -> bool:
@@ -702,6 +710,7 @@ class DocstringChecker:
             (bool):
                 `True` if the section exists, `False` otherwise.
         """
+
         pattern: str = rf"{re.escape(section_name)}:"
         return bool(re.search(pattern, docstring, re.IGNORECASE))
 
@@ -718,6 +727,7 @@ class DocstringChecker:
             (list[str]):
                 A list of error messages for undefined sections.
         """
+
         errors: list[str] = []
 
         # Get all configured section names (case-insensitive)
@@ -768,6 +778,7 @@ class DocstringChecker:
             (list[str]):
                 A list of error messages for mismatched admonitions.
         """
+
         errors: list[str] = []
 
         # Create mapping of section names to expected admonitions
