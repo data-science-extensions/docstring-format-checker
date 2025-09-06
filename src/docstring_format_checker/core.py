@@ -473,6 +473,10 @@ class DocstringChecker:
         colon_errors: list[str] = self._check_colon_usage(docstring)
         errors.extend(colon_errors)
 
+        # Check title case for non-admonition sections
+        title_case_errors: list[str] = self._check_title_case_sections(docstring)
+        errors.extend(title_case_errors)
+
         if errors:
             combined_message: str = "; ".join(errors)
             raise DocstringError(
@@ -857,4 +861,35 @@ class DocstringChecker:
 
         return errors
 
+    def _check_title_case_sections(self, docstring: str) -> list[str]:
+        """
+        Check that non-admonition sections are single word, title case, and match config name.
+        """
+
+        errors: list[str] = []
+
+        # Pattern to find section headers (single word followed by optional colon)
+        section_pattern = r"^(\w+):?$"
+
+        for line in docstring.split("\n"):
+            line: str = line.strip()
+            match: Optional[re.Match[str]] = re.match(section_pattern, line)
+            if match:
+                section_word: str = match.group(1)
+                section_name_lower: str = section_word.lower()
+
+                # Check if this is a configured non-admonition section
+                section_config: Optional[SectionConfig] = next(
+                    (s for s in self.sections_config if s.name.lower() == section_name_lower), None
+                )
+                if section_config and section_config.admonition is False:
+                    # Check if it's title case
+                    expected_title_case: str = section_config.name.title()
+                    if section_word != expected_title_case:
+                        errors.append(
+                            f"Section '{section_name_lower}' must be in title case as '{expected_title_case}', "
+                            f"found: '{section_word}'"
+                        )
+
+        return errors
         return errors
