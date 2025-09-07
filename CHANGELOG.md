@@ -9,6 +9,34 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v0.5.0"
+
+    ## **v0.5.0 - Streamline CLI Architecture**
+
+    <!-- md:tag v0.5.0 --><br>
+    <!-- md:date 2025-09-07 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v0.5.0](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v0.5.0) -->
+
+    ??? note "Release Notes"
+
+        ### What's Changed        * Streamline CLI Architecture: Simplify Interface Design and Achieve Complete Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/5                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.4.0...v0.5.0
+
+    ??? abstract "Updates"
+
+        * Increase code coverage (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/d29faf0a817f9f9d91b0b5580e076283e3405ee0)
+
+        * Fix failing unit tests (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/8b4f42aa6aec1e296d280bf22a31dade80da5f6f)
+
+        * Add `--examples`/`-e` flags to the CLI, instead of using a sub-command (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/dfccf355b3ded218b436249968a446e95b50f148)
+
+        * Remove the unnecessary `_parse_boolean_flag()` function and all associated unit tests (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/76cbd784df3e7bd364448ce6011947a243133481)
+
+        * Remove all references to the `--recursive`/`-r` flag, and ensure that it will always be recursive by default (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/3e583f52021fae17043ee51ac7b75eb5b41c43bf)
+
+        * Update docstring format in CLI module to be more pythonic (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/2614316794560fe6934673820f93e663af5cbb19)
+
+
+
 !!! info "v0.4.0"
 
     ## **v0.4.0 - Enhance CLI Error Output Formatting**
