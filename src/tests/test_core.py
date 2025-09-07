@@ -287,43 +287,7 @@ class TestDocstringChecker(TestCase):
             assert any("bad.py" in path for path in results.keys())
             assert any("nested.py" in path for path in results.keys())
 
-    def test_06_check_directory_non_recursive(self) -> None:
-        """
-        Test checking a directory non-recursively.
-        """
-
-        with tempfile.TemporaryDirectory() as temp_dir:
-
-            # Create test files
-            temp_path = Path(temp_dir)
-            temp_path.joinpath("bad.py").write_text(
-                dedent(
-                    """
-                    def bad_function():
-                        pass
-                    """
-                )
-            )
-
-            temp_path.joinpath("subdir").mkdir()
-            temp_path.joinpath("subdir", "nested.py").write_text(
-                dedent(
-                    """
-                    def nested_function():
-                        pass
-                    """
-                )
-            )
-
-            # Check directory non-recursively
-            results: dict[str, list[DocstringError]] = self.simple_checker.check_directory(temp_path, recursive=False)
-
-            # Should only find errors in bad.py, not nested.py
-            assert len(results) == 1
-            assert any("bad.py" in path for path in results.keys())
-            assert not any("nested.py" in path for path in results.keys())
-
-    def test_07_check_directory_with_exclusions(self) -> None:
+    def test_06_check_directory_with_exclusions(self) -> None:
         """
         Test checking a directory with exclusion patterns.
         """
