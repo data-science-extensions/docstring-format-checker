@@ -43,25 +43,16 @@
 
 
 # ## Python StdLib Imports ----
+from functools import partial
 from pathlib import Path
 from textwrap import dedent
-from typing import Optional, Union
+from typing import Optional
 
 # ## Python Third Party Imports ----
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from toolbox_python.bools import strtobool
-from typer import (
-    Argument,
-    BadParameter,
-    CallbackParam,
-    Context,
-    Exit,
-    Option,
-    Typer,
-    echo,
-)
+from typer import Argument, CallbackParam, Context, Exit, Option, Typer, echo
 
 # ## Local First Party Imports ----
 from docstring_format_checker import __version__
@@ -76,8 +67,6 @@ from docstring_format_checker.core import DocstringChecker, DocstringError
 
 __all__: list[str] = [
     "main",
-    "config_example",
-    "check",
     "entry_point",
 ]
 
@@ -88,6 +77,22 @@ __all__: list[str] = [
 
 
 NEW_LINE = "\n"
+
+
+## --------------------------------------------------------------------------- #
+##  Helpers                                                                 ####
+## --------------------------------------------------------------------------- #
+
+
+### Colours ----
+def _colour(text: str, colour: str) -> str:
+    return f"[{colour}]{text}[/{colour}]"
+
+
+_green = partial(_colour, colour="green")
+_red = partial(_colour, colour="red")
+_cyan = partial(_colour, colour="cyan")
+_blue = partial(_colour, colour="blue")
 
 
 # ---------------------------------------------------------------------------- #
@@ -136,7 +141,7 @@ def _version_callback(ctx: Context, param: CallbackParam, value: bool) -> None:
         raise Exit()
 
 
-def _help_callback(ctx: Context, param: CallbackParam, value: bool) -> None:
+def _help_callback_main(ctx: Context, param: CallbackParam, value: bool) -> None:
     """
     !!! note "Summary"
         Show help and exit.
@@ -159,10 +164,10 @@ def _help_callback(ctx: Context, param: CallbackParam, value: bool) -> None:
     raise Exit()
 
 
-def _parse_boolean_flag(ctx: Context, param: CallbackParam, value: Optional[str]) -> Optional[bool]:
+def _example_callback(ctx: Context, param: CallbackParam, value: Optional[str]) -> None:
     """
     !!! note "Summary"
-        Parse boolean flag that accepts various true/false values.
+        Handle example flag and show appropriate example content.
 
     Params:
         ctx (Context):
@@ -170,51 +175,26 @@ def _parse_boolean_flag(ctx: Context, param: CallbackParam, value: Optional[str]
         param (CallbackParam):
             The parameter object.
         value (Optional[str]):
-            The string value of the flag.
+            The example type to show: 'config' or 'usage'.
 
     Returns:
-        (Optional[bool]):
-            The parsed boolean value or `None` if not provided.
+        (None):
+            Nothing is returned.
     """
 
-    # Handle the case where the flag is provided without a value (e.g., just --recursive or -r)
-    # In this case, Typer doesn't call the callback, so we need to handle it differently
-    if value is None:
-        # This means the flag wasn't provided at all, use default
-        return True
+    if not value or ctx.resilient_parsing:
+        return
 
-    # If value is an empty string, it means the flag was provided without a value
-    if value == "":
-        return True
-
-    try:
-        return strtobool(value)
-    except ValueError as e:
-        raise BadParameter(
-            message=(
-                f"Invalid boolean value: '{value}'.{NEW_LINE}"
-                "Use one of: true/false, t/f, yes/no, y/n, 1/0, or on/off."
-            )
-        ) from e
+    if value == "config":
+        _show_config_example_callback()
+    elif value == "usage":
+        _show_usage_examples_callback()
+    else:
+        console.print(_red(f"Error: Invalid example type '{value}'. Use 'config' or 'usage'."))
+        raise Exit(1)
 
 
-def _parse_recursive_flag(value: str) -> bool:
-    """
-    !!! note "Summary"
-        Parse recursive flag using `strtobool()` utility.
-
-    Params:
-        value (str):
-            The string value of the flag.
-
-    Returns:
-        (bool):
-            The parsed boolean value.
-    """
-    return strtobool(value)
-
-
-def _show_examples_callback(ctx: Context, param: CallbackParam, value: bool) -> None:
+def _show_usage_examples_callback() -> None:
     """
     !!! note "Summary"
         Show examples and exit.
@@ -232,17 +212,19 @@ def _show_examples_callback(ctx: Context, param: CallbackParam, value: bool) -> 
             Nothing is returned.
     """
 
-    if not value or ctx.resilient_parsing:
-        return
-
     examples_content: str = dedent(
-        """
-        [green]dfc check myfile.py[/green]                    Check a single Python file
-        [green]dfc check src/[/green]                         Check all Python files in src/ directory
-        [green]dfc check . --exclude "*/tests/*"[/green]      Check current directory, excluding tests
-        [green]dfc check . -c custom.toml[/green]             Use custom configuration file
-        [green]dfc check . --verbose[/green]                  Show detailed validation output
-        [green]dfc config-example[/green]                     Show example configuration
+        f"""
+        {_green("dfc myfile.py")}                   Check a single Python file (list output)
+        {_green("dfc src/")}                        Check all Python files in src/ directory
+        {_green("dfc --output=table myfile.py")}    Check with table output format
+        {_green("dfc -o list myfile.py")}           Check with list output format (default)
+        {_green("dfc --check myfile.py")}           Check and exit with error if issues found
+        {_green("dfc --quiet myfile.py")}           Check quietly, only show pass/fail
+        {_green("dfc --quiet --check myfile.py")}   Check quietly and exit with error if issues found
+        {_green("dfc . --exclude '*/tests/*'")}     Check current directory, excluding tests
+        {_green("dfc . -c custom.toml")}            Use custom configuration file
+        {_green("dfc --example=config")}            Show example configuration
+        {_green("dfc -e usage")}                    Show usage examples (this help)
         """
     ).strip()
 
@@ -258,10 +240,10 @@ def _show_examples_callback(ctx: Context, param: CallbackParam, value: bool) -> 
     raise Exit()
 
 
-def _show_check_examples_callback(ctx: Context, param: CallbackParam, value: bool) -> None:
+def _show_config_example_callback() -> None:
     """
     !!! note "Summary"
-        Show check command examples and exit.
+        Show configuration example and exit.
 
     Params:
         ctx (Context):
@@ -276,395 +258,6 @@ def _show_check_examples_callback(ctx: Context, param: CallbackParam, value: boo
             Nothing is returned.
     """
 
-    if not value or ctx.resilient_parsing:
-        return
-
-    examples_content: str = dedent(
-        """
-        [green]dfc check myfile.py[/green]                    Check a single Python file
-        [green]dfc check src/[/green]                         Check all Python files in src/ directory
-        [green]dfc check . --exclude "*/tests/*"[/green]      Check current directory, excluding tests
-        [green]dfc check . --config custom.toml[/green]       Use custom configuration file
-        [green]dfc check . --verbose --recursive[/green]      Show detailed output for all subdirectories
-        [green]dfc check . --quiet[/green]                    Only show errors, suppress success messages
-        """
-    )
-
-    panel = Panel(
-        examples_content,
-        title="Check Command Examples",
-        title_align="left",
-        border_style="dim",
-        padding=(0, 1),
-    )
-
-    console.print(panel)
-    raise Exit()
-
-
-def _format_error_messages(error_message: str) -> str:
-    """
-    !!! note "Summary"
-        Format error messages for better readability in CLI output.
-
-    Params:
-        error_message (str):
-            The raw error message that may contain semicolon-separated errors
-
-    Returns:
-        (str):
-            Formatted error message with each error prefixed with "- " and separated by ";\n"
-    """
-    if "; " in error_message:
-        # Split by semicolon and rejoin with proper formatting
-        errors: list[str] = error_message.split("; ")
-        formatted_errors: list[str] = [f"- {error.strip()}" for error in errors if error.strip()]
-        return ";\n".join(formatted_errors) + "."
-    else:
-        # Single error message
-        return f"- {error_message.strip()}."
-
-
-def _display_results(results: dict[str, list[DocstringError]], quiet: bool, verbose: bool) -> int:
-    """
-    !!! note "Summary"
-        Display the results of docstring checking.
-
-    Params:
-        results (dict[str, list[DocstringError]]):
-            Dictionary mapping file paths to lists of errors
-        quiet (bool):
-            Whether to suppress success messages
-        verbose (bool):
-            Whether to show detailed output
-
-    Returns:
-        (int):
-            Exit code (`0` for success, `1` for errors found)
-    """
-    if not results:
-        if not quiet:
-            console.print("[green]✓ All docstrings are valid![/green]")
-        return 0
-
-    # Count total errors
-    total_errors: int = sum(len(errors) for errors in results.values())
-    total_files: int = len(results)
-
-    if verbose:
-        # Show detailed table
-        table = Table(show_header=True, header_style="bold magenta")
-        table.add_column("File", style="cyan", no_wrap=False)
-        table.add_column("Line", justify="right", style="white")
-        table.add_column("Item", style="yellow")
-        table.add_column("Type", style="blue")
-        table.add_column("Error", style="red")
-
-        for file_path, errors in results.items():
-            for i, error in enumerate(errors):
-                file_display: str = file_path if i == 0 else ""
-
-                # Format error message with improved formatting
-                formatted_error_message: str = _format_error_messages(error.message)
-
-                table.add_row(
-                    file_display,
-                    str(error.line_number) if error.line_number > 0 else "",
-                    error.item_name,
-                    error.item_type,
-                    formatted_error_message,
-                )
-        console.print(table)
-
-    else:
-        # Show compact output
-        for file_path, errors in results.items():
-            console.print(f"{NEW_LINE}[cyan]{file_path}[/cyan]")
-            for error in errors:
-                # Format error message with improved formatting
-                formatted_error_message: str = _format_error_messages(error.message)
-
-                if error.line_number > 0:
-                    console.print(
-                        f"  [red]Line {error.line_number}[/red] - {error.item_type} '{error.item_name}': {formatted_error_message}"
-                    )
-                else:
-                    console.print(f"  [red]Error[/red]: {formatted_error_message}")
-
-    # Summary
-    console.print(f"{NEW_LINE}[red]Found {total_errors} error(s) in {total_files} file(s)[/red]")
-
-    return 1
-
-
-# ---------------------------------------------------------------------------- #
-#                                                                              #
-#     Main Logic                                                            ####
-#                                                                              #
-# ---------------------------------------------------------------------------- #
-
-
-# This will be the default behavior when no command is specified
-def _check_docstrings(
-    path: str,
-    config: Optional[str] = None,
-    recursive: bool = True,
-    exclude: Optional[list[str]] = None,
-    quiet: bool = False,
-    verbose: bool = False,
-) -> None:
-    """
-    !!! note "Summary"
-        Core logic for checking docstrings.
-
-    Params:
-        path (str):
-            The path to the file or directory to check.
-        config (Optional[str]):
-            The path to the configuration file.
-        recursive (bool):
-            Whether to check files recursively.
-        exclude (Optional[list[str]]):
-            List of glob patterns to exclude from checking.
-        quiet (bool):
-            Whether to suppress output.
-        verbose (bool):
-            Whether to show detailed output.
-
-    Returns:
-        (None):
-            Nothing is returned.
-    """
-
-    target_path = Path(path)
-
-    # Validate target path
-    if not target_path.exists():
-        console.print(f"[red]Error: Path does not exist: {path}[/red]")
-        raise Exit(1)
-
-    # Load configuration
-    try:
-        if config:
-            config_path = Path(config)
-            if not config_path.exists():
-                console.print(f"[red]Error: Configuration file does not exist: {config}[/red]")
-                raise Exit(1)
-            sections_config = load_config(config_path)
-        else:
-            # Try to find config file automatically
-            found_config: Union[Path, None] = find_config_file(
-                target_path if target_path.is_dir() else target_path.parent
-            )
-            if found_config:
-                if verbose:
-                    console.print(f"[blue]Using configuration from: {found_config}[/blue]")
-                sections_config: list[SectionConfig] = load_config(found_config)
-            else:
-                if verbose:
-                    console.print("[blue]Using default configuration[/blue]")
-                sections_config: list[SectionConfig] = load_config()
-
-    except Exception as e:
-        console.print(f"[red]Error loading configuration: {e}[/red]")
-        raise Exit(1)
-
-    # Initialize checker
-    checker = DocstringChecker(sections_config)
-
-    # Check files
-    try:
-        if target_path.is_file():
-            if verbose:
-                console.print(f"[blue]Checking file: {target_path}[/blue]")
-            errors: list[DocstringError] = checker.check_file(target_path)
-            results: dict[str, list[DocstringError]] = {str(target_path): errors} if errors else {}
-        else:
-            if verbose:
-                console.print(f"[blue]Checking directory: {target_path} (recursive={recursive})[/blue]")
-            results: dict[str, list[DocstringError]] = checker.check_directory(
-                target_path, recursive=recursive, exclude_patterns=exclude
-            )
-    except Exception as e:
-        console.print(f"[red]Error during checking: {e}[/red]")
-        raise Exit(1)
-
-    # Display results
-    exit_code: int = _display_results(results, quiet, verbose)
-
-    if exit_code != 0:
-        raise Exit(exit_code)
-
-
-# ---------------------------------------------------------------------------- #
-#                                                                              #
-#     App Operators                                                         ####
-#                                                                              #
-# ---------------------------------------------------------------------------- #
-
-
-# Simple callback that only handles global options and delegates to subcommands
-@app.callback(invoke_without_command=True)
-def main(
-    ctx: Context,
-    version: Optional[bool] = Option(
-        None,
-        "--version",
-        "-v",
-        callback=_version_callback,
-        is_eager=True,
-        help="Show version and exit",
-    ),
-    examples: Optional[bool] = Option(
-        None,
-        "--examples",
-        "-e",
-        callback=_show_examples_callback,
-        is_eager=True,
-        help="Show usage examples and exit",
-    ),
-    help_flag: Optional[bool] = Option(
-        None,
-        "--help",
-        "-h",
-        callback=_help_callback,
-        is_eager=True,
-        help="Show this message and exit",
-    ),
-) -> None:
-    """
-    !!! note "Summary"
-        Check Python docstring formatting and completeness.
-
-    ???+ abstract "Details"
-        This tool analyzes Python files and validates that functions, methods, and classes have properly formatted docstrings according to the configured sections.
-
-    Params:
-        ctx (Context):
-            The context object for the command.
-        version (Optional[bool]):
-            Show version and exit.
-        examples (Optional[bool]):
-            Show usage examples and exit.
-        help_flag (Optional[bool]):
-            Show help message and exit.
-
-    Returns:
-        (None):
-            Nothing is returned.
-    """
-    # If no subcommand is provided, show help
-    if ctx.invoked_subcommand is None:
-        echo(ctx.get_help())
-        raise Exit()
-
-
-@app.command(
-    rich_help_panel="Commands",
-    add_help_option=False,  # Disable automatic help so we can add our own with -h
-)
-def check(
-    path: str = Argument(..., help="Path to Python file or directory to check"),
-    config: Optional[str] = Option(None, "--config", "-c", help="Path to configuration file (TOML format)"),
-    recursive: str = Option(
-        "true",
-        "--recursive",
-        "-r",
-        help="Check directories recursively (default: true). Accepts: true/false, t/f, yes/no, y/n, 1/0, on/off",
-    ),
-    exclude: Optional[list[str]] = Option(
-        None,
-        "--exclude",
-        "-x",
-        help="Glob patterns to exclude (can be used multiple times)",
-    ),
-    quiet: bool = Option(False, "--quiet", "-q", help="Only show errors, no success messages"),
-    verbose: bool = Option(False, "--verbose", "-n", help="Show detailed output"),
-    examples: Optional[bool] = Option(
-        None,
-        "--examples",
-        "-e",
-        callback=_show_check_examples_callback,
-        is_eager=True,
-        help="Show usage examples and exit",
-    ),
-    help_flag: Optional[bool] = Option(
-        None,
-        "--help",
-        "-h",
-        callback=_help_callback,
-        is_eager=True,
-        help="Show this message and exit",
-    ),
-) -> None:
-    """
-    !!! note "Summary"
-        Check docstrings in Python files.
-
-    ???+ abstract "Details"
-        This command checks the docstrings in the specified Python file or directory.
-
-    Params:
-        path (str):
-            The path to the Python file or directory to check.
-        config (Optional[str]):
-            The path to the configuration file (TOML format).
-        recursive (bool):
-            Whether to check directories recursively.
-        exclude (list[str]):
-            Glob patterns to exclude (can be used multiple times).
-        quiet (bool):
-            Whether to only show errors, no success messages.
-        verbose (bool):
-            Whether to show detailed output.
-        examples (Optional[bool]):
-            Show usage examples and exit.
-        help_flag (Optional[bool]):
-            Show help message and exit.
-
-    Returns:
-        (None):
-            Nothing is returned.
-    """
-    # Parse the recursive string value into a boolean
-    try:
-        recursive_bool: bool = _parse_recursive_flag(recursive)
-    except ValueError as e:
-        raise BadParameter(
-            message=(
-                f"Invalid value for --recursive: '{recursive}'.{NEW_LINE}"
-                "Use one of: true/false, t/f, yes/no, y/n, 1/0, or on/off."
-            )
-        ) from e
-    _check_docstrings(path, config, recursive_bool, exclude, quiet, verbose)
-
-
-@app.command(
-    rich_help_panel="Commands",
-    add_help_option=False,  # Disable automatic help so we can add our own with -h
-)
-def config_example(
-    help_flag: Optional[bool] = Option(
-        None,
-        "--help",
-        "-h",
-        callback=_help_callback,
-        is_eager=True,
-        help="Show this message and exit",
-    ),
-) -> None:
-    """
-    !!! note "Summary"
-        Show example configuration file.
-
-    Params:
-        help_flag (Optional[bool]):
-            Show help message and exit.
-
-    Returns:
-        (None):
-            Nothing is returned.
-    """
     example_config: str = dedent(
         """
         # Example configuration for docstring-format-checker
@@ -728,10 +321,319 @@ def config_example(
         admonition = "note"
         prefix = "???"
         required = false
-        """.strip()
-    )
+        """
+    ).strip()
 
-    print(example_config)
+    # Print without Rich markup processing to avoid bracket interpretation
+    console.print(example_config, markup=False)
+    raise Exit()
+
+
+def _format_error_messages(error_message: str) -> str:
+    """
+    !!! note "Summary"
+        Format error messages for better readability in CLI output.
+
+    Params:
+        error_message (str):
+            The raw error message that may contain semicolon-separated errors
+
+    Returns:
+        (str):
+            Formatted error message with each error prefixed with "- " and separated by ";\n"
+    """
+    if "; " in error_message:
+        # Split by semicolon and rejoin with proper formatting
+        errors: list[str] = error_message.split("; ")
+        formatted_errors: list[str] = [f"- {error.strip()}" for error in errors if error.strip()]
+        return ";\n".join(formatted_errors) + "."
+    else:
+        # Single error message
+        return f"- {error_message.strip()}."
+
+
+def _display_results(results: dict[str, list[DocstringError]], quiet: bool, output: str, check: bool) -> int:
+    """
+    !!! note "Summary"
+        Display the results of docstring checking.
+
+    Params:
+        results (dict[str, list[DocstringError]]):
+            Dictionary mapping file paths to lists of errors
+        quiet (bool):
+            Whether to suppress success messages and error details
+        output (str):
+            Output format: 'table' or 'list'
+        check (bool):
+            Whether this is a check run (affects quiet behavior)
+
+    Returns:
+        (int):
+            Exit code (`0` for success, `1` for errors found)
+    """
+    if not results:
+        if not quiet:
+            console.print(_green("✓ All docstrings are valid!"))
+        return 0
+
+    # Count total errors
+    total_errors: int = sum(len(errors) for errors in results.values())
+    total_files: int = len(results)
+
+    if quiet:
+        # In quiet mode, only show summary
+        console.print(_red(f"{NEW_LINE}Found {total_errors} error(s) in {total_files} file(s)"))
+        return 1
+
+    if output == "table":
+        # Show detailed table
+        table = Table(show_header=True, header_style="bold magenta")
+        table.add_column("File", style="cyan", no_wrap=False)
+        table.add_column("Line", justify="right", style="white")
+        table.add_column("Item", style="yellow")
+        table.add_column("Type", style="blue")
+        table.add_column("Error", style="red")
+
+        for file_path, errors in results.items():
+            for i, error in enumerate(errors):
+                file_display: str = file_path if i == 0 else ""
+
+                # Format error message with improved formatting
+                formatted_error_message: str = _format_error_messages(error.message)
+
+                table.add_row(
+                    file_display,
+                    str(error.line_number) if error.line_number > 0 else "",
+                    error.item_name,
+                    error.item_type,
+                    formatted_error_message,
+                )
+        console.print(table)
+
+    else:
+        # Show compact output
+        for file_path, errors in results.items():
+            console.print(f"{NEW_LINE}{_cyan(file_path)}")
+            for error in errors:
+                # Format error message with improved formatting
+                formatted_error_message: str = _format_error_messages(error.message)
+
+                if error.line_number > 0:
+                    console.print(
+                        f"  [red]Line {error.line_number}[/red] - {error.item_type} '{error.item_name}': {formatted_error_message}"
+                    )
+                else:
+                    console.print(f"  {_red('Error')}: {formatted_error_message}")
+
+    # Summary
+    console.print(_red(f"{NEW_LINE}Found {total_errors} error(s) in {total_files} file(s)"))
+
+    return 1
+
+
+# ---------------------------------------------------------------------------- #
+#                                                                              #
+#     Main Logic                                                            ####
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+
+
+# This will be the default behavior when no command is specified
+def _check_docstrings(
+    path: str,
+    config: Optional[str] = None,
+    exclude: Optional[list[str]] = None,
+    quiet: bool = False,
+    output: str = "list",
+    check: bool = False,
+) -> None:
+    """
+    !!! note "Summary"
+        Core logic for checking docstrings.
+
+    Params:
+        path (str):
+            The path to the file or directory to check.
+        config (Optional[str]):
+            The path to the configuration file.
+        exclude (Optional[list[str]]):
+            List of glob patterns to exclude from checking.
+        quiet (bool):
+            Whether to suppress output.
+        output (str):
+            Output format: 'table' or 'list'.
+        check (bool):
+            Whether to throw error if issues are found.
+
+    Returns:
+        (None):
+            Nothing is returned.
+    """
+
+    target_path = Path(path)
+
+    # Validate target path
+    if not target_path.exists():
+        console.print(_red(f"Error: Path does not exist: '{path}'"))
+        raise Exit(1)
+
+    # Load configuration
+    try:
+        if config:
+            config_path = Path(config)
+            if not config_path.exists():
+                console.print(_red(f"Error: Configuration file does not exist: {config}"))
+                raise Exit(1)
+            sections_config = load_config(config_path)
+        else:
+            # Try to find config file automatically
+            found_config: Optional[Path] = find_config_file(target_path if target_path.is_dir() else target_path.parent)
+            if found_config:
+                sections_config: list[SectionConfig] = load_config(found_config)
+            else:
+                sections_config: list[SectionConfig] = load_config()
+
+    except Exception as e:
+        console.print(_red(f"Error loading configuration: {e}"))
+        raise Exit(1)
+
+    # Initialize checker
+    checker = DocstringChecker(sections_config)
+
+    # Check files
+    try:
+        if target_path.is_file():
+            errors: list[DocstringError] = checker.check_file(target_path)
+            results: dict[str, list[DocstringError]] = {str(target_path): errors} if errors else {}
+        else:
+            results: dict[str, list[DocstringError]] = checker.check_directory(target_path, exclude_patterns=exclude)
+    except Exception as e:
+        console.print(_red(f"Error during checking: {e}"))
+        raise Exit(1)
+
+    # Display results
+    exit_code: int = _display_results(results, quiet, output, check)
+
+    # Always exit with error code if issues are found, regardless of check flag
+    if exit_code != 0:
+        raise Exit(exit_code)
+
+
+# ---------------------------------------------------------------------------- #
+#                                                                              #
+#     App Operators                                                         ####
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+
+
+# Simple callback that only handles global options and delegates to subcommands
+@app.callback(invoke_without_command=True)
+def main(
+    ctx: Context,
+    path: Optional[str] = Argument(None, help="Path to Python file or directory to check"),
+    config: Optional[str] = Option(None, "--config", "-f", help="Path to configuration file (TOML format)"),
+    exclude: Optional[list[str]] = Option(
+        None,
+        "--exclude",
+        "-x",
+        help="Glob patterns to exclude (can be used multiple times)",
+    ),
+    output: str = Option(
+        "list",
+        "--output",
+        "-o",
+        help="Output format: 'table' or 'list'",
+        show_default=True,
+    ),
+    check: bool = Option(
+        False,
+        "--check",
+        "-c",
+        help="Throw error (exit 1) if any issues are found",
+    ),
+    quiet: bool = Option(
+        False,
+        "--quiet",
+        "-q",
+        help="Only output pass/fail confirmation, suppress errors unless failing",
+    ),
+    example: Optional[str] = Option(
+        None,
+        "--example",
+        "-e",
+        callback=_example_callback,
+        is_eager=True,
+        help="Show examples: 'config' for configuration example, 'usage' for usage examples",
+    ),
+    version: Optional[bool] = Option(
+        None,
+        "--version",
+        "-v",
+        callback=_version_callback,
+        is_eager=True,
+        help="Show version and exit",
+    ),
+    help_flag: Optional[bool] = Option(
+        None,
+        "--help",
+        "-h",
+        callback=_help_callback_main,
+        is_eager=True,
+        help="Show this message and exit",
+    ),
+) -> None:
+    """
+    !!! note "Summary"
+        Check Python docstring formatting and completeness.
+
+    ???+ abstract "Details"
+        This tool analyzes Python files and validates that functions, methods, and classes have properly formatted docstrings according to the configured sections.
+
+    Params:
+        ctx (Context):
+            The context object for the command.
+        path (Optional[str]):
+            Path to Python file or directory to check.
+        config (Optional[str]):
+            Path to configuration file (TOML format).
+        exclude (Optional[list[str]]):
+            Glob patterns to exclude.
+        output (str):
+            Output format: 'table' or 'list'.
+        check (bool):
+            Throw error if any issues are found.
+        quiet (bool):
+            Only output pass/fail confirmation.
+        example (Optional[str]):
+            Show examples: 'config' or 'usage'.
+        version (Optional[bool]):
+            Show version and exit.
+        help_flag (Optional[bool]):
+            Show help message and exit.
+
+    Returns:
+        (None):
+            Nothing is returned.
+    """
+
+    # If no path is provided, show help
+    if path is None:
+        echo(ctx.get_help())
+        raise Exit(0)
+
+    # Validate output format
+    if output not in ["table", "list"]:
+        console.print(_red(f"Error: Invalid output format '{output}'. Use 'table' or 'list'."))
+        raise Exit(1)
+
+    _check_docstrings(
+        path=path,
+        config=config,
+        exclude=exclude,
+        quiet=quiet,
+        output=output,
+        check=check,
+    )
 
 
 def entry_point() -> None:
