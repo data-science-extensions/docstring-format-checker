@@ -43,9 +43,10 @@
 
 
 # ## Python StdLib Imports ----
+from functools import partial
 from pathlib import Path
 from textwrap import dedent
-from typing import Optional, Union
+from typing import Optional
 
 # ## Python Third Party Imports ----
 from rich.console import Console
@@ -88,6 +89,22 @@ __all__: list[str] = [
 
 
 NEW_LINE = "\n"
+
+
+## --------------------------------------------------------------------------- #
+##  Helpers                                                                 ####
+## --------------------------------------------------------------------------- #
+
+
+### Colours ----
+def colour(text: str, colour: str) -> str:
+    return f"[{colour}]{text}[/{colour}]"
+
+
+green = partial(colour, colour="green")
+red = partial(colour, colour="red")
+cyan = partial(colour, colour="cyan")
+blue = partial(colour, colour="blue")
 
 
 # ---------------------------------------------------------------------------- #
@@ -236,13 +253,13 @@ def _show_examples_callback(ctx: Context, param: CallbackParam, value: bool) -> 
         return
 
     examples_content: str = dedent(
-        """
-        [green]dfc check myfile.py[/green]                    Check a single Python file
-        [green]dfc check src/[/green]                         Check all Python files in src/ directory
-        [green]dfc check . --exclude "*/tests/*"[/green]      Check current directory, excluding tests
-        [green]dfc check . -c custom.toml[/green]             Use custom configuration file
-        [green]dfc check . --verbose[/green]                  Show detailed validation output
-        [green]dfc config-example[/green]                     Show example configuration
+        f"""
+        {green("dfc check myfile.py")}                    Check a single Python file
+        {green("dfc check src/")}                         Check all Python files in src/ directory
+        {green("dfc check . --exclude '*/tests/*'")}      Check current directory, excluding tests
+        {green("dfc check . -c custom.toml")}             Use custom configuration file
+        {green("dfc check . --verbose")}                  Show detailed validation output
+        {green("dfc config-example")}                     Show example configuration
         """
     ).strip()
 
@@ -280,13 +297,13 @@ def _show_check_examples_callback(ctx: Context, param: CallbackParam, value: boo
         return
 
     examples_content: str = dedent(
-        """
-        [green]dfc check myfile.py[/green]                    Check a single Python file
-        [green]dfc check src/[/green]                         Check all Python files in src/ directory
-        [green]dfc check . --exclude "*/tests/*"[/green]      Check current directory, excluding tests
-        [green]dfc check . --config custom.toml[/green]       Use custom configuration file
-        [green]dfc check . --verbose --recursive[/green]      Show detailed output for all subdirectories
-        [green]dfc check . --quiet[/green]                    Only show errors, suppress success messages
+        f"""
+        {green("dfc check myfile.py")}                    Check a single Python file
+        {green("dfc check src/")}                         Check all Python files in src/ directory
+        {green("dfc check . --exclude '*/tests/*'")}      Check current directory, excluding tests
+        {green("dfc check . --config custom.toml")}       Use custom configuration file
+        {green("dfc check . --verbose --recursive")}      Show detailed output for all subdirectories
+        {green("dfc check . --quiet")}                    Only show errors, suppress success messages
         """
     )
 
@@ -344,7 +361,7 @@ def _display_results(results: dict[str, list[DocstringError]], quiet: bool, verb
     """
     if not results:
         if not quiet:
-            console.print("[green]✓ All docstrings are valid![/green]")
+            console.print(green("✓ All docstrings are valid!"))
         return 0
 
     # Count total errors
@@ -379,7 +396,7 @@ def _display_results(results: dict[str, list[DocstringError]], quiet: bool, verb
     else:
         # Show compact output
         for file_path, errors in results.items():
-            console.print(f"{NEW_LINE}[cyan]{file_path}[/cyan]")
+            console.print(f"{NEW_LINE}{cyan(file_path)}")
             for error in errors:
                 # Format error message with improved formatting
                 formatted_error_message: str = _format_error_messages(error.message)
@@ -389,7 +406,7 @@ def _display_results(results: dict[str, list[DocstringError]], quiet: bool, verb
                         f"  [red]Line {error.line_number}[/red] - {error.item_type} '{error.item_name}': {formatted_error_message}"
                     )
                 else:
-                    console.print(f"  [red]Error[/red]: {formatted_error_message}")
+                    console.print(f"  {red('Error')}: {formatted_error_message}")
 
     # Summary
     console.print(f"{NEW_LINE}[red]Found {total_errors} error(s) in {total_files} file(s)[/red]")
@@ -453,9 +470,7 @@ def _check_docstrings(
             sections_config = load_config(config_path)
         else:
             # Try to find config file automatically
-            found_config: Union[Path, None] = find_config_file(
-                target_path if target_path.is_dir() else target_path.parent
-            )
+            found_config: Optional[Path] = find_config_file(target_path if target_path.is_dir() else target_path.parent)
             if found_config:
                 if verbose:
                     console.print(f"[blue]Using configuration from: {found_config}[/blue]")
