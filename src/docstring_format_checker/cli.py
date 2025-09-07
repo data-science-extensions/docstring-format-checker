@@ -165,12 +165,34 @@ def _help_callback_main(ctx: Context, param: CallbackParam, value: bool) -> None
     raise Exit()
 
 
-def _help_callback_example(ctx: Context, param: CallbackParam, value: bool) -> None:
+def _example_callback(ctx: Context, param: CallbackParam, value: Optional[str]) -> None:
+    """
+    !!! note "Summary"
+        Handle example flag and show appropriate example content.
+
+    Params:
+        ctx (Context):
+            The context object.
+        param (CallbackParam):
+            The parameter object.
+        value (Optional[str]):
+            The example type to show: 'config' or 'usage'.
+
+    Returns:
+        (None):
+            Nothing is returned.
+    """
+
     if not value or ctx.resilient_parsing:
         return
-    console.print("Example Command Help:")
-    echo(ctx.get_help())
-    raise Exit()
+
+    if value == "config":
+        _show_config_example_callback()
+    elif value == "usage":
+        _show_usage_examples_callback()
+    else:
+        console.print(_red(f"Error: Invalid example type '{value}'. Use '--config'/'-f' or '--usage'/'-u'."))
+        raise Exit(1)
 
 
 def _show_usage_examples_callback() -> None:
@@ -202,7 +224,8 @@ def _show_usage_examples_callback() -> None:
         {_green("dfc --quiet --check myfile.py")}   Check quietly and exit with error if issues found
         {_green("dfc . --exclude '*/tests/*'")}     Check current directory, excluding tests
         {_green("dfc . -c custom.toml")}            Use custom configuration file
-        {_green("dfc --config-example")}            Show example configuration
+        {_green("dfc --example=config")}            Show example configuration
+        {_green("dfc -e usage")}                    Show usage examples (this help)
         """
     ).strip()
 
@@ -504,7 +527,7 @@ def _check_docstrings(
 
 
 # Simple callback that only handles global options and delegates to subcommands
-@app.callback(invoke_without_command=True)
+@app.callback(invoke_without_command=False)
 def main(
     ctx: Context,
     path: Optional[str] = Argument(None, help="Path to Python file or directory to check"),
@@ -533,6 +556,14 @@ def main(
         "--quiet",
         "-q",
         help="Only output pass/fail confirmation, suppress errors unless failing",
+    ),
+    example: Optional[str] = Option(
+        None,
+        "--example",
+        "-e",
+        callback=_example_callback,
+        is_eager=True,
+        help="Show examples: 'config' for configuration example, 'usage' for usage examples",
     ),
     version: Optional[bool] = Option(
         None,
@@ -573,6 +604,8 @@ def main(
             Throw error if any issues are found.
         quiet (bool):
             Only output pass/fail confirmation.
+        example (Optional[str]):
+            Show examples: 'config' or 'usage'.
         version (Optional[bool]):
             Show version and exit.
         help_flag (Optional[bool]):
@@ -582,10 +615,6 @@ def main(
         (None):
             Nothing is returned.
     """
-
-    # If a subcommand is being invoked, don't run the main logic
-    if ctx.invoked_subcommand is not None:
-        return
 
     # If no path is provided, show help
     if path is None:
@@ -605,71 +634,6 @@ def main(
         output=output,
         check=check,
     )
-
-
-@app.command(
-    rich_help_panel="Commands",
-    add_help_option=True,
-    no_args_is_help=False,  # We'll handle no-args logic ourselves
-    short_help="Show configuration or usage examples.",
-)
-def example(
-    ctx: Context,
-    config: bool = Option(
-        False,
-        "--config",
-        "-f",
-        help="Show configuration example and exit",
-        is_flag=True,
-    ),
-    usage: bool = Option(
-        False,
-        "--usage",
-        "-u",
-        help="Show usage examples and exit",
-        is_flag=True,
-    ),
-    help_flag: Optional[bool] = Option(
-        None,
-        "--help",
-        "-h",
-        callback=_help_callback_example,
-        is_eager=True,
-        help="Show this message and exit",
-    ),
-) -> None:
-    """
-    !!! note "Summary"
-        Show configuration or usage examples.
-
-    Params:
-        ctx (Context):
-            The context object for the command.
-        config (bool):
-            Show configuration example.
-        usage (bool):
-            Show usage examples.
-
-    Returns:
-        (None):
-            Nothing is returned.
-    """
-
-    if config and usage:
-        console.print(_red("Error: Please specify either '--config' or '--usage', not both."))
-        raise Exit(1)
-
-    if config:
-        _show_config_example_callback()
-        raise Exit(0)
-
-    if usage:
-        _show_usage_examples_callback()
-        raise Exit(0)
-
-    # If no flags, show help and exit 0
-    echo(ctx.get_help())
-    raise Exit(0)
 
 
 def entry_point() -> None:
