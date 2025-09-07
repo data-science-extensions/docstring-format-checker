@@ -52,17 +52,7 @@ from typing import Optional
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from toolbox_python.bools import strtobool
-from typer import (
-    Argument,
-    BadParameter,
-    CallbackParam,
-    Context,
-    Exit,
-    Option,
-    Typer,
-    echo,
-)
+from typer import Argument, CallbackParam, Context, Exit, Option, Typer, echo
 
 # ## Local First Party Imports ----
 from docstring_format_checker import __version__
@@ -181,45 +171,6 @@ def _help_callback_example(ctx: Context, param: CallbackParam, value: bool) -> N
     console.print("Example Command Help:")
     echo(ctx.get_help())
     raise Exit()
-
-
-def _parse_boolean_flag(ctx: Context, param: CallbackParam, value: Optional[str]) -> Optional[bool]:
-    """
-    !!! note "Summary"
-        Parse boolean flag that accepts various true/false values.
-
-    Params:
-        ctx (Context):
-            The context object.
-        param (CallbackParam):
-            The parameter object.
-        value (Optional[str]):
-            The string value of the flag.
-
-    Returns:
-        (Optional[bool]):
-            The parsed boolean value or `None` if not provided.
-    """
-
-    # Handle the case where the flag is provided without a value
-    # In this case, Typer doesn't call the callback, so we need to handle it differently
-    if value is None:
-        # This means the flag wasn't provided at all, use default
-        return True
-
-    # If value is an empty string, it means the flag was provided without a value
-    if value == "":
-        return True
-
-    try:
-        return strtobool(value)
-    except ValueError as e:
-        raise BadParameter(
-            message=(
-                f"Invalid boolean value: '{value}'.{NEW_LINE}"
-                "Use one of: true/false, t/f, yes/no, y/n, 1/0, or on/off."
-            )
-        ) from e
 
 
 def _show_usage_examples_callback() -> None:

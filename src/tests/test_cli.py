@@ -16,23 +16,15 @@ import tempfile
 from pathlib import Path
 from textwrap import dedent
 from unittest import TestCase
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 # ## Python Third Party Imports ----
-import typer
 from click.testing import Result
-from parameterized import parameterized
-from pytest import raises
 from typer.testing import CliRunner
 
 # ## Local First Party Imports ----
 from docstring_format_checker import __version__
-from docstring_format_checker.cli import (
-    _format_error_messages,
-    _parse_boolean_flag,
-    app,
-    entry_point,
-)
+from docstring_format_checker.cli import _format_error_messages, app, entry_point
 from tests.setup import clean
 
 
@@ -380,25 +372,6 @@ class TestCLI(TestCase):
         assert result.exit_code == 0
         assert "A CLI tool to check and validate Python docstring formatting and completeness." in clean(result.output)
 
-    def test_19_parse_boolean_flag_edge_cases(self) -> None:
-        """
-        Test parse_boolean_flag function with edge cases.
-        """
-
-        # Create mock context and param
-        mock_ctx = Mock()
-        mock_param = Mock()
-
-        # Test None value (default case)
-        assert _parse_boolean_flag(mock_ctx, mock_param, None) == True
-
-        # Test empty string (flag without value)
-        assert _parse_boolean_flag(mock_ctx, mock_param, "") == True
-
-        # Test invalid value raises exception
-        with raises(typer.BadParameter):
-            _parse_boolean_flag(mock_ctx, mock_param, "invalid")
-
     def test_25_entry_point_function(self) -> None:
         """
         Test entry_point function.
@@ -538,44 +511,6 @@ class TestCLI(TestCase):
             assert result.exit_code == 1
             assert "error(s)" in clean(result.output)
             assert "file(s)" in clean(result.output)
-
-    @parameterized.expand(
-        input=[
-            ("true", True),
-            ("t", True),
-            ("yes", True),
-            ("y", True),
-            ("1", True),
-            ("on", True),
-            ("TRUE", True),
-            ("T", True),
-            ("YES", True),
-            ("Y", True),
-            ("ON", True),
-            ("false", False),
-            ("f", False),
-            ("no", False),
-            ("n", False),
-            ("0", False),
-            ("off", False),
-            ("FALSE", False),
-            ("F", False),
-            ("NO", False),
-            ("N", False),
-            ("OFF", False),
-        ]
-    )
-    def test_32_parse_boolean_flag_values(self, value: str, expected: bool) -> None:
-        """
-        Test parse_boolean_flag values.
-        """
-
-        ctx = MagicMock()
-        param = MagicMock()
-
-        # Test each value and check it matches the expected result
-        actual = _parse_boolean_flag(ctx, param, value)
-        assert actual == expected, f"Failed for value: {value}, expected {expected}, got {actual}"
 
     def test_33_check_directory_verbose_message(self) -> None:
         """
