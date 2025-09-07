@@ -108,7 +108,6 @@ app = Typer(
     add_completion=False,
     rich_markup_mode="rich",
     add_help_option=False,  # Disable automatic help so we can add our own with -h
-    no_args_is_help=True,  # Show help when no arguments are provided
 )
 console = Console()
 
@@ -191,7 +190,7 @@ def _example_callback(ctx: Context, param: CallbackParam, value: Optional[str]) 
     elif value == "usage":
         _show_usage_examples_callback()
     else:
-        console.print(_red(f"Error: Invalid example type '{value}'. Use '--config'/'-f' or '--usage'/'-u'."))
+        console.print(_red(f"Error: Invalid example type '{value}'. Use 'config' or 'usage'."))
         raise Exit(1)
 
 
@@ -532,7 +531,7 @@ def _check_docstrings(
 def main(
     ctx: Context,
     path: Optional[str] = Argument(None, help="Path to Python file or directory to check"),
-    config: Optional[str] = Option("pyproject.toml", "--config", "-f", help="Path to configuration file (TOML format)"),
+    config: Optional[str] = Option(None, "--config", "-f", help="Path to configuration file (TOML format)"),
     exclude: Optional[list[str]] = Option(
         None,
         "--exclude",
@@ -620,7 +619,7 @@ def main(
     # If no path is provided, show help
     if path is None:
         echo(ctx.get_help())
-        raise Exit()
+        raise Exit(0)
 
     # Validate output format
     if output not in ["table", "list"]:
