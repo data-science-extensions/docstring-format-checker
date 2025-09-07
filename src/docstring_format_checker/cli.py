@@ -260,7 +260,7 @@ def _show_config_example_callback() -> None:
     """
 
     example_config: str = dedent(
-        r"""
+        """
         # Example configuration for docstring-format-checker
         # Place this in your pyproject.toml file
 
@@ -322,10 +322,11 @@ def _show_config_example_callback() -> None:
         admonition = "note"
         prefix = "???"
         required = false
-        """.strip()
-    )
+        """
+    ).strip()
 
-    console.print(example_config)
+    # Print without Rich markup processing to avoid bracket interpretation
+    console.print(example_config, markup=False)
     raise Exit()
 
 
@@ -527,7 +528,7 @@ def _check_docstrings(
 
 
 # Simple callback that only handles global options and delegates to subcommands
-@app.callback(invoke_without_command=False)
+@app.callback(invoke_without_command=True)
 def main(
     ctx: Context,
     path: Optional[str] = Argument(None, help="Path to Python file or directory to check"),

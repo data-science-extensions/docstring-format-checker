@@ -83,9 +83,9 @@ class TestCLI(TestCase):
 
     def test_05_example_config_subcommand(self) -> None:
         """
-        Test example subcommand with --config flag.
+        Test example flag with config option.
         """
-        result: Result = self.runner.invoke(app, ["example", "--config"])
+        result: Result = self.runner.invoke(app, ["--example=config"])
         assert result.exit_code == 0
         assert "[tool.dfc]" in clean(result.output)
         assert "[[tool.dfc.sections]]" in clean(result.output)
@@ -350,17 +350,17 @@ class TestCLI(TestCase):
 
     def test_16_example_config_subcommand_content(self) -> None:
         """
-        Test example subcommand config content.
+        Test example flag config content.
         """
-        result: Result = self.runner.invoke(app, ["example", "--config"])
+        result: Result = self.runner.invoke(app, ["--example=config"])
         assert result.exit_code == 0
         assert "Example configuration for docstring-format-checker" in clean(result.output)
 
     def test_17_example_usage_subcommand(self) -> None:
         """
-        Test example subcommand with --usage flag.
+        Test example flag with usage option.
         """
-        result: Result = self.runner.invoke(app, ["example", "--usage"])
+        result: Result = self.runner.invoke(app, ["--example=usage"])
         assert result.exit_code == 0
         assert "Examples" in clean(result.output)
 
@@ -440,7 +440,14 @@ class TestCLI(TestCase):
             # Create a Python file
             temp_path = Path(temp_dir)
             py_file: Path = temp_path.joinpath("test.py")
-            py_file.write_text("def good_function():\n    '''This has a docstring.'''\n    pass")
+            py_file.write_text(
+                "def good_function():\n"
+                '    """\n'
+                '    !!! note "Summary"\n'
+                "        This has a valid docstring.\n"
+                '    """\n'
+                "    pass"
+            )
 
             # Create a config file in the same directory
             config_file: Path = temp_path.joinpath("pyproject.toml")
@@ -469,7 +476,7 @@ class TestCLI(TestCase):
         """
         Test global examples callback functionality.
         """
-        result: Result = self.runner.invoke(app, ["--examples"])
+        result: Result = self.runner.invoke(app, ["--example=usage"])
         assert result.exit_code == 0
         assert "Examples" in clean(result.output)
         assert "dfc myfile.py" in clean(result.output)
