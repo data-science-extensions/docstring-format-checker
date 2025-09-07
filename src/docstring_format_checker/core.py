@@ -167,18 +167,15 @@ class DocstringChecker:
     def check_directory(
         self,
         directory_path: Union[str, Path],
-        recursive: bool = True,
         exclude_patterns: Optional[list[str]] = None,
     ) -> dict[str, list[DocstringError]]:
         """
         !!! note "Summary"
-            Check docstrings in all Python files in a directory.
+            Check docstrings in all Python files in a directory recursively.
 
         Params:
             directory_path (Union[str, Path]):
                 Path to the directory to check.
-            recursive (bool):
-                Whether to check subdirectories recursively.
             exclude_patterns (Optional[list[str]]):
                 List of glob patterns to exclude.
 
@@ -200,13 +197,7 @@ class DocstringChecker:
         if not directory_path.is_dir():
             raise DirectoryNotFoundError(f"Path is not a directory: {directory_path}")
 
-        # Find all Python files
-        if recursive:
-            pattern = "**/*.py"
-        else:
-            pattern = "*.py"
-
-        python_files: list[Path] = list(directory_path.glob(pattern))
+        python_files: list[Path] = list(directory_path.glob("**/*.py"))
 
         # Filter out excluded patterns
         if exclude_patterns:
