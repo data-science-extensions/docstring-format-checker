@@ -9,6 +9,24 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v0.6.0"
+
+    ## **v0.6.0 - Advanced List Output Formatting & Error Summary Display**
+
+    <!-- md:tag v0.6.0 --><br>
+    <!-- md:date 2025-09-08 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v0.6.0](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v0.6.0) -->
+
+    ??? note "Release Notes"
+
+        ### What's Changed        * Advanced List Output Formatting & Error Summary Display by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/6                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.5.0...v0.6.0
+
+    ??? abstract "Updates"
+
+        * Resove issues with the output when `-o list` and with the summary stats on the printed output (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/44578b4dcbad4e0fc14f7c9fae73fca020426bd8)
+
+
+
 !!! info "v0.5.0"
 
     ## **v0.5.0 - Streamline CLI Architecture**
