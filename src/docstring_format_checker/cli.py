@@ -376,13 +376,36 @@ def _display_results(results: dict[str, list[DocstringError]], quiet: bool, outp
             console.print(_green("✓ All docstrings are valid!"))
         return 0
 
-    # Count total errors
-    total_errors: int = sum(len(errors) for errors in results.values())
+    # Count total errors (individual error messages, not error objects)
+    total_individual_errors: int = 0
+    total_functions: int = 0
+
+    for errors in results.values():
+        total_functions += len(errors)  # Count functions/items with errors
+        for error in errors:
+            # Count individual error messages within each error object
+            if "; " in error.message:
+                individual_errors = [msg.strip() for msg in error.message.split("; ") if msg.strip()]
+                total_individual_errors += len(individual_errors)
+            else:
+                total_individual_errors += 1
+
+    total_errors: int = total_individual_errors
     total_files: int = len(results)
 
     if quiet:
-        # In quiet mode, only show summary
-        console.print(_red(f"{NEW_LINE}Found {total_errors} error(s) in {total_files} file(s)"))
+        # In quiet mode, only show summary with improved format
+        if total_functions == 1:
+            functions_text = f"1 function"
+        else:
+            functions_text = f"{total_functions} functions"
+
+        if total_files == 1:
+            files_text = f"1 file"
+        else:
+            files_text = f"{total_files} files"
+
+        console.print(_red(f"{NEW_LINE}Found {total_errors} error(s) in {functions_text} over {files_text}"))
         return 1
 
     if output == "table":
@@ -411,22 +434,43 @@ def _display_results(results: dict[str, list[DocstringError]], quiet: bool, outp
         console.print(table)
 
     else:
-        # Show compact output
+        # Show compact output - each individual error on its own line
         for file_path, errors in results.items():
             console.print(f"{NEW_LINE}{_cyan(file_path)}")
             for error in errors:
-                # Format error message with improved formatting
-                formatted_error_message: str = _format_error_messages(error.message)
-
-                if error.line_number > 0:
-                    console.print(
-                        f"  [red]Line {error.line_number}[/red] - {error.item_type} '{error.item_name}': {formatted_error_message}"
-                    )
+                # Split error message into individual errors for list mode
+                if "; " in error.message:
+                    individual_errors = [msg.strip() for msg in error.message.split("; ") if msg.strip()]
+                    for individual_error in individual_errors:
+                        formatted_error = f"- {individual_error}"
+                        if error.line_number > 0:
+                            console.print(
+                                f"  [red]Line {error.line_number}[/red] - {error.item_type} '{error.item_name}': {formatted_error}"
+                            )
+                        else:
+                            console.print(f"  {_red('Error')}: {formatted_error}")
                 else:
-                    console.print(f"  {_red('Error')}: {formatted_error_message}")
+                    # Single error message
+                    formatted_error = f"- {error.message.strip()}"
+                    if error.line_number > 0:
+                        console.print(
+                            f"  [red]Line {error.line_number}[/red] - {error.item_type} '{error.item_name}': {formatted_error}"
+                        )
+                    else:
+                        console.print(f"  {_red('Error')}: {formatted_error}")
 
-    # Summary
-    console.print(_red(f"{NEW_LINE}Found {total_errors} error(s) in {total_files} file(s)"))
+    # Summary - more descriptive message
+    if total_functions == 1:
+        functions_text = f"1 function"
+    else:
+        functions_text = f"{total_functions} functions"
+
+    if total_files == 1:
+        files_text = f"1 file"
+    else:
+        files_text = f"{total_files} files"
+
+    console.print(_red(f"{NEW_LINE}Found {total_errors} error(s) in {functions_text} over {files_text}"))
 
     return 1
 
@@ -439,7 +483,7 @@ def _display_results(results: dict[str, list[DocstringError]], quiet: bool, outp
 
 
 # This will be the default behavior when no command is specified
-def _check_docstrings(
+def check_docstrings(
     path: str,
     config: Optional[str] = None,
     exclude: Optional[list[str]] = None,
@@ -456,14 +500,19 @@ def _check_docstrings(
             The path to the file or directory to check.
         config (Optional[str]):
             The path to the configuration file.
+            Default: `None`.
         exclude (Optional[list[str]]):
             List of glob patterns to exclude from checking.
+            Default: `None`.
         quiet (bool):
             Whether to suppress output.
+            Default: `False`.
         output (str):
             Output format: 'table' or 'list'.
+            Default: `'list'`.
         check (bool):
             Whether to throw error if issues are found.
+            Default: `False`.
 
     Returns:
         (None):
@@ -626,7 +675,7 @@ def main(
         console.print(_red(f"Error: Invalid output format '{output}'. Use 'table' or 'list'."))
         raise Exit(1)
 
-    _check_docstrings(
+    check_docstrings(
         path=path,
         config=config,
         exclude=exclude,
