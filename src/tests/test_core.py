@@ -2793,3 +2793,224 @@ class TestDocstringChecker(TestCase):
         empty_docstring: str = ""
         result_empty: bool = checker._check_free_text_section(empty_docstring, summary_section)
         assert result_empty is False, "Empty docstring should not satisfy summary requirement"
+
+    def test_76_parentheses_validation_with_description_words(self) -> None:
+        """
+        Test parentheses validation with description lines containing specific words.
+        This covers the missing lines 971 and 980 in core.py.
+        """
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
+            SectionConfig(order=2, name="Params", type="list_name_and_type", required=True, admonition=False),
+        ]
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Test with content that has description lines with specific words that should be skipped
+        python_content: str = dedent(
+            '''
+            def test_function():
+                """
+                Summary:
+                    Test function.
+
+                Params:
+                    param1 (str): Main parameter
+                    Default: some default value here
+                    Output format: JSON format description
+                    Show examples: whether to show examples
+                    param2: Missing parenthesized type (should trigger error)
+                """
+                pass
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+        # Should have an error for param2 missing parentheses, but not for the description lines
+        assert len(errors) > 0
+        error_message: str = errors[0].message
+
+        # Should have error for param2
+        assert (
+            "param2" in error_message and "parenthesized types" in error_message
+        ), f"Expected parentheses error for param2, got: {error_message}"
+
+        # Should NOT have errors for the description lines
+        assert "Default:" not in error_message, f"Should not have error for 'Default:' line, got: {error_message}"
+        assert (
+            "Output format:" not in error_message
+        ), f"Should not have error for 'Output format:' line, got: {error_message}"
+        assert (
+            "Show examples:" not in error_message
+        ), f"Should not have error for 'Show examples:' line, got: {error_message}"
+
+        # Clean up
+        py_file.unlink(missing_ok=True)
+
+    def test_77_parentheses_validation_specific_error_line(self) -> None:
+        """
+        Test that hits the specific error append line (line 980) in core.py.
+        """
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
+            SectionConfig(order=2, name="Parameters", type="list_name_and_type", required=True, admonition=False),
+        ]
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Simple content that should definitely trigger the parentheses error
+        python_content: str = dedent(
+            '''
+            def test_function():
+                """
+                Summary:
+                    Test function.
+
+                Parameters:
+                    simple_param_name: This should trigger parentheses validation error
+                """
+                pass
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+        # Should have an error for missing parentheses that hits line 980-981
+        assert len(errors) > 0
+        error_message: str = errors[0].message
+        assert "parenthesized types" in error_message, f"Expected parentheses error, got: {error_message}"
+        assert "simple_param_name" in error_message, f"Expected error for simple_param_name, got: {error_message}"
+
+        # Clean up
+        py_file.unlink(missing_ok=True)
+
+    def test_78_parentheses_validation_alternative_trigger(self) -> None:
+        """
+        Another attempt to hit the missing line in parentheses validation.
+        """
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
+            SectionConfig(order=2, name="Args", type="list_name_and_type", required=True, admonition=False),
+        ]
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Test case where we have a clear parameter line that lacks parentheses
+        python_content: str = dedent(
+            '''
+            def test_function():
+                """
+                Summary:
+                    Test function.
+
+                Args:
+                    x: Parameter without parentheses - should error
+                """
+                pass
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+        # Should have an error for missing parentheses
+        assert len(errors) > 0
+        error_message: str = errors[0].message
+        assert (
+            "parenthesized types" in error_message and "x:" in error_message
+        ), f"Expected parentheses error for 'x:', got: {error_message}"
+
+        # Clean up
+        py_file.unlink(missing_ok=True)
+
+    def test_79_specific_parentheses_validation_line_target(self) -> None:
+        """Test to specifically target core.py line 998 with exact condition."""
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
+            SectionConfig(order=2, name="Parameters", type="list_name_and_type", required=True, admonition=False),
+        ]
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Create a parameter line that will pass all the filter conditions but fail the regex
+        # This should hit the exact line we're targeting (core.py:998)
+        python_content: str = dedent(
+            '''
+            def test_function():
+                """
+                Summary:
+                    Test function.
+
+                Parameters:
+                    some_param: description without parentheses
+                """
+                pass
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+        # Should find error specifically about parentheses validation
+        parentheses_errors: list[DocstringError] = [
+            err for err in errors if "parenthesized types" in err.message and "some_param:" in err.message
+        ]
+        assert len(parentheses_errors) > 0, f"Expected parentheses error, got errors: {[e.message for e in errors]}"
+
+        # Clean up
+        py_file.unlink(missing_ok=True)
+
+    def test_80_precise_parentheses_validation_coverage(self) -> None:
+        """Test to precisely hit core.py line 998 - parentheses error creation."""
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
+            SectionConfig(order=2, name="Args", type="list_name_and_type", required=True, admonition=False),
+        ]
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Create content that will hit the exact conditions:
+        # - Current section is list_name_and_type
+        # - Line has colon but no parentheses
+        # - Line doesn't contain filter words ("default", "output", "format", "show", "example")
+        # - Line fails the regex r"\([^)]+\):"
+        python_content: str = dedent(
+            '''
+            def test_function():
+                """
+                Summary:
+                    Test function.
+
+                Args:
+                    param: missing parentheses here
+                """
+                pass
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+        # Should find the specific parentheses error
+        parentheses_errors: list[DocstringError] = [
+            err for err in errors if "parenthesized types" in err.message and "param:" in err.message
+        ]
+        assert (
+            len(parentheses_errors) > 0
+        ), f"Expected parentheses error containing 'param:', got errors: {[e.message for e in errors]}"
+
+        # Clean up
+        py_file.unlink(missing_ok=True)

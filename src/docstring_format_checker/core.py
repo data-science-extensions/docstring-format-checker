@@ -962,9 +962,41 @@ class DocstringChecker:
             if current_section and stripped_line and not stripped_line.startswith(("!", "?", "#")):
                 # Look for parameter/type definitions
                 if ":" in stripped_line:
+                    # Skip description lines that start with common description words
+                    description_prefixes = [
+                        "default:",
+                        "note:",
+                        "example:",
+                        "see:",
+                        "warning:",
+                        "info:",
+                        "tip:",
+                        "returns:",
+                    ]
+                    is_description_line = any(
+                        stripped_line.lower().startswith(prefix) for prefix in description_prefixes
+                    )
+
+                    # Skip lines that are clearly descriptions (containing "Default:", etc.)
+                    if (
+                        is_description_line
+                        or "Default:" in stripped_line
+                        or "Output format:" in stripped_line
+                        or "Show examples:" in stripped_line
+                    ):
+                        continue
+
                     # For list_name_and_type sections, check format like "name (type):" or "(type):"
                     if current_section.type == "list_name_and_type":
                         # Pattern: name (type): or (type):
+                        # But skip if it doesn't look like a parameter definition (e.g., has multiple words before the colon)
+                        colon_part = stripped_line.split(":")[0].strip()
+                        # Skip if it contains phrases that indicate it's a description, not a parameter
+                        if any(
+                            word in colon_part.lower() for word in ["default", "output", "format", "show", "example"]
+                        ):
+                            continue
+
                         if not re.search(r"\([^)]+\):", stripped_line):
                             errors.append(
                                 f"Section '{current_section.name}' (type: '{current_section.type}') requires "
