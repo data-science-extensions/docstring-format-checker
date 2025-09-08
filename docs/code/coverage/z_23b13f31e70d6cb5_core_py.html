@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for src/docstring_format_checker/core.py: 100%</title>
+    <title>Coverage for src/docstring_format_checker/core.py: 99%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_6b508a39.css" type="text/css">
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>src/docstring_format_checker/core.py</b>:
-            <span class="pc_cov">100%</span>
+            <span class="pc_cov">99%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -54,9 +54,9 @@
             </div>
         </aside>
         <h2>
-            <span class="text">351 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">351<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">0<span class="text"> missing</span></button>
+            <span class="text">358 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">357<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">1<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_e07aac1f463b91eb___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.6">coverage.py v7.10.6</a>,
-            created at 2025-09-07 12:48 +0000
+            created at 2025-09-08 13:04 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -1044,25 +1044,57 @@
     <p class="run"><span class="n"><a id="t962" href="#t962">962</a></span><span class="t">            <span class="key">if</span> <span class="nam">current_section</span> <span class="key">and</span> <span class="nam">stripped_line</span> <span class="key">and</span> <span class="key">not</span> <span class="nam">stripped_line</span><span class="op">.</span><span class="nam">startswith</span><span class="op">(</span><span class="op">(</span><span class="str">"!"</span><span class="op">,</span> <span class="str">"?"</span><span class="op">,</span> <span class="str">"#"</span><span class="op">)</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t963" href="#t963">963</a></span><span class="t">                <span class="com"># Look for parameter/type definitions</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t964" href="#t964">964</a></span><span class="t">                <span class="key">if</span> <span class="str">":"</span> <span class="key">in</span> <span class="nam">stripped_line</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t965" href="#t965">965</a></span><span class="t">                    <span class="com"># For list_name_and_type sections, check format like "name (type):" or "(type):"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t966" href="#t966">966</a></span><span class="t">                    <span class="key">if</span> <span class="nam">current_section</span><span class="op">.</span><span class="nam">type</span> <span class="op">==</span> <span class="str">"list_name_and_type"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t967" href="#t967">967</a></span><span class="t">                        <span class="com"># Pattern: name (type): or (type):</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t968" href="#t968">968</a></span><span class="t">                        <span class="key">if</span> <span class="key">not</span> <span class="nam">re</span><span class="op">.</span><span class="nam">search</span><span class="op">(</span><span class="str">r"\([^)]+\):"</span><span class="op">,</span> <span class="nam">stripped_line</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t969" href="#t969">969</a></span><span class="t">                            <span class="nam">errors</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t970" href="#t970">970</a></span><span class="t">                                <span class="fst">f"</span><span class="fst">Section '</span><span class="op">{</span><span class="nam">current_section</span><span class="op">.</span><span class="nam">name</span><span class="op">}</span><span class="fst">' (type: '</span><span class="op">{</span><span class="nam">current_section</span><span class="op">.</span><span class="nam">type</span><span class="op">}</span><span class="fst">') requires </span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t971" href="#t971">971</a></span><span class="t">                                <span class="fst">f"</span><span class="fst">parenthesized types, see: '</span><span class="op">{</span><span class="nam">stripped_line</span><span class="op">}</span><span class="fst">'</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t972" href="#t972">972</a></span><span class="t">                            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t973" href="#t973">973</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t974" href="#t974">974</a></span><span class="t">                    <span class="com"># For list_type sections, check format like "(Type):"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t975" href="#t975">975</a></span><span class="t">                    <span class="key">elif</span> <span class="nam">current_section</span><span class="op">.</span><span class="nam">type</span> <span class="op">==</span> <span class="str">"list_type"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t976" href="#t976">976</a></span><span class="t">                        <span class="com"># Pattern: (Type):</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t977" href="#t977">977</a></span><span class="t">                        <span class="key">if</span> <span class="key">not</span> <span class="nam">re</span><span class="op">.</span><span class="nam">search</span><span class="op">(</span><span class="str">r"^\s*\([^)]+\):"</span><span class="op">,</span> <span class="nam">stripped_line</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t978" href="#t978">978</a></span><span class="t">                            <span class="nam">errors</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t979" href="#t979">979</a></span><span class="t">                                <span class="fst">f"</span><span class="fst">Section '</span><span class="op">{</span><span class="nam">current_section</span><span class="op">.</span><span class="nam">name</span><span class="op">}</span><span class="fst">' (type: '</span><span class="op">{</span><span class="nam">current_section</span><span class="op">.</span><span class="nam">type</span><span class="op">}</span><span class="fst">') requires </span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t980" href="#t980">980</a></span><span class="t">                                <span class="fst">f"</span><span class="fst">parenthesized types, see: '</span><span class="op">{</span><span class="nam">stripped_line</span><span class="op">}</span><span class="fst">'</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t981" href="#t981">981</a></span><span class="t">                            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t982" href="#t982">982</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t983" href="#t983">983</a></span><span class="t">        <span class="key">return</span> <span class="nam">errors</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t965" href="#t965">965</a></span><span class="t">                    <span class="com"># Skip description lines that start with common description words</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t966" href="#t966">966</a></span><span class="t">                    <span class="nam">description_prefixes</span> <span class="op">=</span> <span class="op">[</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t967" href="#t967">967</a></span><span class="t">                        <span class="str">"default:"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t968" href="#t968">968</a></span><span class="t">                        <span class="str">"note:"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t969" href="#t969">969</a></span><span class="t">                        <span class="str">"example:"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t970" href="#t970">970</a></span><span class="t">                        <span class="str">"see:"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t971" href="#t971">971</a></span><span class="t">                        <span class="str">"warning:"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t972" href="#t972">972</a></span><span class="t">                        <span class="str">"info:"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t973" href="#t973">973</a></span><span class="t">                        <span class="str">"tip:"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t974" href="#t974">974</a></span><span class="t">                        <span class="str">"returns:"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t975" href="#t975">975</a></span><span class="t">                    <span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t976" href="#t976">976</a></span><span class="t">                    <span class="nam">is_description_line</span> <span class="op">=</span> <span class="nam">any</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t977" href="#t977">977</a></span><span class="t">                        <span class="nam">stripped_line</span><span class="op">.</span><span class="nam">lower</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">startswith</span><span class="op">(</span><span class="nam">prefix</span><span class="op">)</span> <span class="key">for</span> <span class="nam">prefix</span> <span class="key">in</span> <span class="nam">description_prefixes</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t978" href="#t978">978</a></span><span class="t">                    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t979" href="#t979">979</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t980" href="#t980">980</a></span><span class="t">                    <span class="com"># Skip lines that are clearly descriptions (containing "Default:", etc.)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t981" href="#t981">981</a></span><span class="t">                    <span class="key">if</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t982" href="#t982">982</a></span><span class="t">                        <span class="nam">is_description_line</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t983" href="#t983">983</a></span><span class="t">                        <span class="key">or</span> <span class="str">"Default:"</span> <span class="key">in</span> <span class="nam">stripped_line</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t984" href="#t984">984</a></span><span class="t">                        <span class="key">or</span> <span class="str">"Output format:"</span> <span class="key">in</span> <span class="nam">stripped_line</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t985" href="#t985">985</a></span><span class="t">                        <span class="key">or</span> <span class="str">"Show examples:"</span> <span class="key">in</span> <span class="nam">stripped_line</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t986" href="#t986">986</a></span><span class="t">                    <span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t987" href="#t987">987</a></span><span class="t">                        <span class="key">continue</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t988" href="#t988">988</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t989" href="#t989">989</a></span><span class="t">                    <span class="com"># For list_name_and_type sections, check format like "name (type):" or "(type):"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t990" href="#t990">990</a></span><span class="t">                    <span class="key">if</span> <span class="nam">current_section</span><span class="op">.</span><span class="nam">type</span> <span class="op">==</span> <span class="str">"list_name_and_type"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t991" href="#t991">991</a></span><span class="t">                        <span class="com"># Pattern: name (type): or (type):</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t992" href="#t992">992</a></span><span class="t">                        <span class="com"># But skip if it doesn't look like a parameter definition (e.g., has multiple words before the colon)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t993" href="#t993">993</a></span><span class="t">                        <span class="nam">colon_part</span> <span class="op">=</span> <span class="nam">stripped_line</span><span class="op">.</span><span class="nam">split</span><span class="op">(</span><span class="str">":"</span><span class="op">)</span><span class="op">[</span><span class="num">0</span><span class="op">]</span><span class="op">.</span><span class="nam">strip</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t994" href="#t994">994</a></span><span class="t">                        <span class="com"># Skip if it contains phrases that indicate it's a description, not a parameter</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t995" href="#t995">995</a></span><span class="t">                        <span class="key">if</span> <span class="nam">any</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t996" href="#t996">996</a></span><span class="t">                            <span class="nam">word</span> <span class="key">in</span> <span class="nam">colon_part</span><span class="op">.</span><span class="nam">lower</span><span class="op">(</span><span class="op">)</span> <span class="key">for</span> <span class="nam">word</span> <span class="key">in</span> <span class="op">[</span><span class="str">"default"</span><span class="op">,</span> <span class="str">"output"</span><span class="op">,</span> <span class="str">"format"</span><span class="op">,</span> <span class="str">"show"</span><span class="op">,</span> <span class="str">"example"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t997" href="#t997">997</a></span><span class="t">                        <span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t998" href="#t998">998</a></span><span class="t">                            <span class="key">continue</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t999" href="#t999">999</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t1000" href="#t1000">1000</a></span><span class="t">                        <span class="key">if</span> <span class="key">not</span> <span class="nam">re</span><span class="op">.</span><span class="nam">search</span><span class="op">(</span><span class="str">r"\([^)]+\):"</span><span class="op">,</span> <span class="nam">stripped_line</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t1001" href="#t1001">1001</a></span><span class="t">                            <span class="nam">errors</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t1002" href="#t1002">1002</a></span><span class="t">                                <span class="fst">f"</span><span class="fst">Section '</span><span class="op">{</span><span class="nam">current_section</span><span class="op">.</span><span class="nam">name</span><span class="op">}</span><span class="fst">' (type: '</span><span class="op">{</span><span class="nam">current_section</span><span class="op">.</span><span class="nam">type</span><span class="op">}</span><span class="fst">') requires </span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t1003" href="#t1003">1003</a></span><span class="t">                                <span class="fst">f"</span><span class="fst">parenthesized types, see: '</span><span class="op">{</span><span class="nam">stripped_line</span><span class="op">}</span><span class="fst">'</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t1004" href="#t1004">1004</a></span><span class="t">                            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t1005" href="#t1005">1005</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t1006" href="#t1006">1006</a></span><span class="t">                    <span class="com"># For list_type sections, check format like "(Type):"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t1007" href="#t1007">1007</a></span><span class="t">                    <span class="key">elif</span> <span class="nam">current_section</span><span class="op">.</span><span class="nam">type</span> <span class="op">==</span> <span class="str">"list_type"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t1008" href="#t1008">1008</a></span><span class="t">                        <span class="com"># Pattern: (Type):</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t1009" href="#t1009">1009</a></span><span class="t">                        <span class="key">if</span> <span class="key">not</span> <span class="nam">re</span><span class="op">.</span><span class="nam">search</span><span class="op">(</span><span class="str">r"^\s*\([^)]+\):"</span><span class="op">,</span> <span class="nam">stripped_line</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t1010" href="#t1010">1010</a></span><span class="t">                            <span class="nam">errors</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t1011" href="#t1011">1011</a></span><span class="t">                                <span class="fst">f"</span><span class="fst">Section '</span><span class="op">{</span><span class="nam">current_section</span><span class="op">.</span><span class="nam">name</span><span class="op">}</span><span class="fst">' (type: '</span><span class="op">{</span><span class="nam">current_section</span><span class="op">.</span><span class="nam">type</span><span class="op">}</span><span class="fst">') requires </span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t1012" href="#t1012">1012</a></span><span class="t">                                <span class="fst">f"</span><span class="fst">parenthesized types, see: '</span><span class="op">{</span><span class="nam">stripped_line</span><span class="op">}</span><span class="fst">'</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t1013" href="#t1013">1013</a></span><span class="t">                            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t1014" href="#t1014">1014</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t1015" href="#t1015">1015</a></span><span class="t">        <span class="key">return</span> <span class="nam">errors</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -1072,7 +1104,7 @@
             <a class="nav" href="z_e07aac1f463b91eb___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.6">coverage.py v7.10.6</a>,
-            created at 2025-09-07 12:48 +0000
+            created at 2025-09-08 13:04 +0000
         </p>
     </div>
 </footer>
