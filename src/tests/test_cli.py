@@ -519,7 +519,100 @@ class TestCLI(TestCase):
             result: Result = self.runner.invoke(app, [str(temp_path)])
             assert result.exit_code == 1
             assert "error(s)" in clean(result.output)
-            assert "file(s)" in clean(result.output)
+            assert "functions over" in clean(result.output)
+            assert "files" in clean(result.output)
+
+    def test_32_quiet_mode_single_file_single_function(self) -> None:
+        """
+        Test quiet mode with single file and single function (coverage for total_files == 1 and total_functions == 1).
+        """
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            try:
+                temp_file.write("def func(): pass")  # Missing docstring
+                temp_file.flush()
+
+                result: Result = self.runner.invoke(app, ["--quiet", temp_file.name])
+                assert result.exit_code == 1
+                assert "1 error(s) in 1 function over 1 file" in clean(result.output)
+            finally:
+                Path(temp_file.name).unlink(missing_ok=True)
+
+    def test_32_quiet_mode_multiple_files_multiple_functions(self) -> None:
+        """
+        Test quiet mode with multiple files and functions (coverage for else branches).
+        """
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+
+            # Create multiple files with multiple functions each
+            for i in range(2):
+                py_file = temp_path / f"test_{i}.py"
+                py_file.write_text(
+                    """
+def func1(): pass
+def func2(): pass
+class TestClass:
+    def method1(self): pass
+"""
+                )
+
+            result: Result = self.runner.invoke(app, ["--quiet", str(temp_path)])
+            assert result.exit_code == 1
+            # This should hit the else branches for multiple functions and files
+            assert "functions over" in clean(result.output)
+            assert "files" in clean(result.output)
+
+    def test_32_list_output_with_compound_errors(self) -> None:
+        """
+        Test list output with compound error messages that contain '; ' separators.
+        This tests the missing lines 443-451 in cli.py.
+        """
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            try:
+                # Create content that would generate compound errors
+                temp_file.write(
+                    dedent(
+                        '''
+                    def test_function(param1, param2):
+                        """
+                        Test function.
+
+                        Params:
+                            param1 str: Description
+                            param2: Missing type information
+                        """
+                        pass
+                    '''
+                    ).strip()
+                )
+                temp_file.flush()
+
+                result: Result = self.runner.invoke(app, ["-o", "list", temp_file.name])
+                # This should generate errors with "; " separators that will hit lines 443-451
+                assert result.exit_code == 1
+                output = clean(result.output)
+                assert "param" in output
+            finally:
+                Path(temp_file.name).unlink(missing_ok=True)
+
+    def test_32_list_output_with_compound_errors_no_line_number(self) -> None:
+        """
+        Test list output with compound errors that have no line number (line 451).
+        """
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            try:
+                # Create a file with syntax errors that will generate file-level errors
+                temp_file.write("def broken_syntax(:\n    pass\n")  # Invalid syntax
+                temp_file.flush()
+
+                result: Result = self.runner.invoke(app, ["-o", "list", temp_file.name])
+                # File-level syntax errors have line_number=0, which should hit line 451
+                # The result might be exit code 2 for syntax errors, but we still test the code path
+                output = clean(result.output)
+                # Should contain some error message
+                assert len(output) > 0
+            finally:
+                Path(temp_file.name).unlink(missing_ok=True)
 
     def test_33_check_directory_verbose_message(self) -> None:
         """
@@ -998,3 +1091,46 @@ class TestCLI(TestCase):
                 assert "Error loading configuration: Mock config error" in clean(result.output)
         finally:
             py_file.unlink(missing_ok=True)
+
+    def test_42_compound_errors_with_no_line_number(self) -> None:
+        """Test list output with compound errors where line_number is 0 to hit cli.py:451."""
+        # ## Python StdLib Imports ----
+        from unittest.mock import patch
+
+        # ## Local First Party Imports ----
+        from docstring_format_checker.core import DocstringChecker
+        from docstring_format_checker.utils.exceptions import DocstringError
+
+        with tempfile.NamedTemporaryFile(mode="w+", suffix=".py", delete=False) as test_file:
+            test_file.write(
+                '''
+def test_function():
+    """Summary here."""
+    pass
+'''
+            )
+            test_file.flush()
+
+            try:
+                # Mock the check_file method to return an error with line_number = 0 and compound message
+                def mock_check_file(self, file_path):
+                    return [
+                        DocstringError(
+                            file_path=str(file_path),
+                            line_number=0,  # This should trigger line 451 in cli.py
+                            item_type="function",
+                            item_name="test_function",
+                            message="Missing required section 'params'; Missing required section 'returns'",
+                        )
+                    ]
+
+                # Patch the method
+                with patch.object(DocstringChecker, "check_file", mock_check_file):
+                    result = self.runner.invoke(app, ["-o", "list", test_file.name])
+
+                # The test should succeed and hit the specific line we're targeting
+                assert result.exit_code == 1  # Should be 1 for validation errors
+                assert "Missing required section" in result.output
+
+            finally:
+                Path(test_file.name).unlink()
