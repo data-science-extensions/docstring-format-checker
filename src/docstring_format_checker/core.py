@@ -1000,8 +1000,11 @@ class DocstringChecker:
                             type_line_indent = current_indent
                             continue
                         else:
+                            # If no type definition has been found yet, allow lines with colons as possible descriptions
+                            if type_line_indent is None:
+                                continue
                             # Check if this is a description line (more indented than type line)
-                            if type_line_indent is not None and current_indent > type_line_indent:
+                            if current_indent > type_line_indent:
                                 # This is a description line, skip validation
                                 continue
                             else:
@@ -1010,7 +1013,6 @@ class DocstringChecker:
                                     f"Section '{current_section.name}' (type: '{current_section.type}') requires "
                                     f"parenthesized types, see: '{stripped_line}'"
                                 )
-
                     # For list_name_and_type sections, check format like "name (type):" or "(type):"
                     elif current_section.type == "list_name_and_type":
                         # Pattern: name (type): or (type):
