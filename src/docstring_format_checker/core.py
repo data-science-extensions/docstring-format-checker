@@ -1015,19 +1015,42 @@ class DocstringChecker:
                                 )
                     # For list_name_and_type sections, check format like "name (type):" or "(type):"
                     elif current_section.type == "list_name_and_type":
-                        # Pattern: name (type): or (type):
-                        # But skip if it doesn't look like a parameter definition (e.g., has multiple words before the colon)
-                        colon_part = stripped_line.split(":")[0].strip()
-                        # Skip if it contains phrases that indicate it's a description, not a parameter
-                        if any(
-                            word in colon_part.lower() for word in ["default", "output", "format", "show", "example"]
-                        ):
+                        # Check if this line has parentheses and looks like a parameter definition
+                        if re.search(r"\([^)]+\):", stripped_line):
+                            # This is a valid parameter definition line, remember its indentation
+                            type_line_indent = current_indent
                             continue
+                        else:
+                            # Check if this is likely a description line based on various criteria
+                            colon_part = stripped_line.split(":")[0].strip()
 
-                        if not re.search(r"\([^)]+\):", stripped_line):
-                            errors.append(
-                                f"Section '{current_section.name}' (type: '{current_section.type}') requires "
-                                f"parenthesized types, see: '{stripped_line}'"
-                            )
+                            # Skip if it contains phrases that indicate it's a description, not a parameter
+                            if any(
+                                word in colon_part.lower()
+                                for word in ["default", "output", "format", "show", "example"]
+                            ):
+                                continue
+
+                            # Skip if it starts with bullet points or list markers
+                            if stripped_line.strip().startswith(("-", "*", "•", "+")):
+                                continue
+
+                            # If we have found a parameter definition, check if this is a description line
+                            if type_line_indent is not None:
+                                # Skip if this is more indented than the parameter definition (description line)
+                                if current_indent > type_line_indent:
+                                    continue
+
+                            # Skip if the line before the colon contains multiple words (likely description)
+                            words_before_colon = colon_part.split()
+                            if len(words_before_colon) > 2:  # More than "param_name (type)"
+                                continue
+
+                            # Only flag lines that could reasonably be parameter definitions
+                            if ":" in stripped_line and not stripped_line.strip().startswith("#"):
+                                errors.append(
+                                    f"Section '{current_section.name}' (type: '{current_section.type}') requires "
+                                    f"parenthesized types, see: '{stripped_line}'"
+                                )
 
         return errors

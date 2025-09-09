@@ -3198,3 +3198,186 @@ class TestDocstringChecker(TestCase):
 
         finally:
             temp_path.unlink()
+
+    def test_84_list_name_and_type_description_lines_with_colons(self):
+        """
+        Test that description lines in list_name_and_type sections with colons don't trigger parentheses errors.
+        This tests the specific scenario where a params section has proper parentheses for parameters,
+        but the description contains bullet points with colons and should not be validated.
+        """
+        # Create a checker with params section configured
+        sections_config = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True),
+            SectionConfig(order=2, name="params", type="list_name_and_type", required=False),
+        ]
+        checker: DocstringChecker = DocstringChecker(sections_config)
+
+        python_content: str = dedent(
+            '''
+            def function_with_description_lines():
+                """
+                Summary of the function.
+
+                Params:
+                    columnwise (bool, optional):
+                        Whether or not to print columnwise or rowwise.
+
+                        - `True`: Will be formatted column-wise.
+                        - `False`: Will be formatted row-wise.
+
+                        Defaults to: `True`.
+
+                    print_output (bool, optional):
+                        Whether or not to print the output to the terminal.
+
+                        - `True`: Will print and return.
+                        - `False`: Will not print; only return.
+
+                        Defaults to: `False`.
+                """
+                pass
+            '''
+        ).strip()
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+
+            # Should have no errors - description lines with colons should be ignored
+            assert (
+                len(errors) == 0
+            ), f"Expected no errors for description lines with colons, got: {[e.message for e in errors]}"
+
+        finally:
+            temp_path.unlink()
+
+    def test_85_list_name_and_type_indentation_based_validation(self):
+        """
+        Test indentation-based validation in list_name_and_type sections.
+        This covers lines 1041 and 1046 in core.py.
+        """
+        # Create a checker with params section configured
+        sections_config = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True),
+            SectionConfig(order=2, name="params", type="list_name_and_type", required=False),
+        ]
+        checker: DocstringChecker = DocstringChecker(sections_config)
+
+        python_content: str = dedent(
+            '''
+            def function_with_indented_descriptions():
+                """
+                Summary of the function.
+
+                Params:
+                    param_name (str):
+                        This is a description that is properly indented.
+                        This line should be ignored: it has multiple words.
+                """
+                pass
+            '''
+        ).strip()
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+
+            # Should have no errors - description lines should be ignored based on indentation and word count
+            assert len(errors) == 0, f"Expected no errors for indented descriptions, got: {[e.message for e in errors]}"
+
+        finally:
+            temp_path.unlink()
+
+    def test_86_list_name_and_type_multiple_words_before_colon(self):
+        """
+        Test that lines with multiple words before colon are skipped in list_name_and_type sections.
+        This covers line 1046 in core.py (the continue statement for multiple words).
+        """
+        # Create a checker with params section configured
+        sections_config = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True),
+            SectionConfig(order=2, name="params", type="list_name_and_type", required=False),
+        ]
+        checker: DocstringChecker = DocstringChecker(sections_config)
+
+        python_content: str = dedent(
+            '''
+            def function_with_multiple_word_descriptions():
+                """
+                Summary of the function.
+
+                Params:
+                    param_name (str):
+                        This description line has multiple words before colon: should be skipped.
+                """
+                pass
+            '''
+        ).strip()
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+
+            # Should have no errors - lines with multiple words before colon should be skipped
+            assert (
+                len(errors) == 0
+            ), f"Expected no errors for multiple word descriptions, got: {[e.message for e in errors]}"
+
+        finally:
+            temp_path.unlink()
+
+    def test_87_list_name_and_type_exactly_multiple_words_at_same_level(self):
+        """
+        Test line 1046 in core.py - the continue statement for multiple words before colon.
+        This creates a scenario where we have a line with multiple words before colon
+        at the same indentation level as parameter definitions.
+        """
+        # Create a checker with params section configured
+        sections_config = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True),
+            SectionConfig(order=2, name="params", type="list_name_and_type", required=False),
+        ]
+        checker: DocstringChecker = DocstringChecker(sections_config)
+
+        python_content: str = dedent(
+            '''
+            def function_with_same_level_multiple_words():
+                """
+                Summary of the function.
+
+                Params:
+                    param_name (str):
+                        Description line.
+                    multiple words here should be skipped: this has too many words.
+                """
+                pass
+            '''
+        ).strip()
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+
+            # Should have no errors - the line with multiple words should be skipped
+            assert (
+                len(errors) == 0
+            ), f"Expected no errors for multiple words at same level, got: {[e.message for e in errors]}"
+
+        finally:
+            temp_path.unlink()
