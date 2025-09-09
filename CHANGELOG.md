@@ -9,6 +9,36 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v0.7.0"
+
+    ## **v0.7.0 - Enhanced Docstring Validation Logic**
+
+    <!-- md:tag v0.7.0 --><br>
+    <!-- md:date 2025-09-09 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v0.7.0](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v0.7.0) -->
+
+    ??? note "Release Notes"
+
+        ### What's Changed        * Enhanced Docstring Validation Logic: Description Line Colon Handling & Complete Code Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/7                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.6.0...v0.7.0
+
+    ??? abstract "Updates"
+
+        * Updates test expectations for parentheses validation<br>
+            Adjusts test assertions to reflect current implementation behavior where certain type annotations are skipped when no parenthesized types have been found yet.<br>
+            Changes expected error types from missing parentheses violations to undefined section errors, and removes assertions for cases that no longer generate errors due to the permissive logic. (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/cf9b6104d5191aa50055dffc9f8307b6e8e58b29)
+
+        * Update src/docstring_format_checker/core.py<br>
+            Co-authored-by: Copilot <175728472+Copilot@users.noreply.github.com> (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/ce0cca0a66a5e152be37170d7a57fbab3c0a6519)
+
+        * Fixes description line validation in list_type sections<br>
+            Improves docstring validation logic to properly handle description lines that contain colons in list_type sections.<br>
+            Previously, description lines indented under type definitions were incorrectly flagged as requiring parenthesized types. Now tracks indentation levels to distinguish between type definition lines and their corresponding descriptions.<br>
+            Adds comprehensive test coverage for various scenarios including multi-line descriptions, same-line descriptions, and invalid formats to ensure robust validation behavior. (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/39aaf5214d3fe5624a2cbbcf9fa1481fc03cb479)
+
+        * Correct output as list, ensure errors are on individual lines (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/7f65068b61e296c156e3bd41e19a5eb089a0a63c)
+
+
+
 !!! info "v0.6.0"
 
     ## **v0.6.0 - Advanced List Output Formatting & Error Summary Display**
