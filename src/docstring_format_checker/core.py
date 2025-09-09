@@ -924,6 +924,7 @@ class DocstringChecker:
         # Check each line in the docstring
         lines: list[str] = docstring.split("\n")
         current_section = None
+        type_line_indent = None  # Track indentation of type definition lines
 
         for i, line in enumerate(lines):
             stripped_line: str = line.strip()
@@ -938,6 +939,7 @@ class DocstringChecker:
                 current_section: Optional[SectionConfig] = next(
                     (s for s in parentheses_sections if s.name.lower() == section_name), None
                 )
+                type_line_indent = None  # Reset for new section
                 continue
 
             # Non-admonition sections - only match actual section headers, not indented content
@@ -955,6 +957,7 @@ class DocstringChecker:
                         current_section = next(
                             (s for s in parentheses_sections if s.name.lower() == section_name), None
                         )
+                        type_line_indent = None  # Reset for new section
                         continue
                     # If it doesn't match a known section, fall through to content processing
 
@@ -962,6 +965,9 @@ class DocstringChecker:
             if current_section and stripped_line and not stripped_line.startswith(("!", "?", "#")):
                 # Look for parameter/type definitions
                 if ":" in stripped_line:
+                    # Calculate current line indentation
+                    current_indent = len(line) - len(line.lstrip())
+
                     # Skip description lines that start with common description words
                     description_prefixes = [
                         "default:",
@@ -986,8 +992,27 @@ class DocstringChecker:
                     ):
                         continue
 
+                    # For list_type sections, we need special handling
+                    if current_section.type == "list_type":
+                        # Check if this line has parentheses at the beginning
+                        if re.search(r"^\s*\([^)]+\):", stripped_line):
+                            # This is a valid type definition line, remember its indentation
+                            type_line_indent = current_indent
+                            continue
+                        else:
+                            # Check if this is a description line (more indented than type line)
+                            if type_line_indent is not None and current_indent > type_line_indent:
+                                # This is a description line, skip validation
+                                continue
+                            else:
+                                # This should be a type definition but doesn't have proper format
+                                errors.append(
+                                    f"Section '{current_section.name}' (type: '{current_section.type}') requires "
+                                    f"parenthesized types, see: '{stripped_line}'"
+                                )
+
                     # For list_name_and_type sections, check format like "name (type):" or "(type):"
-                    if current_section.type == "list_name_and_type":
+                    elif current_section.type == "list_name_and_type":
                         # Pattern: name (type): or (type):
                         # But skip if it doesn't look like a parameter definition (e.g., has multiple words before the colon)
                         colon_part = stripped_line.split(":")[0].strip()
@@ -998,15 +1023,6 @@ class DocstringChecker:
                             continue
 
                         if not re.search(r"\([^)]+\):", stripped_line):
-                            errors.append(
-                                f"Section '{current_section.name}' (type: '{current_section.type}') requires "
-                                f"parenthesized types, see: '{stripped_line}'"
-                            )
-
-                    # For list_type sections, check format like "(Type):"
-                    elif current_section.type == "list_type":
-                        # Pattern: (Type):
-                        if not re.search(r"^\s*\([^)]+\):", stripped_line):
                             errors.append(
                                 f"Section '{current_section.name}' (type: '{current_section.type}') requires "
                                 f"parenthesized types, see: '{stripped_line}'"
