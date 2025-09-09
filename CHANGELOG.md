@@ -9,6 +9,31 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v0.8.0"
+
+    ## **v0.8.0 - Enhanced Docstring Validation Logic**
+
+    <!-- md:tag v0.8.0 --><br>
+    <!-- md:date 2025-09-09 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v0.8.0](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v0.8.0) -->
+
+    ??? note "Release Notes"
+
+        ### What's Changed        * Enhanced Docstring Validation Logic: Advanced Parameter Description Handling by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/8                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.7.0...v0.8.0
+
+    ??? abstract "Updates"
+
+        * Improves validation logic for list sections with types<br>
+            Enhances the docstring checker to better distinguish between parameter<br>
+            definitions and description content in list_name_and_type sections.<br>
+            Previously flagged description lines containing colons as invalid parameter<br>
+            definitions. Now uses multiple criteria including indentation levels, word<br>
+            count analysis, and bullet point detection to avoid false positives.<br>
+            Prevents validation errors on legitimate description content while maintaining<br>
+            strict checking for actual parameter definition lines. (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/1852dafd4b25ae7f54554bf5d5bca35711882416)
+
+
+
 !!! info "v0.7.0"
 
     ## **v0.7.0 - Enhanced Docstring Validation Logic**
