@@ -1,6 +1,6 @@
 [project]
 name = "docstring-format-checker"
-version = "v0.7.0"
+version = "v0.8.0"
 description = "A CLI tool to check and validate Python docstring formatting and completeness"
 readme = "README.md"
 license = "MIT"
