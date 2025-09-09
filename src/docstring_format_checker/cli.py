@@ -434,30 +434,24 @@ def _display_results(results: dict[str, list[DocstringError]], quiet: bool, outp
         console.print(table)
 
     else:
-        # Show compact output - each individual error on its own line
+        # Show compact output with grouped errors under function/class headers
         for file_path, errors in results.items():
             console.print(f"{NEW_LINE}{_cyan(file_path)}")
             for error in errors:
-                # Split error message into individual errors for list mode
+                # Print the header line with line number, item type and name
+                if error.line_number > 0:
+                    console.print(f"  [red]Line {error.line_number}[/red] - {error.item_type} '{error.item_name}':")
+                else:
+                    console.print(f"  {_red('Error')} - {error.item_type} '{error.item_name}':")
+
+                # Split error message into individual errors and indent them
                 if "; " in error.message:
                     individual_errors = [msg.strip() for msg in error.message.split("; ") if msg.strip()]
                     for individual_error in individual_errors:
-                        formatted_error = f"- {individual_error}"
-                        if error.line_number > 0:
-                            console.print(
-                                f"  [red]Line {error.line_number}[/red] - {error.item_type} '{error.item_name}': {formatted_error}"
-                            )
-                        else:
-                            console.print(f"  {_red('Error')}: {formatted_error}")
+                        console.print(f"    - {individual_error}")
                 else:
                     # Single error message
-                    formatted_error = f"- {error.message.strip()}"
-                    if error.line_number > 0:
-                        console.print(
-                            f"  [red]Line {error.line_number}[/red] - {error.item_type} '{error.item_name}': {formatted_error}"
-                        )
-                    else:
-                        console.print(f"  {_red('Error')}: {formatted_error}")
+                    console.print(f"    - {error.message.strip()}")
 
     # Summary - more descriptive message
     if total_functions == 1:

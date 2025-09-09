@@ -3014,3 +3014,55 @@ class TestDocstringChecker(TestCase):
 
         # Clean up
         py_file.unlink(missing_ok=True)
+
+    def test_81_continue_statement_for_description_words(self) -> None:
+        """
+        Test that line 998 (continue statement) is hit when lines contain description words.
+        This specifically targets the continue statement that skips validation for description lines.
+        """
+        # Create configuration with list_name_and_type section
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
+            SectionConfig(order=2, name="params", type="list_name_and_type", required=False, admonition=False),
+        ]
+        checker = DocstringChecker(sections_config=config)
+
+        python_content: str = dedent(
+            '''
+            def test_function(param1, param2):
+                """
+                Test function for hitting continue statement.
+
+                Params:
+                    default: Should be skipped due to continue word in name
+                    output: Should be skipped due to continue word in name
+                    normal_param: Should trigger parentheses error
+                """
+                pass
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            py_file: Path = temp_path.joinpath("test.py")
+            py_file.write_text(python_content)
+            errors: list[DocstringError] = checker.check_file(str(py_file))
+
+        # The lines with "default" and "output" should be skipped due to the continue statement
+        # But the "normal_param" line should trigger a parentheses error
+        parentheses_errors: list[DocstringError] = [err for err in errors if "parenthesized types" in err.message]
+
+        # Should have exactly one error for normal_param, but not for default/output lines
+        assert len(parentheses_errors) == 1, f"Expected exactly 1 parentheses error, got: {len(parentheses_errors)}"
+        assert (
+            "normal_param" in parentheses_errors[0].message
+        ), f"Expected error for normal_param, got: {parentheses_errors[0].message}"
+
+        # Ensure the lines with description words were skipped (no errors for them)
+        # The 'default' and 'output' parameter names should have been skipped due to continue statement
+        assert not any(
+            any(word in err.message.lower() for word in ["default:", "output:"]) for err in parentheses_errors
+        ), f"Expected no parentheses errors for description lines, got: {[e.message for e in parentheses_errors]}"
+
+        # Clean up
+        py_file.unlink(missing_ok=True)
