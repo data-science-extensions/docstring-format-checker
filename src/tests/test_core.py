@@ -3066,3 +3066,93 @@ class TestDocstringChecker(TestCase):
 
         # Clean up
         py_file.unlink(missing_ok=True)
+
+    def test_82_list_type_description_lines_with_colons(self) -> None:
+        """
+        Test that description lines in list_type sections with colons don't trigger parentheses errors.
+        This tests the specific scenario where a raises section has proper parentheses for the type,
+        but the description contains colons and should not be validated.
+        """
+        config: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
+            SectionConfig(order=2, name="raises", type="list_type", required=False, admonition=False),
+        ]
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Test case 1: Description on separate lines (should pass)
+        python_content_1: str = dedent(
+            '''
+            def test_function():
+                """
+                Test function for raises validation.
+
+                Raises:
+                    (TypeCheckError):
+                        If any of the inputs parsed to the parameters of this function are not the correct type. Uses the [`@typeguard.typechecked`](https://typeguard.readthedocs.io/en/stable/api.html#typeguard.typechecked) decorator.
+                """
+                pass
+            '''
+        ).strip()
+
+        # Test case 2: Description on same line (should pass)
+        python_content_2: str = dedent(
+            '''
+            def test_function_same_line():
+                """
+                Test function for raises validation on same line.
+
+                Raises:
+                    (TypeCheckError): If any of the inputs parsed to the parameters of this function are not the correct type.
+                """
+                pass
+            '''
+        ).strip()
+
+        # Test case 3: Invalid format (should fail)
+        python_content_3: str = dedent(
+            '''
+            def test_function_invalid():
+                """
+                Test function for invalid raises format.
+
+                Raises:
+                    TypeCheckError: This should trigger an error because type is not parenthesized.
+                """
+                pass
+            '''
+        ).strip()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+
+            # Test case 1
+            py_file_1: Path = temp_path.joinpath("test1.py")
+            py_file_1.write_text(python_content_1)
+            errors_1: list[DocstringError] = checker.check_file(str(py_file_1))
+
+            # Test case 2
+            py_file_2: Path = temp_path.joinpath("test2.py")
+            py_file_2.write_text(python_content_2)
+            errors_2: list[DocstringError] = checker.check_file(str(py_file_2))
+
+            # Test case 3
+            py_file_3: Path = temp_path.joinpath("test3.py")
+            py_file_3.write_text(python_content_3)
+            errors_3: list[DocstringError] = checker.check_file(str(py_file_3))
+
+        # Test case 1: Should have no errors (description lines with colons should be ignored)
+        assert (
+            len(errors_1) == 0
+        ), f"Expected no errors for proper parentheses with description, got: {[e.message for e in errors_1]}"
+
+        # Test case 2: Should have no errors (same line description should be ignored)
+        assert len(errors_2) == 0, f"Expected no errors for same line description, got: {[e.message for e in errors_2]}"
+
+        # Test case 3: Should have exactly 1 error for missing parentheses
+        assert len(errors_3) == 1, f"Expected 1 error for missing parentheses, got: {len(errors_3)}"
+        assert (
+            "requires parenthesized types" in errors_3[0].message
+        ), f"Expected parentheses error, got: {errors_3[0].message}"
+        assert (
+            "TypeCheckError:" in errors_3[0].message
+        ), f"Expected to see the problematic line in error, got: {errors_3[0].message}"
