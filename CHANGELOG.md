@@ -9,6 +9,28 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v0.9.0"
+
+    ## **v0.9.0 - Configuration Architecture Enhancement**
+
+    <!-- md:tag v0.9.0 --><br>
+    <!-- md:date 2025-09-10 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v0.9.0](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v0.9.0) -->
+
+    ??? note "Release Notes"
+
+        ### What's Changed        * Major Test Suite Refactor and Configuration Architecture Enhancement by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/9                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.8.0...v0.9.0
+
+    ??? abstract "Updates"
+
+        * Refactor tests to utilize new Config structure and global configuration flags<br>
+            - Updated test_config.py to reflect changes in load_config function, ensuring it returns a Config object instead of a list of SectionConfig.<br>
+            - Enhanced assertions in test cases to validate global configuration values such as allow_undefined_sections, require_docstrings, and check_private.<br>
+            - Introduced test_global_config.py to cover new global configuration features, including loading from TOML files and validating behavior based on global flags.<br>
+            - Added tests for scenarios where undefined sections and missing docstrings are handled according to the global configuration settings. (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/46cd052d15f9e90592cfb944049c6892b33e5498)
+
+
+
 !!! info "v0.8.0"
 
     ## **v0.8.0 - Enhanced Docstring Validation Logic**
