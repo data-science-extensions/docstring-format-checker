@@ -80,7 +80,8 @@ __all__: list[str] = [
 
 class FunctionAndClassDetails(NamedTuple):
     """
-    Details about a function or class found in the AST.
+    !!! note "Summary"
+        Details about a function or class found in the AST.
     """
 
     item_type: Literal["function", "class", "method"]
@@ -92,7 +93,8 @@ class FunctionAndClassDetails(NamedTuple):
 
 class DocstringChecker:
     """
-    Main class for checking docstring format and completeness.
+    !!! note "Summary"
+        Main class for checking docstring format and completeness.
     """
 
     def __init__(self, config: Config) -> None:
@@ -118,10 +120,6 @@ class DocstringChecker:
             file_path (Union[str, Path]):
                 Path to the Python file to check.
 
-        Returns:
-            (list[DocstringError]):
-                List of DocstringError objects for any validation failures.
-
         Raises:
             (FileNotFoundError):
                 If the file doesn't exist.
@@ -131,6 +129,10 @@ class DocstringChecker:
                 If the file can't be decoded.
             (SyntaxError):
                 If the file contains invalid Python syntax.
+
+        Returns:
+            (list[DocstringError]):
+                List of DocstringError objects for any validation failures.
         """
 
         file_path = Path(file_path)
@@ -274,12 +276,24 @@ class DocstringChecker:
         items: list[FunctionAndClassDetails] = []
 
         class ItemVisitor(ast.NodeVisitor):
+            """
+            !!! note "Summary"
+                AST visitor to extract function and class definitions
+            """
 
             def __init__(self, checker: DocstringChecker) -> None:
+                """
+                !!! note "Summary"
+                    Initialize the AST visitor.
+                """
                 self.class_stack: list[str] = []
                 self.checker: DocstringChecker = checker
 
             def visit_ClassDef(self, node: ast.ClassDef) -> None:
+                """
+                !!! note "Summary"
+                    Visit class definition node.
+                """
                 # Skip private classes unless check_private is enabled
                 should_check: bool = self.checker.config.global_config.check_private or not node.name.startswith("_")
                 if should_check:
@@ -299,13 +313,24 @@ class DocstringChecker:
                 self.class_stack.pop()
 
             def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+                """
+                !!! note "Summary"
+                    Visit function definition node.
+                """
                 self._visit_function(node)
 
             def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+                """
+                !!! note "Summary"
+                    Visit async function definition node.
+                """
                 self._visit_function(node)
 
             def _visit_function(self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> None:
-                """Visit function definition node (sync or async)."""
+                """
+                !!! note "Summary"
+                    Visit function definition node (sync or async).
+                """
 
                 # Skip private functions unless check_private is enabled
                 should_check: bool = self.checker.config.global_config.check_private or not node.name.startswith("_")
@@ -835,7 +860,8 @@ class DocstringChecker:
 
     def _check_colon_usage(self, docstring: str) -> list[str]:
         """
-        Check that colons are used correctly for admonition vs non-admonition sections.
+        !!! note "Summary"
+            Check that colons are used correctly for admonition vs non-admonition sections.
         """
 
         errors: list[str] = []
@@ -882,7 +908,8 @@ class DocstringChecker:
 
     def _check_title_case_sections(self, docstring: str) -> list[str]:
         """
-        Check that non-admonition sections are single word, title case, and match config name.
+        !!! note "Summary"
+            Check that non-admonition sections are single word, title case, and match config name.
         """
 
         errors: list[str] = []
@@ -914,7 +941,8 @@ class DocstringChecker:
 
     def _check_parentheses_validation(self, docstring: str) -> list[str]:
         """
-        Check that list_type and list_name_and_type sections have proper parentheses.
+        !!! note "Summary"
+            Check that list_type and list_name_and_type sections have proper parentheses.
         """
 
         errors: list[str] = []

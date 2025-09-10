@@ -154,63 +154,19 @@ files = [
 ]
 
 [tool.dfc]
-# Default configuration for docstring format checker
-
-[[tool.dfc.sections]]
-order = 1
-name = "summary"
-type = "free_text"
-admonition = "note"
-prefix = "!!!"
-required = true
-
-[[tool.dfc.sections]]
-order = 2
-name = "details"
-type = "free_text"
-admonition = "info"
-prefix = "???+"
-required = false
-
-[[tool.dfc.sections]]
-order = 3
-name = "params"
-type = "list_name_and_type"
-required = true
-
-[[tool.dfc.sections]]
-order = 4
-name = "returns"
-type = "list_name_and_type"
-required = false
-
-[[tool.dfc.sections]]
-order = 5
-name = "yields"
-type = "list_type"
-required = false
-
-[[tool.dfc.sections]]
-order = 6
-name = "raises"
-type = "list_type"
-required = false
-
-[[tool.dfc.sections]]
-order = 7
-name = "examples"
-type = "free_text"
-admonition = "example"
-prefix = "???+"
-required = false
-
-[[tool.dfc.sections]]
-order = 8
-name = "notes"
-type = "free_text"
-admonition = "note"
-prefix = "???"
-required = false
+allow_undefined_sections = false
+require_docstrings = true
+check_private = true
+sections = [
+    { order = 1, name = "summary",  type = "free_text",          required = true, admonition = "note", prefix = "!!!" },
+    { order = 2, name = "details",  type = "free_text",          required = false, admonition = "abstract", prefix = "???+" },
+    { order = 3, name = "params",   type = "list_name_and_type", required = false },
+    { order = 4, name = "raises",   type = "list_type",          required = false },
+    { order = 5, name = "returns",  type = "list_name_and_type", required = false },
+    { order = 6, name = "yields",   type = "list_type",          required = false },
+    { order = 7, name = "examples", type = "free_text",          required = false, admonition = "example", prefix = "???+" },
+    { order = 8, name = "notes",    type = "free_text",          required = false, admonition = "note", prefix = "???" },
+]
 
 [build-system]
 requires = ["uv_build>=0.7.19,<0.8.0"]
