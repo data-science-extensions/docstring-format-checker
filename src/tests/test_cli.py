@@ -116,7 +116,7 @@ class TestCLI(TestCase):
                         !!! note "Summary"
                             This function has a good docstring.
 
-                        ???+ info "Details"
+                        ???+ abstract "Details"
                             More detailed information here.
 
                         Params:

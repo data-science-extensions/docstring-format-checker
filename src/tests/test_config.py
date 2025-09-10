@@ -51,15 +51,24 @@ class TestConfig(TestCase):
         """
         Test loading default configuration.
         """
-        config: Config = load_config()
-        assert isinstance(config, Config)
-        assert len(config.sections) > 0
-        assert all(isinstance(section, SectionConfig) for section in config.sections)
-        assert any(section.name == "summary" for section in config.sections)
-        # Test default global config values
-        assert config.global_config.allow_undefined_sections is False
-        assert config.global_config.require_docstrings is True
-        assert config.global_config.check_private is False
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Change to temp directory to avoid loading pyproject.toml from current directory
+            original_cwd = Path.cwd()
+            temp_path = Path(temp_dir)
+            os.chdir(temp_path)
+
+            try:
+                config: Config = load_config()
+                assert isinstance(config, Config)
+                assert len(config.sections) > 0
+                assert all(isinstance(section, SectionConfig) for section in config.sections)
+                assert any(section.name == "summary" for section in config.sections)
+                # Test default global config values
+                assert config.global_config.allow_undefined_sections is False
+                assert config.global_config.require_docstrings is True
+                assert config.global_config.check_private is False
+            finally:
+                os.chdir(original_cwd)
 
     def test_02_load_config_from_toml(self) -> None:
 
