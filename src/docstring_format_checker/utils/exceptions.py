@@ -1,6 +1,7 @@
 class DocstringError(Exception):
     """
-    Exception raised when a docstring validation error occurs.
+    !!! note "Summary"
+        Exception raised when a docstring validation error occurs.
     """
 
     def __init__(
@@ -11,6 +12,10 @@ class DocstringError(Exception):
         item_name: str,
         item_type: str,
     ) -> None:
+        """
+        !!! note "Summary"
+            Initialize a DocstringError.
+        """
         self.message = message
         self.file_path = file_path
         self.line_number = line_number
@@ -20,20 +25,45 @@ class DocstringError(Exception):
 
 
 class InvalidConfigError(Exception):
+    """
+    !!! note "Summary"
+        Exception raised for invalid configuration errors.
+    """
+
     pass
 
 
 class InvalidConfigError_DuplicateOrderValues(Exception):
+    """
+    !!! note "Summary"
+        Exception raised for duplicate order values in configuration.
+    """
+
     pass
 
 
 class InvalidTypeValuesError(Exception):
+    """
+    !!! note "Summary"
+        Exception raised for invalid type values in configuration.
+    """
+
     pass
 
 
 class InvalidFileError(OSError):
+    """
+    !!! note "Summary"
+        Exception raised for invalid file errors.
+    """
+
     pass
 
 
 class DirectoryNotFoundError(OSError):
+    """
+    !!! note "Summary"
+        Exception raised for directory not found errors.
+    """
+
     pass
