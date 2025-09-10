@@ -315,7 +315,7 @@ class DocstringChecker:
             def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
                 """
                 !!! note "Summary"
-                    Visit async function definition node.
+                    Visit function definition node.
                 """
                 self._visit_function(node)
 
