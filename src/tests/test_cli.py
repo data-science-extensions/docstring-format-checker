@@ -370,7 +370,9 @@ class TestCLI(TestCase):
         """
         result: Result = self.runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert "A CLI tool to check and validate Python docstring formatting and completeness." in clean(result.output)
+        # Check for the help text with flexible formatting due to line wrapping on different platforms
+        output = clean(result.output)
+        assert "A CLI tool to check and validate Python docstring formatting and completeness" in output
 
     def test_25_entry_point_function(self) -> None:
         """
@@ -967,7 +969,9 @@ class TestClass:
         # Invoke with no path argument
         result: Result = self.runner.invoke(app, [])
         assert result.exit_code == 0
-        assert "A CLI tool to check and validate Python docstring formatting and completeness." in clean(result.output)
+        # Check for the help text with flexible formatting due to line wrapping on different platforms
+        output = clean(result.output)
+        assert "A CLI tool to check and validate Python docstring formatting and completeness" in output
 
     def test_39_invalid_output_format(self) -> None:
         """
