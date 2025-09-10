@@ -9,6 +9,36 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v0.11.0"
+
+    ## **v0.11.0 - Test Suite Reliability Improvement**
+
+    <!-- md:tag v0.11.0 --><br>
+    <!-- md:date 2025-09-10 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v0.11.0](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v0.11.0) -->
+
+    ??? note "Release Notes"
+
+        ### What's Changed        * Comprehensive Docstring Validation Enhancement and Test Suite Reliability Improvement by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/11                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.10.0...v0.11.0
+
+    ??? abstract "Updates"
+
+        * Fix typo<br>
+            Co-authored-by: Copilot <175728472+Copilot@users.noreply.github.com> (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/d9494ddc679f1d1f883cdc3d046acfd13fed82ac)
+
+        * Standardise admonition types and isolate test environment<br>
+            - Change admonition type from `info` to `abstract` for consistency in documentation formatting<br>
+            - Isolate configuration loading test by switching to temporary directory to prevent interference from existing project configuration files<br>
+            - Ensure test runs in clean environment by temporarily changing working directory and restoring original location afterwards (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/24de49888f74583d24b78b50d2a1dec063408b82)
+
+        * Add or fix package docstrings (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/d569da7fa1b23c70041562158e828913ee453534)
+
+        * Fix typo (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/581109e54069fe9ed971c1827edcac13ce4c17ed)
+
+        * Fix typo (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/ec7103e60b09fef3a226ca05a7f6307708ffadff)
+
+
+
 !!! info "v0.10.0"
 
     ## **v0.10.0 - Enhanced CLI Architecture and Cross-Platform Test Reliability**
