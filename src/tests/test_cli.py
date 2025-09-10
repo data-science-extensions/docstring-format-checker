@@ -527,15 +527,16 @@ class TestCLI(TestCase):
         Test quiet mode with single file and single function (coverage for total_files == 1 and total_functions == 1).
         """
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
-            try:
-                temp_file.write("def func(): pass")  # Missing docstring
-                temp_file.flush()
+            temp_file.write("def func(): pass")  # Missing docstring
+            temp_file.flush()
+            temp_file_name = temp_file.name
 
-                result: Result = self.runner.invoke(app, ["--quiet", temp_file.name])
-                assert result.exit_code == 1
-                assert "1 error(s) in 1 function over 1 file" in clean(result.output)
-            finally:
-                Path(temp_file.name).unlink(missing_ok=True)
+        try:
+            result: Result = self.runner.invoke(app, ["--quiet", temp_file_name])
+            assert result.exit_code == 1
+            assert "1 error(s) in 1 function over 1 file" in clean(result.output)
+        finally:
+            Path(temp_file_name).unlink(missing_ok=True)
 
     def test_32_quiet_mode_multiple_files_multiple_functions(self) -> None:
         """
@@ -568,51 +569,53 @@ class TestClass:
         This tests the missing lines 443-451 in cli.py.
         """
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
-            try:
-                # Create content that would generate compound errors
-                temp_file.write(
-                    dedent(
-                        '''
-                    def test_function(param1, param2):
-                        """
-                        Test function.
-
-                        Params:
-                            param1 str: Description
-                            param2: Missing type information
-                        """
-                        pass
+            # Create content that would generate compound errors
+            temp_file.write(
+                dedent(
                     '''
-                    ).strip()
-                )
-                temp_file.flush()
+                def test_function(param1, param2):
+                    """
+                    Test function.
 
-                result: Result = self.runner.invoke(app, ["-o", "list", temp_file.name])
-                # This should generate errors with "; " separators that will hit lines 443-451
-                assert result.exit_code == 1
-                output = clean(result.output)
-                assert "param" in output
-            finally:
-                Path(temp_file.name).unlink(missing_ok=True)
+                    Params:
+                        param1 str: Description
+                        param2: Missing type information
+                    """
+                    pass
+                '''
+                ).strip()
+            )
+            temp_file.flush()
+            temp_file_name = temp_file.name
+
+        try:
+            result: Result = self.runner.invoke(app, ["-o", "list", temp_file_name])
+            # This should generate errors with "; " separators that will hit lines 443-451
+            assert result.exit_code == 1
+            output = clean(result.output)
+            assert "param" in output
+        finally:
+            Path(temp_file_name).unlink(missing_ok=True)
 
     def test_32_list_output_with_compound_errors_no_line_number(self) -> None:
         """
         Test list output with compound errors that have no line number (line 451).
         """
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
-            try:
-                # Create a file with syntax errors that will generate file-level errors
-                temp_file.write("def broken_syntax(:\n    pass\n")  # Invalid syntax
-                temp_file.flush()
+            # Create a file with syntax errors that will generate file-level errors
+            temp_file.write("def broken_syntax(:\n    pass\n")  # Invalid syntax
+            temp_file.flush()
+            temp_file_name = temp_file.name
 
-                result: Result = self.runner.invoke(app, ["-o", "list", temp_file.name])
-                # File-level syntax errors have line_number=0, which should hit line 451
-                # The result might be exit code 2 for syntax errors, but we still test the code path
-                output = clean(result.output)
-                # Should contain some error message
-                assert len(output) > 0
-            finally:
-                Path(temp_file.name).unlink(missing_ok=True)
+        try:
+            result: Result = self.runner.invoke(app, ["-o", "list", temp_file_name])
+            # File-level syntax errors have line_number=0, which should hit line 451
+            # The result might be exit code 2 for syntax errors, but we still test the code path
+            output = clean(result.output)
+            # Should contain some error message
+            assert len(output) > 0
+        finally:
+            Path(temp_file_name).unlink(missing_ok=True)
 
     def test_33_check_directory_verbose_message(self) -> None:
         """
@@ -964,7 +967,7 @@ class TestClass:
         # Invoke with no path argument
         result: Result = self.runner.invoke(app, [])
         assert result.exit_code == 0
-        assert "A CLI tool to check and validate Python docstring formatting and completeness" in clean(result.output)
+        assert "A CLI tool to check and validate Python docstring formatting and completeness." in clean(result.output)
 
     def test_39_invalid_output_format(self) -> None:
         """
