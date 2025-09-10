@@ -237,12 +237,11 @@ jobs:
           export PATH="$HOME/.local/bin:$PATH"
           uv --version
           uv python install ${{ matrix.python-version }}
-          source .venv/bin/activate
-          python --version
+          uv run python --version
 
       - name: Install Package
         id: install-package
-        run: pip install --no-cache --verbose --no-python-version-warning "${{ env.PACKAGE_NAME }}==${{ env.VERSION }}"
+        run: uv run pip install --no-cache --verbose --no-python-version-warning "${{ env.PACKAGE_NAME }}==${{ env.VERSION }}"
 
   build-docs:
 
