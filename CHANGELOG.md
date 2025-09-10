@@ -9,6 +9,46 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v0.10.0"
+
+    ## **v0.10.0 - Enhanced CLI Architecture and Cross-Platform Test Reliability**
+
+    <!-- md:tag v0.10.0 --><br>
+    <!-- md:date 2025-09-10 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v0.10.0](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v0.10.0) -->
+
+    ??? note "Release Notes"
+
+        ### What's Changed        * Enhanced CLI Architecture and Cross-Platform Test Reliability by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/10                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.9.0...v0.10.0
+
+    ??? abstract "Updates"
+
+        * Improve test assertion robustness for CLI help text validation<br>
+            - Replace exact string matching with word-by-word validation to handle platform-specific line wrapping<br>
+            - Use `all()` function with generator expression to check each word individually in help output<br>
+            - Add explicit type annotation for output variable to improve code clarity<br>
+            - Ensure tests pass consistently across different terminal widths and operating systems (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/f795295577721ad65c590c275c3438f2b16116a0)
+
+        * Fix test assertions to handle platform-specific line wrapping<br>
+            - Remove trailing period from expected help text string to account for line wrapping variations across different platforms<br>
+            - Extract cleaned output to variable for better readability and maintainability<br>
+            - Ensure test reliability when help text formatting differs due to terminal width constraints (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/145f68c0240668ad01b1c2546a11ffdd494e6e56)
+
+        * Fix Windows CI issues: resolve temp file locking and help text assertion mismatches<br>
+            - Close all temporary files before CLI invocation to prevent Windows file locking errors<br>
+            - Update help text assertions to match actual output (completeness. vs completeness)<br>
+            - All 167 tests now pass with 100% code coverage locally (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/af74cc520d4ddec561acdd1461ede1b9c5df516b)
+
+        * Improve CI setup and fix test reliability issues<br>
+            - Add UV package manager setup in CD workflow for faster Python dependency management<br>
+            - Fix Python version handling to use UV for installing matrix versions while maintaining setup consistency<br>
+            - Improve test stability by adding `f.flush()` calls and proper temporary file name handling to prevent file system race conditions<br>
+            - Expand table border detection to handle various Unicode characters for more robust output validation<br>
+            - Update help text to better reflect tool capabilities including completeness checking<br>
+            - Fix test configuration to use proper `Config` objects instead of deprecated helper functions (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/e580876c332ce1e8c008986ddd6650f423abcbcb)
+
+
+
 !!! info "v0.9.0"
 
     ## **v0.9.0 - Configuration Architecture Enhancement**
