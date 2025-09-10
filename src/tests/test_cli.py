@@ -370,7 +370,12 @@ class TestCLI(TestCase):
         """
         result: Result = self.runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert "A CLI tool to check and validate Python docstring formatting and completeness." in clean(result.output)
+        # More flexible check for the description that handles line wrapping
+        output: str = clean(result.output)
+        assert all(
+            word in output
+            for word in "A CLI tool to check and validate Python docstring formatting and completeness".split(" ")
+        )
 
     def test_25_entry_point_function(self) -> None:
         """
@@ -527,15 +532,16 @@ class TestCLI(TestCase):
         Test quiet mode with single file and single function (coverage for total_files == 1 and total_functions == 1).
         """
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
-            try:
-                temp_file.write("def func(): pass")  # Missing docstring
-                temp_file.flush()
+            temp_file.write("def func(): pass")  # Missing docstring
+            temp_file.flush()
+            temp_file_name = temp_file.name
 
-                result: Result = self.runner.invoke(app, ["--quiet", temp_file.name])
-                assert result.exit_code == 1
-                assert "1 error(s) in 1 function over 1 file" in clean(result.output)
-            finally:
-                Path(temp_file.name).unlink(missing_ok=True)
+        try:
+            result: Result = self.runner.invoke(app, ["--quiet", temp_file_name])
+            assert result.exit_code == 1
+            assert "1 error(s) in 1 function over 1 file" in clean(result.output)
+        finally:
+            Path(temp_file_name).unlink(missing_ok=True)
 
     def test_32_quiet_mode_multiple_files_multiple_functions(self) -> None:
         """
@@ -568,51 +574,53 @@ class TestClass:
         This tests the missing lines 443-451 in cli.py.
         """
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
-            try:
-                # Create content that would generate compound errors
-                temp_file.write(
-                    dedent(
-                        '''
-                    def test_function(param1, param2):
-                        """
-                        Test function.
-
-                        Params:
-                            param1 str: Description
-                            param2: Missing type information
-                        """
-                        pass
+            # Create content that would generate compound errors
+            temp_file.write(
+                dedent(
                     '''
-                    ).strip()
-                )
-                temp_file.flush()
+                def test_function(param1, param2):
+                    """
+                    Test function.
 
-                result: Result = self.runner.invoke(app, ["-o", "list", temp_file.name])
-                # This should generate errors with "; " separators that will hit lines 443-451
-                assert result.exit_code == 1
-                output = clean(result.output)
-                assert "param" in output
-            finally:
-                Path(temp_file.name).unlink(missing_ok=True)
+                    Params:
+                        param1 str: Description
+                        param2: Missing type information
+                    """
+                    pass
+                '''
+                ).strip()
+            )
+            temp_file.flush()
+            temp_file_name = temp_file.name
+
+        try:
+            result: Result = self.runner.invoke(app, ["-o", "list", temp_file_name])
+            # This should generate errors with "; " separators that will hit lines 443-451
+            assert result.exit_code == 1
+            output = clean(result.output)
+            assert "param" in output
+        finally:
+            Path(temp_file_name).unlink(missing_ok=True)
 
     def test_32_list_output_with_compound_errors_no_line_number(self) -> None:
         """
         Test list output with compound errors that have no line number (line 451).
         """
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
-            try:
-                # Create a file with syntax errors that will generate file-level errors
-                temp_file.write("def broken_syntax(:\n    pass\n")  # Invalid syntax
-                temp_file.flush()
+            # Create a file with syntax errors that will generate file-level errors
+            temp_file.write("def broken_syntax(:\n    pass\n")  # Invalid syntax
+            temp_file.flush()
+            temp_file_name = temp_file.name
 
-                result: Result = self.runner.invoke(app, ["-o", "list", temp_file.name])
-                # File-level syntax errors have line_number=0, which should hit line 451
-                # The result might be exit code 2 for syntax errors, but we still test the code path
-                output = clean(result.output)
-                # Should contain some error message
-                assert len(output) > 0
-            finally:
-                Path(temp_file.name).unlink(missing_ok=True)
+        try:
+            result: Result = self.runner.invoke(app, ["-o", "list", temp_file_name])
+            # File-level syntax errors have line_number=0, which should hit line 451
+            # The result might be exit code 2 for syntax errors, but we still test the code path
+            output = clean(result.output)
+            # Should contain some error message
+            assert len(output) > 0
+        finally:
+            Path(temp_file_name).unlink(missing_ok=True)
 
     def test_33_check_directory_verbose_message(self) -> None:
         """
@@ -799,7 +807,8 @@ class TestClass:
             output = clean(result.output)
             # Table format should contain table headers and structure
             assert "File" in output and "Line" in output and "Item" in output
-            assert "┃" in output or "|" in output  # Table borders
+            # Check for table borders - accept various formats (unicode, ascii, or other)
+            assert any(char in output for char in ["┃", "|", "│", "╎", "┆", "┊"])
 
             py_file.unlink(missing_ok=True)
 
@@ -878,8 +887,10 @@ class TestClass:
                     """
                 ).strip()
             )
+            f.flush()
+            temp_file_name = f.name
 
-        py_file = Path(f.name)
+        py_file = Path(temp_file_name)
 
         try:
             result: Result = self.runner.invoke(app, ["-c", str(py_file)])
@@ -911,8 +922,10 @@ class TestClass:
                     """
                 ).strip()
             )
+            f.flush()
+            temp_file_name = f.name
 
-        py_file = Path(f.name)
+        py_file = Path(temp_file_name)
 
         try:
             # Test -f works the same as --config
@@ -936,8 +949,10 @@ class TestClass:
         """
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write("def func(): pass")
+            f.flush()
+            temp_file_name = f.name
 
-        py_file = Path(f.name)
+        py_file = Path(temp_file_name)
 
         try:
             # Mock load_config to raise an exception
@@ -957,7 +972,12 @@ class TestClass:
         # Invoke with no path argument
         result: Result = self.runner.invoke(app, [])
         assert result.exit_code == 0
-        assert "A CLI tool to check and validate Python docstring formatting" in clean(result.output)
+        # More flexible check for the description that handles line wrapping
+        output: str = clean(result.output)
+        assert all(
+            word in output
+            for word in "A CLI tool to check and validate Python docstring formatting and completeness".split(" ")
+        )
 
     def test_39_invalid_output_format(self) -> None:
         """
@@ -965,8 +985,10 @@ class TestClass:
         """
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write("def func(): pass")
+            f.flush()
+            temp_file_name = f.name
 
-        py_file = Path(f.name)
+        py_file = Path(temp_file_name)
 
         try:
             result: Result = self.runner.invoke(app, ["--output=invalid", str(py_file)])
@@ -1080,8 +1102,10 @@ class TestClass:
         """
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write("def func(): pass")
+            f.flush()
+            temp_file_name = f.name
 
-        py_file = Path(f.name)
+        py_file = Path(temp_file_name)
 
         try:
             # Mock load_config to raise an exception - need to patch where it's imported
@@ -1110,27 +1134,28 @@ def test_function():
 '''
             )
             test_file.flush()
+            temp_file_name = test_file.name
 
-            try:
-                # Mock the check_file method to return an error with line_number = 0 and compound message
-                def mock_check_file(self, file_path):
-                    return [
-                        DocstringError(
-                            file_path=str(file_path),
-                            line_number=0,  # This should trigger line 451 in cli.py
-                            item_type="function",
-                            item_name="test_function",
-                            message="Missing required section 'params'; Missing required section 'returns'",
-                        )
-                    ]
+        try:
+            # Mock the check_file method to return an error with line_number = 0 and compound message
+            def mock_check_file(self, file_path):
+                return [
+                    DocstringError(
+                        file_path=str(file_path),
+                        line_number=0,  # This should trigger line 451 in cli.py
+                        item_type="function",
+                        item_name="test_function",
+                        message="Missing required section 'params'; Missing required section 'returns'",
+                    )
+                ]
 
-                # Patch the method
-                with patch.object(DocstringChecker, "check_file", mock_check_file):
-                    result = self.runner.invoke(app, ["-o", "list", test_file.name])
+            # Patch the method
+            with patch.object(DocstringChecker, "check_file", mock_check_file):
+                result = self.runner.invoke(app, ["-o", "list", temp_file_name])
 
-                # The test should succeed and hit the specific line we're targeting
-                assert result.exit_code == 1  # Should be 1 for validation errors
-                assert "Missing required section" in result.output
+            # The test should succeed and hit the specific line we're targeting
+            assert result.exit_code == 1  # Should be 1 for validation errors
+            assert "Missing required section" in result.output
 
-            finally:
-                Path(test_file.name).unlink()
+        finally:
+            Path(temp_file_name).unlink(missing_ok=True)
