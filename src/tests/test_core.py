@@ -62,7 +62,7 @@ def simple_checker() -> DocstringChecker:
         SectionConfig(order=3, name="returns", type="list_name_and_type", required=False, admonition=False),
     ]
     config = Config(global_config=GlobalConfig(), sections=sections)
-    return DocstringChecker(_create_config(sections))
+    return DocstringChecker(config)
 
 
 def detailed_checker() -> DocstringChecker:
@@ -90,7 +90,7 @@ def detailed_checker() -> DocstringChecker:
         ),
     ]
     config = Config(global_config=GlobalConfig(), sections=sections)
-    return DocstringChecker(_create_config(sections))
+    return DocstringChecker(config)
 
 
 ## --------------------------------------------------------------------------- #

@@ -228,7 +228,17 @@ jobs:
         id: setup-python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.13'
+
+      - name: Set up UV
+        id: setup-uv
+        run: |
+          curl -LsSf https://uv.astral.sh/uv/install.sh | sh
+          export PATH="$HOME/.local/bin:$PATH"
+          uv --version
+          uv python install ${{ matrix.python-version }}
+          source .venv/bin/activate
+          python --version
 
       - name: Install Package
         id: install-package
