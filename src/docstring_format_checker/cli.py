@@ -72,6 +72,7 @@ from docstring_format_checker.core import DocstringChecker, DocstringError
 __all__: list[str] = [
     "main",
     "entry_point",
+    "check_docstrings",
 ]
 
 
@@ -90,6 +91,20 @@ NEW_LINE = "\n"
 
 ### Colours ----
 def _colour(text: str, colour: str) -> str:
+    """
+    !!! note "Summary"
+        Apply Rich colour markup to text.
+
+    Params:
+        text (str):
+            The text to colour.
+        colour (str):
+            The colour to apply, e.g., 'red', 'green', 'blue'.
+
+    Returns:
+        (str):
+            The text wrapped in Rich colour markup.
+    """
     return f"[{colour}]{text}[/{colour}]"
 
 

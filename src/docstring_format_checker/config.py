@@ -107,7 +107,8 @@ VALID_TYPES: tuple[str, ...] = (
 @dataclass
 class GlobalConfig:
     """
-    Global configuration for docstring checking behavior.
+    !!! note "Summary"
+        Global configuration for docstring checking behavior.
     """
 
     allow_undefined_sections: bool = False
@@ -123,7 +124,8 @@ class GlobalConfig:
 @dataclass
 class SectionConfig:
     """
-    Configuration for a docstring section.
+    !!! note "Summary"
+        Configuration for a docstring section.
     """
 
     order: int
@@ -135,17 +137,26 @@ class SectionConfig:
     message: str = ""  # Optional message for validation errors
 
     def __post_init__(self) -> None:
-        """Validate configuration after initialization."""
+        """
+        !!! note "Summary"
+            Validate configuration after initialization.
+        """
         self._validate_types()
         self._validate_admonition_prefix_combination()
 
     def _validate_types(self) -> None:
-        """Validate the 'type' field."""
+        """
+        !!! note "Summary"
+            Validate the 'type' field.
+        """
         if self.type not in VALID_TYPES:
             raise InvalidTypeValuesError(f"Invalid section type: {self.type}. Valid types: {VALID_TYPES}")
 
     def _validate_admonition_prefix_combination(self) -> None:
-        """Validate admonition and prefix combination rules."""
+        """
+        !!! note "Summary"
+            Validate admonition and prefix combination rules.
+        """
 
         if isinstance(self.admonition, bool):
             # Rule: admonition cannot be True (only False or string)
@@ -173,6 +184,22 @@ class SectionConfig:
 
 
 def _validate_config_order(config_sections: list[SectionConfig]) -> None:
+    """
+    !!! note "Summary"
+        Validate that section order values are unique.
+
+    Params:
+        config_sections (list[SectionConfig]):
+            List of section configurations to validate.
+
+    Raises:
+        (InvalidConfigError_DuplicateOrderValues):
+            If duplicate order values are found.
+
+    Returns:
+        (None):
+            Nothing is returned.
+    """
 
     # Validate no duplicate order values
     order_values: list[int] = [section.order for section in config_sections]
@@ -202,7 +229,8 @@ def _validate_config_order(config_sections: list[SectionConfig]) -> None:
 @dataclass
 class Config:
     """
-    Complete configuration containing global settings and section definitions.
+    !!! note "Summary"
+        Complete configuration containing global settings and section definitions.
     """
 
     global_config: GlobalConfig
@@ -293,15 +321,15 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> Config:
             If `None`, looks for `pyproject.toml` in current directory.
             Default: `None`.
 
-    Returns:
-        (Config):
-            Configuration object containing global settings and section definitions.
-
     Raises:
         (FileNotFoundError):
             If the specified config file doesn't exist.
         (InvalidConfigError):
             If the configuration is invalid.
+
+    Returns:
+        (Config):
+            Configuration object containing global settings and section definitions.
     """
 
     if config_path is None:
