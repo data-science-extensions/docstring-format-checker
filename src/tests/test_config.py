@@ -25,7 +25,12 @@ import pytest
 from pytest import raises
 
 # ## Local First Party Imports ----
-from docstring_format_checker.config import SectionConfig, find_config_file, load_config
+from docstring_format_checker.config import (
+    Config,
+    SectionConfig,
+    find_config_file,
+    load_config,
+)
 from docstring_format_checker.utils.exceptions import (
     InvalidConfigError,
     InvalidConfigError_DuplicateOrderValues,
@@ -46,10 +51,15 @@ class TestConfig(TestCase):
         """
         Test loading default configuration.
         """
-        config: list[SectionConfig] = load_config()
-        assert len(config) > 0
-        assert all(isinstance(section, SectionConfig) for section in config)
-        assert any(section.name == "summary" for section in config)
+        config: Config = load_config()
+        assert isinstance(config, Config)
+        assert len(config.sections) > 0
+        assert all(isinstance(section, SectionConfig) for section in config.sections)
+        assert any(section.name == "summary" for section in config.sections)
+        # Test default global config values
+        assert config.global_config.allow_undefined_sections is False
+        assert config.global_config.require_docstrings is True
+        assert config.global_config.check_private is False
 
     def test_02_load_config_from_toml(self) -> None:
 
@@ -78,10 +88,11 @@ class TestConfig(TestCase):
             config_file: Path = temp_path.joinpath("test_config.toml")
             config_file.write_text(toml_content)
 
-            config: list[SectionConfig] = load_config(str(config_file))
-            assert len(config) == 2
-            assert config[0].name == "summary"
-            assert config[1].name == "params"
+            config: Config = load_config(str(config_file))
+            assert isinstance(config, Config)
+            assert len(config.sections) == 2
+            assert config.sections[0].name == "summary"
+            assert config.sections[1].name == "params"
 
             # Clean up
             config_file.unlink(missing_ok=True)
@@ -106,9 +117,10 @@ class TestConfig(TestCase):
             config_file: Path = temp_path.joinpath("test_config.toml")
             config_file.write_text(toml_content)
 
-            config: list[SectionConfig] = load_config(str(config_file))
-            assert len(config) == 1
-            assert config[0].name == "test"
+            config: Config = load_config(str(config_file))
+            assert isinstance(config, Config)
+            assert len(config.sections) == 1
+            assert config.sections[0].name == "test"
 
             # Clean up
             config_file.unlink(missing_ok=True)
@@ -210,9 +222,9 @@ class TestConfig(TestCase):
             )
 
             # Should return default config when no dfc section found
-            config: list[SectionConfig] = load_config(str(config_file))
-            assert isinstance(config, list)
-            assert len(config) > 0  # DEFAULT_CONFIG has sections
+            config: Config = load_config(str(config_file))
+            assert isinstance(config, Config)
+            assert len(config.sections) > 0  # DEFAULT_CONFIG has sections
 
             # Clean up
             config_file.unlink(missing_ok=True)
@@ -237,9 +249,9 @@ class TestConfig(TestCase):
             )
 
             # Should return default config when no sections found
-            config: list[SectionConfig] = load_config(str(config_file))
-            assert isinstance(config, list)
-            assert len(config) > 0  # Returns DEFAULT_CONFIG (has 8 sections)
+            config: Config = load_config(str(config_file))
+            assert isinstance(config, Config)
+            assert len(config.sections) > 0  # Returns DEFAULT_CONFIG (has 8 sections)
 
             # Clean up
             config_file.unlink(missing_ok=True)
@@ -350,9 +362,10 @@ class TestConfig(TestCase):
             )
 
             # This should work regardless of Python version
-            config: list[SectionConfig] = load_config(str(config_file))
-            assert len(config) == 1
-            assert config[0].name == "summary"
+            config: Config = load_config(str(config_file))
+            assert isinstance(config, Config)
+            assert len(config.sections) == 1
+            assert config.sections[0].name == "summary"
 
             # Clean up
             config_file.unlink(missing_ok=True)
@@ -369,8 +382,8 @@ class TestConfig(TestCase):
                 os.chdir(temp_dir)
                 # Call load_config with no argument - should return DEFAULT_CONFIG
                 config = load_config()
-                assert isinstance(config, list)
-                assert len(config) > 0  # DEFAULT_CONFIG has sections
+                assert isinstance(config, Config)
+                assert len(config.sections) > 0  # DEFAULT_CONFIG has sections
             finally:
                 os.chdir(original_cwd)
 
@@ -606,14 +619,14 @@ class TestConfig(TestCase):
 
         try:
             # Force loading from this specific file to trigger the empty string logic
-            config: list[SectionConfig] = load_config(Path(temp_file))
+            config: Config = load_config(Path(temp_file))
 
             # Should process the empty string and convert to False (line 306)
-            assert len(config) >= 1
-            test_section = None
-            for section in config:
+            assert len(config.sections) >= 1
+            test_section: Optional[SectionConfig] = None
+            for section in config.sections:
                 if section.name == "test_section":
-                    test_section: SectionConfig = section
+                    test_section = section
                     break
 
             # The admonition should be False due to empty string conversion

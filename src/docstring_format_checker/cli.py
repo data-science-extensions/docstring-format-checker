@@ -56,7 +56,11 @@ from typer import Argument, CallbackParam, Context, Exit, Option, Typer, echo
 
 # ## Local First Party Imports ----
 from docstring_format_checker import __version__
-from docstring_format_checker.config import SectionConfig, find_config_file, load_config
+from docstring_format_checker.config import (
+    Config,
+    find_config_file,
+    load_config,
+)
 from docstring_format_checker.core import DocstringChecker, DocstringError
 
 
@@ -527,21 +531,21 @@ def check_docstrings(
             if not config_path.exists():
                 console.print(_red(f"Error: Configuration file does not exist: {config}"))
                 raise Exit(1)
-            sections_config = load_config(config_path)
+            config_obj = load_config(config_path)
         else:
             # Try to find config file automatically
             found_config: Optional[Path] = find_config_file(target_path if target_path.is_dir() else target_path.parent)
             if found_config:
-                sections_config: list[SectionConfig] = load_config(found_config)
+                config_obj: Config = load_config(found_config)
             else:
-                sections_config: list[SectionConfig] = load_config()
+                config_obj: Config = load_config()
 
     except Exception as e:
         console.print(_red(f"Error loading configuration: {e}"))
         raise Exit(1)
 
     # Initialize checker
-    checker = DocstringChecker(sections_config)
+    checker = DocstringChecker(config_obj)
 
     # Check files
     try:

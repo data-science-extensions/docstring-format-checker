@@ -70,7 +70,9 @@ else:
 
 
 __all__: list[str] = [
+    "GlobalConfig",
     "SectionConfig",
+    "Config",
     "DEFAULT_CONFIG",
     "load_config",
     "find_config_file",
@@ -92,13 +94,29 @@ VALID_TYPES: tuple[str, ...] = (
 
 # ---------------------------------------------------------------------------- #
 #                                                                              #
-#     Helpers                                                               ####
+#     Config                                                                ####
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
 
 ## --------------------------------------------------------------------------- #
-##  Classes                                                                 ####
+##  GlobalConfig                                                            ####
+## --------------------------------------------------------------------------- #
+
+
+@dataclass
+class GlobalConfig:
+    """
+    Global configuration for docstring checking behavior.
+    """
+
+    allow_undefined_sections: bool = False
+    require_docstrings: bool = True
+    check_private: bool = False
+
+
+## --------------------------------------------------------------------------- #
+##  SectionConfig                                                           ####
 ## --------------------------------------------------------------------------- #
 
 
@@ -176,12 +194,29 @@ def _validate_config_order(config_sections: list[SectionConfig]) -> None:
 
 # ---------------------------------------------------------------------------- #
 #                                                                              #
-#     Main Section                                                          ####
+#     Config Container                                                      ####
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
 
-DEFAULT_CONFIG: list[SectionConfig] = [
+@dataclass
+class Config:
+    """
+    Complete configuration containing global settings and section definitions.
+    """
+
+    global_config: GlobalConfig
+    sections: list[SectionConfig]
+
+
+# ---------------------------------------------------------------------------- #
+#                                                                              #
+#     Default Configuration                                                 ####
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+
+
+DEFAULT_SECTIONS: list[SectionConfig] = [
     SectionConfig(
         order=1,
         name="summary",
@@ -241,7 +276,13 @@ DEFAULT_CONFIG: list[SectionConfig] = [
 ]
 
 
-def load_config(config_path: Optional[Union[str, Path]] = None) -> list[SectionConfig]:
+DEFAULT_CONFIG: Config = Config(
+    global_config=GlobalConfig(),
+    sections=DEFAULT_SECTIONS,
+)
+
+
+def load_config(config_path: Optional[Union[str, Path]] = None) -> Config:
     """
     !!! note "Summary"
         Load configuration from a TOML file or return default configuration.
@@ -253,8 +294,8 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> list[SectionC
             Default: `None`.
 
     Returns:
-        (list[SectionConfig]):
-            List of SectionConfig objects defining the docstring sections to check.
+        (Config):
+            Configuration object containing global settings and section definitions.
 
     Raises:
         (FileNotFoundError):
@@ -271,6 +312,7 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> list[SectionC
         else:
             return DEFAULT_CONFIG
 
+    # Convert to Path object and check existence
     config_path = Path(config_path)
     if not config_path.exists():
         raise FileNotFoundError(f"Configuration file not found: {config_path}")
@@ -291,6 +333,13 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> list[SectionC
 
     if tool_config is None:
         return DEFAULT_CONFIG
+
+    # Parse global configuration flags
+    global_config = GlobalConfig(
+        allow_undefined_sections=tool_config.get("allow_undefined_sections", False),
+        require_docstrings=tool_config.get("require_docstrings", True),
+        check_private=tool_config.get("check_private", False),
+    )
 
     # Parse sections configuration
     sections_config: list[SectionConfig] = []
@@ -315,16 +364,17 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> list[SectionC
             except (KeyError, TypeError, ValueError, InvalidTypeValuesError) as e:
                 raise InvalidConfigError(f"Invalid section configuration: {section_data}. Error: {e}") from e
 
+    # Use default sections if none provided, otherwise validate and sort
     if not sections_config:
-        return DEFAULT_CONFIG
+        sections_config = DEFAULT_SECTIONS
+    else:
+        # Validate no duplicate order values
+        _validate_config_order(config_sections=sections_config)
 
-    # Validate no duplicate order values
-    _validate_config_order(config_sections=sections_config)
+        # Sort by order
+        sections_config.sort(key=lambda x: x.order)
 
-    # Sort by order
-    sections_config.sort(key=lambda x: x.order)
-
-    return sections_config
+    return Config(global_config=global_config, sections=sections_config)
 
 
 def find_config_file(start_path: Optional[Path] = None) -> Optional[Path]:

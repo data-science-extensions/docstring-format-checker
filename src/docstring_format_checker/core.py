@@ -50,7 +50,7 @@ from pathlib import Path
 from typing import Iterator, Literal, NamedTuple, Optional, Union
 
 # ## Local First Party Imports ----
-from docstring_format_checker.config import SectionConfig
+from docstring_format_checker.config import Config, SectionConfig
 from docstring_format_checker.utils.exceptions import (
     DirectoryNotFoundError,
     DocstringError,
@@ -95,18 +95,19 @@ class DocstringChecker:
     Main class for checking docstring format and completeness.
     """
 
-    def __init__(self, sections_config: list[SectionConfig]) -> None:
+    def __init__(self, config: Config) -> None:
         """
         !!! note "Summary"
             Initialize the docstring checker.
 
         Params:
-            sections_config (list[SectionConfig]):
-                List of section configurations to check against.
+            config (Config):
+                Configuration object containing global settings and section definitions.
         """
-        self.sections_config: list[SectionConfig] = sections_config
-        self.required_sections: list[SectionConfig] = [s for s in sections_config if s.required]
-        self.optional_sections: list[SectionConfig] = [s for s in sections_config if not s.required]
+        self.config = config
+        self.sections_config: list[SectionConfig] = config.sections
+        self.required_sections: list[SectionConfig] = [s for s in config.sections if s.required]
+        self.optional_sections: list[SectionConfig] = [s for s in config.sections if not s.required]
 
     def check_file(self, file_path: Union[str, Path]) -> list[DocstringError]:
         """
@@ -279,7 +280,9 @@ class DocstringChecker:
                 self.checker: DocstringChecker = checker
 
             def visit_ClassDef(self, node: ast.ClassDef) -> None:
-                if not node.name.startswith("_"):  # Skip private classes
+                # Skip private classes unless check_private is enabled
+                should_check: bool = self.checker.config.global_config.check_private or not node.name.startswith("_")
+                if should_check:
                     items.append(
                         FunctionAndClassDetails(
                             item_type="class",
@@ -304,9 +307,10 @@ class DocstringChecker:
             def _visit_function(self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> None:
                 """Visit function definition node (sync or async)."""
 
-                if not node.name.startswith("_"):  # Skip private functions
+                # Skip private functions unless check_private is enabled
+                should_check: bool = self.checker.config.global_config.check_private or not node.name.startswith("_")
+                if should_check:
                     # Skip @overload functions - they don't need docstrings
-
                     if not self.checker._is_overload_function(node):
                         item_type: Literal["function", "method"] = "method" if self.class_stack else "function"
                         parent_class: Optional[str] = self.class_stack[-1] if self.class_stack else None
@@ -378,7 +382,8 @@ class DocstringChecker:
                         applicable_sections.append(section)
 
         if not docstring:
-            if requires_docstring:
+            # Only require docstrings if the global flag is enabled
+            if requires_docstring and self.config.global_config.require_docstrings:
                 message: str = f"Missing docstring for {item.item_type}"
                 raise DocstringError(
                     message=message,
@@ -387,7 +392,7 @@ class DocstringChecker:
                     item_name=item.name,
                     item_type=item.item_type,
                 )
-            return  # No docstring required
+            return  # No docstring required or docstring requirement disabled
 
         # Validate docstring sections if docstring exists
         self._validate_docstring_sections(docstring, item, file_path)
@@ -452,9 +457,10 @@ class DocstringChecker:
         if self._has_both_returns_and_yields(docstring):
             errors.append("Docstring cannot have both Returns and Yields sections")
 
-        # Check for undefined sections in docstring
-        undefined_errors: list[str] = self._check_undefined_sections(docstring)
-        errors.extend(undefined_errors)
+        # Check for undefined sections in docstring (only if not allowed)
+        if not self.config.global_config.allow_undefined_sections:
+            undefined_errors: list[str] = self._check_undefined_sections(docstring)
+            errors.extend(undefined_errors)
 
         # Check admonition values match configuration
         admonition_errors: list[str] = self._check_admonition_values(docstring)
