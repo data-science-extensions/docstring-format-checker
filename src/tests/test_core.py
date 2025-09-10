@@ -25,7 +25,7 @@ from unittest import TestCase
 import pytest
 
 # ## Local First Party Imports ----
-from docstring_format_checker.config import SectionConfig
+from docstring_format_checker.config import Config, GlobalConfig, SectionConfig
 from docstring_format_checker.core import DocstringChecker
 from docstring_format_checker.utils.exceptions import (
     DirectoryNotFoundError,
@@ -46,23 +46,30 @@ from docstring_format_checker.utils.exceptions import (
 ## --------------------------------------------------------------------------- #
 
 
+def _create_config(sections: list[SectionConfig], **global_flags) -> Config:
+    """Helper function to create Config objects for tests."""
+    global_config = GlobalConfig(**global_flags)
+    return Config(global_config=global_config, sections=sections)
+
+
 def simple_checker() -> DocstringChecker:
     """
     Create a simple docstring checker for testing.
     """
-    config: list[SectionConfig] = [
+    sections: list[SectionConfig] = [
         SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
         SectionConfig(order=2, name="params", type="list_name_and_type", required=True, admonition=False),
         SectionConfig(order=3, name="returns", type="list_name_and_type", required=False, admonition=False),
     ]
-    return DocstringChecker(config)
+    config = Config(global_config=GlobalConfig(), sections=sections)
+    return DocstringChecker(_create_config(sections))
 
 
 def detailed_checker() -> DocstringChecker:
     """
     Create a detailed docstring checker for testing.
     """
-    config: list[SectionConfig] = [
+    sections: list[SectionConfig] = [
         SectionConfig(
             order=1,
             name="summary",
@@ -82,7 +89,8 @@ def detailed_checker() -> DocstringChecker:
             required=False,
         ),
     ]
-    return DocstringChecker(config)
+    config = Config(global_config=GlobalConfig(), sections=sections)
+    return DocstringChecker(_create_config(sections))
 
 
 ## --------------------------------------------------------------------------- #
@@ -445,7 +453,7 @@ class TestDocstringChecker(TestCase):
         Test checker with empty sections configuration.
         """
 
-        empty_checker = DocstringChecker([])
+        empty_checker = DocstringChecker(_create_config([]))
         python_content: str = dedent(
             '''
             def function_with_docstring():
@@ -585,7 +593,7 @@ class TestDocstringChecker(TestCase):
             SectionConfig(order=4, name="raises", type="list_type", required=False),
         ]
 
-        complex_checker = DocstringChecker(complex_sections)
+        complex_checker = DocstringChecker(_create_config(complex_sections))
 
         python_content: str = dedent(
             '''
@@ -826,7 +834,7 @@ class TestDocstringChecker(TestCase):
             SectionConfig(order=3, name="returns", type="free_text", required=False),
         ]
 
-        ordered_checker = DocstringChecker(ordered_sections)
+        ordered_checker = DocstringChecker(_create_config(ordered_sections))
 
         python_content: str = dedent(
             '''
@@ -900,7 +908,7 @@ class TestDocstringChecker(TestCase):
             SectionConfig(order=4, name="authors", type="list_name", required=False),
         ]
 
-        checker = DocstringChecker(sections)
+        checker = DocstringChecker(_create_config(sections))
 
         python_content: str = dedent(
             '''
@@ -948,7 +956,7 @@ class TestDocstringChecker(TestCase):
             SectionConfig(order=1, name="summary", type="free_text", required=True),
         ]
 
-        checker = DocstringChecker(sections)
+        checker = DocstringChecker(_create_config(sections))
 
         python_content: str = dedent(
             """
@@ -991,7 +999,7 @@ class TestDocstringChecker(TestCase):
             SectionConfig(order=6, name="notes", type="list_name", required=False),
         ]
 
-        checker = DocstringChecker(sections)
+        checker = DocstringChecker(_create_config(sections))
 
         # Function with incomplete sections
         python_content: str = dedent(
@@ -1036,7 +1044,7 @@ class TestDocstringChecker(TestCase):
             SectionConfig(order=2, name="authors", type="list_name", required=True),
         ]
 
-        checker = DocstringChecker(sections)
+        checker = DocstringChecker(_create_config(sections))
 
         python_content: str = dedent(
             '''
@@ -1073,7 +1081,7 @@ class TestDocstringChecker(TestCase):
             SectionConfig(order=2, name="yields", type="list_type", required=True),
         ]
 
-        checker = DocstringChecker(sections)
+        checker = DocstringChecker(_create_config(sections))
 
         python_content: str = dedent(
             '''
@@ -1112,7 +1120,7 @@ class TestDocstringChecker(TestCase):
             SectionConfig(order=3, name="yields", type="list_type", required=False),
         ]
 
-        checker = DocstringChecker(sections)
+        checker = DocstringChecker(_create_config(sections))
 
         python_content: str = dedent(
             '''
@@ -1156,7 +1164,7 @@ class TestDocstringChecker(TestCase):
             SectionConfig(order=1, name="summary", type="free_text", required=True),
         ]
 
-        checker = DocstringChecker(sections)
+        checker = DocstringChecker(_create_config(sections))
 
         python_content: str = dedent(
             """
@@ -1190,7 +1198,7 @@ class TestDocstringChecker(TestCase):
             SectionConfig(order=2, name="examples", type="free_text", required=True),
         ]
 
-        checker = DocstringChecker(sections)
+        checker = DocstringChecker(_create_config(sections))
 
         python_content: str = dedent(
             '''
@@ -1260,7 +1268,7 @@ class TestDocstringChecker(TestCase):
             SectionConfig(order=1, name="unknown custom section", type="free_text", required=True, admonition=False),
         ]
 
-        checker = DocstringChecker(custom_sections)
+        checker = DocstringChecker(_create_config(custom_sections))
 
         python_content: str = dedent(
             '''
@@ -1296,7 +1304,7 @@ class TestDocstringChecker(TestCase):
             SectionConfig(order=1, name="summary", type="free_text", required=True),
         ]
 
-        checker = DocstringChecker(summary_sections)
+        checker = DocstringChecker(_create_config(summary_sections))
 
         python_content: str = dedent(
             '''
@@ -1331,7 +1339,7 @@ class TestDocstringChecker(TestCase):
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
         ]
 
-        checker = DocstringChecker(summary_sections)
+        checker = DocstringChecker(_create_config(summary_sections))
 
         python_content: str = dedent(
             '''
@@ -1498,10 +1506,10 @@ class TestDocstringChecker(TestCase):
         """
 
         # Use a checker that only requires summary, not params
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True),
         ]
-        checker: DocstringChecker = DocstringChecker(config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content mixing overload and regular functions
         python_content: str = dedent(
@@ -1716,11 +1724,12 @@ class TestDocstringChecker(TestCase):
         """
         Test that correct admonition values pass validation.
         """
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition="note", prefix="!!!"),
             SectionConfig(order=2, name="details", type="free_text", required=False, admonition="info", prefix="???+"),
         ]
-        checker: DocstringChecker = DocstringChecker(config)
+        config = _create_config(sections)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content with correct admonitions
         python_content: str = dedent(
@@ -1753,11 +1762,11 @@ class TestDocstringChecker(TestCase):
         """
         Test that incorrect admonition values are caught.
         """
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition="note", prefix="!!!"),
             SectionConfig(order=2, name="details", type="free_text", required=False, admonition="info", prefix="???+"),
         ]
-        checker: DocstringChecker = DocstringChecker(config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content with wrong admonition for details section
         python_content: str = dedent(
@@ -1795,7 +1804,7 @@ class TestDocstringChecker(TestCase):
         """
         Test that sections defined in configuration don't trigger undefined section errors.
         """
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition="note", prefix="!!!"),
             SectionConfig(order=2, name="params", type="list_name_and_type", required=False),
             SectionConfig(order=3, name="returns", type="list_type", required=False),
@@ -1803,7 +1812,7 @@ class TestDocstringChecker(TestCase):
                 order=4, name="examples", type="free_text", required=False, admonition="example", prefix="???+"
             ),
         ]
-        checker: DocstringChecker = DocstringChecker(config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content with only defined sections
         python_content: str = dedent(
@@ -1842,12 +1851,12 @@ class TestDocstringChecker(TestCase):
         """
         Test that sections not defined in configuration trigger undefined section errors.
         """
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition="note", prefix="!!!"),
             SectionConfig(order=2, name="params", type="list_name_and_type", required=False),
             SectionConfig(order=3, name="returns", type="list_type", required=False),
         ]
-        checker: DocstringChecker = DocstringChecker(config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content with undefined sections
         python_content: str = dedent(
@@ -1900,12 +1909,12 @@ class TestDocstringChecker(TestCase):
         """
         Test that both admonition and undefined section errors are caught together.
         """
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition="note", prefix="!!!"),
             SectionConfig(order=2, name="details", type="free_text", required=False, admonition="info", prefix="???+"),
             SectionConfig(order=3, name="params", type="list_name_and_type", required=False),
         ]
-        checker: DocstringChecker = DocstringChecker(config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content with both wrong admonition AND undefined section
         python_content: str = dedent(
@@ -2004,11 +2013,11 @@ class TestDocstringChecker(TestCase):
         """
         Test that admonition sections with colons trigger validation errors.
         """
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition="note", prefix="!!!"),
             SectionConfig(order=2, name="details", type="free_text", required=False, admonition="info", prefix="???+"),
         ]
-        checker: DocstringChecker = DocstringChecker(config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content with admonition sections ending with colons (wrong)
         python_content: str = dedent(
@@ -2047,12 +2056,12 @@ class TestDocstringChecker(TestCase):
         """
         Test that non-admonition sections without colons trigger validation errors.
         """
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
             SectionConfig(order=2, name="params", type="list_name_and_type", required=False, admonition=False),
             SectionConfig(order=3, name="returns", type="list_type", required=False, admonition=False),
         ]
-        checker: DocstringChecker = DocstringChecker(config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content with non-admonition sections missing colons (wrong)
         python_content: str = dedent(
@@ -2094,12 +2103,12 @@ class TestDocstringChecker(TestCase):
         """
         Test that non-admonition sections must be in title case.
         """
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
             SectionConfig(order=2, name="params", type="list_name_and_type", required=False, admonition=False),
             SectionConfig(order=3, name="returns", type="list_type", required=False, admonition=False),
         ]
-        checker: DocstringChecker = DocstringChecker(config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content with wrong case sections
         python_content: str = dedent(
@@ -2141,7 +2150,7 @@ class TestDocstringChecker(TestCase):
         """
         Test that list_type sections require parenthesized types.
         """
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
             SectionConfig(
                 order=2, name="raises", type="list_type", required=True, admonition=False
@@ -2150,7 +2159,7 @@ class TestDocstringChecker(TestCase):
                 order=3, name="returns", type="list_type", required=True, admonition=False
             ),  # Make required for testing
         ]
-        checker: DocstringChecker = DocstringChecker(config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content with missing parentheses in list_type sections
         python_content: str = dedent(
@@ -2197,12 +2206,12 @@ class TestDocstringChecker(TestCase):
         """
         Test that list_name_and_type sections require parenthesized types.
         """
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
             SectionConfig(order=2, name="params", type="list_name_and_type", required=False, admonition=False),
             SectionConfig(order=3, name="returns", type="list_name_and_type", required=False, admonition=False),
         ]
-        checker: DocstringChecker = DocstringChecker(config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content with missing parentheses in list_name_and_type sections
         python_content: str = dedent(
@@ -2248,7 +2257,7 @@ class TestDocstringChecker(TestCase):
         """
         Test that properly formatted docstring with all new rules passes validation.
         """
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition="note", prefix="!!!"),
             SectionConfig(order=2, name="details", type="free_text", required=False, admonition="info", prefix="???+"),
             SectionConfig(order=3, name="params", type="list_name_and_type", required=False, admonition=False),
@@ -2258,7 +2267,7 @@ class TestDocstringChecker(TestCase):
                 order=6, name="examples", type="free_text", required=False, admonition="example", prefix="???+"
             ),
         ]
-        checker: DocstringChecker = DocstringChecker(config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content following all the new validation rules correctly
         python_content: str = dedent(
@@ -2313,10 +2322,10 @@ class TestDocstringChecker(TestCase):
         Test that unknown free text sections return True by default.
         """
         # Create a config with an unknown free text section name
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="unknown_custom_section", type="free_text", required=True, admonition=False),
         ]
-        checker: DocstringChecker = DocstringChecker(config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         python_content: str = dedent(
             '''
@@ -2343,10 +2352,10 @@ class TestDocstringChecker(TestCase):
         Test that _check_undefined_sections skips empty matches and code blocks.
         """
 
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
         ]
-        checker: DocstringChecker = DocstringChecker(config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         python_content: str = dedent(
             r'''
@@ -2394,10 +2403,10 @@ class TestDocstringChecker(TestCase):
         Test that summary section validation accepts simple docstring content (not just admonitions).
         """
         # Config with just a summary section (non-admonition)
-        summary_config: list[SectionConfig] = [
+        summary_sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
         ]
-        checker = DocstringChecker(summary_config)
+        checker = DocstringChecker(_create_config(summary_sections))
 
         python_content: str = dedent(
             '''
@@ -2463,10 +2472,10 @@ class TestDocstringChecker(TestCase):
         Test that summary sections accept simple content without formal patterns.
         """
         # Custom config with summary section
-        custom_config: list[SectionConfig] = [
+        custom_sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
         ]
-        checker = DocstringChecker(custom_config)
+        checker = DocstringChecker(_create_config(custom_sections))
 
         # Test the _check_free_text_section method directly
         section_config = SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False)
@@ -2483,10 +2492,10 @@ class TestDocstringChecker(TestCase):
         Test that undefined sections validation skips entries with special characters.
         """
         # Custom config with only summary defined
-        custom_config: list[SectionConfig] = [
+        custom_sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
         ]
-        checker = DocstringChecker(custom_config)
+        checker = DocstringChecker(_create_config(custom_sections))
 
         # Test docstring with special characters that should be skipped
         test_docstring = "Summary:\nContent\nfile.txt:\nSkipped\nbackslash\\path:\nSkipped\n`code`:\nSkipped"
@@ -2502,10 +2511,10 @@ class TestDocstringChecker(TestCase):
         Test the logic for detecting which sections are not configured.
         """
         # Custom config with only summary defined
-        custom_config: list[SectionConfig] = [
+        custom_sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
         ]
-        checker = DocstringChecker(custom_config)
+        checker = DocstringChecker(_create_config(custom_sections))
 
         # Test docstring with an undefined section
         test_docstring = "Summary:\nContent\nUndefined:\nContent"
@@ -2521,8 +2530,8 @@ class TestDocstringChecker(TestCase):
         """
         Test that sections with special characters are skipped.
         """
-        custom_config: list[SectionConfig] = []
-        checker = DocstringChecker(custom_config)
+        custom_sections: list[SectionConfig] = []
+        checker = DocstringChecker(_create_config(custom_sections))
 
         # Test docstring with sections containing special characters that should be skipped
         test_docstring: str = dedent(
@@ -2563,10 +2572,10 @@ class TestDocstringChecker(TestCase):
         Test the examples section pattern matching.
         """
         # Create a minimal checker to test the specific method
-        minimal_config: list[SectionConfig] = [
+        minimal_sections: list[SectionConfig] = [
             SectionConfig(order=1, name="examples", type="free_text", required=True, admonition=False)
         ]
-        checker = DocstringChecker(minimal_config)
+        checker = DocstringChecker(_create_config(minimal_sections))
 
         # Create section config for examples
         section = SectionConfig(order=1, name="examples", type="free_text", required=True, admonition=False)
@@ -2595,8 +2604,8 @@ class TestDocstringChecker(TestCase):
         """
         Test that empty section names and code language markers are skipped.
         """
-        custom_config: list[SectionConfig] = []
-        checker = DocstringChecker(custom_config)
+        custom_sections: list[SectionConfig] = []
+        checker = DocstringChecker(_create_config(custom_sections))
 
         # Test docstring with empty section names and code language markers
         test_docstring: str = dedent(
@@ -2643,7 +2652,7 @@ class TestDocstringChecker(TestCase):
         # Create a section config specifically for examples
         examples_section = SectionConfig(order=1, name="examples", type="free_text", required=False, admonition=False)
 
-        checker = DocstringChecker([examples_section])
+        checker = DocstringChecker(_create_config([examples_section]))
 
         # Test docstring with the exact pattern that should trigger
         docstring_with_examples: str = dedent(
@@ -2688,8 +2697,8 @@ class TestDocstringChecker(TestCase):
         """
         Test that sections with special characters trigger the continue statement.
         """
-        custom_config: list[SectionConfig] = []
-        checker = DocstringChecker(custom_config)
+        custom_sections: list[SectionConfig] = []
+        checker = DocstringChecker(_create_config(custom_sections))
 
         # Test docstring with admonition sections that will be found by the regex but filtered out by special chars
         test_docstring: str = dedent(
@@ -2741,7 +2750,7 @@ class TestDocstringChecker(TestCase):
         examples_section = SectionConfig(
             name="example", required=True, type="free_text", order=1, admonition="example", prefix="???+"
         )
-        checker = DocstringChecker([examples_section])
+        checker = DocstringChecker(_create_config([examples_section]))
 
         # This should match the regex pattern
         docstring_with_examples: str = dedent(
@@ -2771,7 +2780,7 @@ class TestDocstringChecker(TestCase):
             admonition=False,  # Not a string admonition, so first condition fails
             prefix="",
         )
-        checker = DocstringChecker([summary_section])
+        checker = DocstringChecker(_create_config([summary_section]))
 
         # Test formal pattern match should return True
         formal_docstring = """
@@ -2798,11 +2807,11 @@ class TestDocstringChecker(TestCase):
         Test parentheses validation with description lines containing specific words.
         This covers the missing lines 971 and 980 in core.py.
         """
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
             SectionConfig(order=2, name="Params", type="list_name_and_type", required=True, admonition=False),
         ]
-        checker: DocstringChecker = DocstringChecker(config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Test with content that has description lines with specific words that should be skipped
         python_content: str = dedent(
@@ -2854,11 +2863,11 @@ class TestDocstringChecker(TestCase):
         """
         Test that hits the specific error append line (line 980) in core.py.
         """
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
             SectionConfig(order=2, name="Parameters", type="list_name_and_type", required=True, admonition=False),
         ]
-        checker: DocstringChecker = DocstringChecker(config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Simple content that should definitely trigger the parentheses error
         python_content: str = dedent(
@@ -2894,11 +2903,11 @@ class TestDocstringChecker(TestCase):
         """
         Another attempt to hit the missing line in parentheses validation.
         """
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
             SectionConfig(order=2, name="Args", type="list_name_and_type", required=True, admonition=False),
         ]
-        checker: DocstringChecker = DocstringChecker(config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Test case where we have a clear parameter line that lacks parentheses
         python_content: str = dedent(
@@ -2933,11 +2942,11 @@ class TestDocstringChecker(TestCase):
 
     def test_79_specific_parentheses_validation_line_target(self) -> None:
         """Test to specifically target core.py line 998 with exact condition."""
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
             SectionConfig(order=2, name="Parameters", type="list_name_and_type", required=True, admonition=False),
         ]
-        checker: DocstringChecker = DocstringChecker(config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Create a parameter line that will pass all the filter conditions but fail the regex
         # This should hit the exact line we're targeting (core.py:998)
@@ -2972,11 +2981,11 @@ class TestDocstringChecker(TestCase):
 
     def test_80_precise_parentheses_validation_coverage(self) -> None:
         """Test to precisely hit core.py line 998 - parentheses error creation."""
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
             SectionConfig(order=2, name="Args", type="list_name_and_type", required=True, admonition=False),
         ]
-        checker: DocstringChecker = DocstringChecker(config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Create content that will hit the exact conditions:
         # - Current section is list_name_and_type
@@ -3020,11 +3029,11 @@ class TestDocstringChecker(TestCase):
         This specifically targets the continue statement that skips validation for description lines.
         """
         # Create configuration with list_name_and_type section
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
             SectionConfig(order=2, name="params", type="list_name_and_type", required=False, admonition=False),
         ]
-        checker = DocstringChecker(sections_config=config)
+        checker = DocstringChecker(_create_config(sections))
 
         python_content: str = dedent(
             '''
@@ -3072,11 +3081,11 @@ class TestDocstringChecker(TestCase):
         This tests the specific scenario where a raises section has proper parentheses for the type,
         but the description contains colons and should not be validated.
         """
-        config: list[SectionConfig] = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition=False),
             SectionConfig(order=2, name="raises", type="list_type", required=False, admonition=False),
         ]
-        checker: DocstringChecker = DocstringChecker(config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Test case 1: Description on separate lines (should pass)
         python_content_1: str = dedent(
@@ -3158,11 +3167,11 @@ class TestDocstringChecker(TestCase):
         This covers the missing line 1012 in core.py.
         """
         # Create a checker with raises section configured
-        sections_config = [
+        sections = [
             SectionConfig(order=1, name="summary", type="free_text", required=True),
             SectionConfig(order=2, name="raises", type="list_type", required=False),
         ]
-        checker: DocstringChecker = DocstringChecker(sections_config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         python_content: str = dedent(
             '''
@@ -3206,11 +3215,11 @@ class TestDocstringChecker(TestCase):
         but the description contains bullet points with colons and should not be validated.
         """
         # Create a checker with params section configured
-        sections_config = [
+        sections = [
             SectionConfig(order=1, name="summary", type="free_text", required=True),
             SectionConfig(order=2, name="params", type="list_name_and_type", required=False),
         ]
-        checker: DocstringChecker = DocstringChecker(sections_config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         python_content: str = dedent(
             '''
@@ -3261,11 +3270,11 @@ class TestDocstringChecker(TestCase):
         This covers lines 1041 and 1046 in core.py.
         """
         # Create a checker with params section configured
-        sections_config = [
+        sections = [
             SectionConfig(order=1, name="summary", type="free_text", required=True),
             SectionConfig(order=2, name="params", type="list_name_and_type", required=False),
         ]
-        checker: DocstringChecker = DocstringChecker(sections_config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         python_content: str = dedent(
             '''
@@ -3302,11 +3311,11 @@ class TestDocstringChecker(TestCase):
         This covers line 1046 in core.py (the continue statement for multiple words).
         """
         # Create a checker with params section configured
-        sections_config = [
+        sections = [
             SectionConfig(order=1, name="summary", type="free_text", required=True),
             SectionConfig(order=2, name="params", type="list_name_and_type", required=False),
         ]
-        checker: DocstringChecker = DocstringChecker(sections_config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         python_content: str = dedent(
             '''
@@ -3345,11 +3354,11 @@ class TestDocstringChecker(TestCase):
         at the same indentation level as parameter definitions.
         """
         # Create a checker with params section configured
-        sections_config = [
+        sections = [
             SectionConfig(order=1, name="summary", type="free_text", required=True),
             SectionConfig(order=2, name="params", type="list_name_and_type", required=False),
         ]
-        checker: DocstringChecker = DocstringChecker(sections_config)
+        checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         python_content: str = dedent(
             '''
