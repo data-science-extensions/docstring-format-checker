@@ -134,10 +134,7 @@ jobs:
 
       - name: Bump Version
         id: bump-version
-        run: |
-          export VERSION_CLEAN=$(echo "${VERSION}" | awk '{gsub(/v/,"")}1')
-          export VERSION_NO_PATCH="$(echo ${VERSION} | cut -d '.' -f 1-2).*"
-          uv run ./src/utils/bump_version.py --verbose=true ${VERSION}
+        run: uv version ${VERSION}
 
       - name: Update Git
         id: update-git
