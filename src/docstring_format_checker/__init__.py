@@ -5,14 +5,14 @@ A CLI tool to check and validate Python docstring formatting and completeness.
 """
 
 # ## Python StdLib Imports ----
-from importlib.metadata import PackageMetadata, metadata
+from importlib.metadata import metadata
 
 # ## Local First Party Imports ----
 from docstring_format_checker.config import DEFAULT_CONFIG, load_config
 from docstring_format_checker.core import DocstringChecker, SectionConfig
 
 
-_metadata: PackageMetadata = metadata("docstring-format-checker")
+_metadata = metadata("docstring-format-checker")
 __name__: str = _metadata["Name"]
 __version__: str = _metadata["Version"]
 __author__: str = _metadata["Author"]
