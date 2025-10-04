@@ -88,7 +88,8 @@ class TestCLI(TestCase):
         result: Result = self.runner.invoke(app, ["--example=config"])
         assert result.exit_code == 0
         assert "[tool.dfc]" in clean(result.output)
-        assert "[[tool.dfc.sections]]" in clean(result.output)
+        assert "[tool.docstring-format-checker]" in clean(result.output)
+        assert "sections = [" in clean(result.output)
 
     def test_06_nonexistent_file(self) -> None:
         """
@@ -354,7 +355,7 @@ class TestCLI(TestCase):
         """
         result: Result = self.runner.invoke(app, ["--example=config"])
         assert result.exit_code == 0
-        assert "Example configuration for docstring-format-checker" in clean(result.output)
+        assert "Place the below config in your `pyproject.toml` file" in clean(result.output)
 
     def test_17_example_usage_subcommand(self) -> None:
         """

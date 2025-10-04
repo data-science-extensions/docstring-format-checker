@@ -12,9 +12,9 @@
 
 # ## Python StdLib Imports ----
 import subprocess
-import sys
 import tempfile
 from ast import Module, stmt
+from functools import partial
 from pathlib import Path
 from subprocess import CompletedProcess
 from textwrap import dedent
@@ -22,6 +22,7 @@ from typing import Any, Union
 from unittest import TestCase
 
 # ## Python Third Party Imports ----
+import pyfiglet
 import pytest
 
 # ## Local First Party Imports ----
@@ -1239,15 +1240,17 @@ class TestDocstringChecker(TestCase):
             error_messages: list[str] = [error.message for error in errors]
             assert any("examples" in msg.lower() for msg in error_messages)
 
-    def test_35_cli_main_execution(self) -> None:
+    def test_35_pyfiglet_title(self) -> None:
         """
-        Test CLI main execution for coverage.
+        Test that pyfiglet title is generated correctly.
         """
 
-        # This tests the __main__ execution path
-        # Test the __main__ execution by running the module
+        figlet = partial(pyfiglet.figlet_format, font="standard", justify="left", width=140)
+        title1: str = figlet("docstring-format-checker")
+        title2: str = figlet("dfc")
+
         result: CompletedProcess[str] = subprocess.run(
-            [sys.executable, "-m", "docstring_format_checker.cli", "--help"],
+            ["dfc", "--help"],
             capture_output=True,
             text=True,
             cwd=Path(__file__).parent.parent.parent.resolve(),
@@ -1255,7 +1258,7 @@ class TestDocstringChecker(TestCase):
 
         # Should show help and exit with code 0
         assert result.returncode == 0
-        assert "Usage:" in result.stdout
+        assert title1 in result.stdout or title2 in result.stdout
 
     def test_36_unknown_free_text_section_validation(self) -> None:
         """
