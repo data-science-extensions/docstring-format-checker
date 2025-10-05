@@ -290,7 +290,6 @@ def _show_config_example_callback() -> None:
 
     # Print without Rich markup processing to avoid bracket interpretation
     console.print(panel)
-    # console.print(panel, markup=False)
 
 
 def _help_callback_main(ctx: Context, param: CallbackParam, value: bool) -> None:
