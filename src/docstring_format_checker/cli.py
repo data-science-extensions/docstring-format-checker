@@ -527,8 +527,9 @@ def check_docstrings(
     """
 
     # Validate all target paths
-    target_paths: list[Path] = [Path(path) for path in paths if Path(path).exists()]
-    invalid_paths: list[Path] = [Path(path) for path in paths if not Path(path).exists()]
+    path_objs: list[Path] = [Path(path) for path in paths]
+    target_paths: list[Path] = [p for p in path_objs if p.exists()]
+    invalid_paths: list[Path] = [p for p in path_objs if not p.exists()]
 
     if len(invalid_paths) > 0:
         console.print(
