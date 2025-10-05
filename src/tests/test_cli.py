@@ -88,7 +88,8 @@ class TestCLI(TestCase):
         result: Result = self.runner.invoke(app, ["--example=config"])
         assert result.exit_code == 0
         assert "[tool.dfc]" in clean(result.output)
-        assert "[[tool.dfc.sections]]" in clean(result.output)
+        assert "[tool.docstring-format-checker]" in clean(result.output)
+        assert "sections = [" in clean(result.output)
 
     def test_06_nonexistent_file(self) -> None:
         """
@@ -354,7 +355,7 @@ class TestCLI(TestCase):
         """
         result: Result = self.runner.invoke(app, ["--example=config"])
         assert result.exit_code == 0
-        assert "Example configuration for docstring-format-checker" in clean(result.output)
+        assert "Place the below config in your `pyproject.toml` file" in clean(result.output)
 
     def test_17_example_usage_subcommand(self) -> None:
         """
@@ -377,7 +378,7 @@ class TestCLI(TestCase):
             for word in "A CLI tool to check and validate Python docstring formatting and completeness".split(" ")
         )
 
-    def test_25_entry_point_function(self) -> None:
+    def test_19_entry_point_function(self) -> None:
         """
         Test entry_point function.
         """
@@ -389,7 +390,7 @@ class TestCLI(TestCase):
             except SystemExit:
                 pass  # Expected for --version
 
-    def test_26_config_error_handling(self) -> None:
+    def test_20_config_error_handling(self) -> None:
         """
         Test configuration error handling in check command.
         """
@@ -414,7 +415,7 @@ class TestCLI(TestCase):
             py_file.unlink(missing_ok=True)
             config_file.unlink(missing_ok=True)
 
-    def test_27_verbose_config_loading(self) -> None:
+    def test_21_verbose_config_loading(self) -> None:
         """
         Test verbose output during config loading.
         """
@@ -435,7 +436,7 @@ class TestCLI(TestCase):
             # Clean up
             py_file.unlink(missing_ok=True)
 
-    def test_28_auto_config_discovery(self) -> None:
+    def test_22_auto_config_discovery(self) -> None:
         """
         Test automatic config file discovery.
         """
@@ -479,7 +480,7 @@ class TestCLI(TestCase):
             # Just verify that some output was generated, indicating auto-discovery ran
             assert len(result.output) > 0
 
-    def test_29_global_examples_callback(self) -> None:
+    def test_23_global_examples_callback(self) -> None:
         """
         Test global examples callback functionality.
         """
@@ -488,7 +489,7 @@ class TestCLI(TestCase):
         assert "Examples" in clean(result.output)
         assert "dfc myfile.py" in clean(result.output)
 
-    def test_30_error_during_checking(self) -> None:
+    def test_24_error_during_checking(self) -> None:
         """
         Test error handling during file/directory checking.
         """
@@ -507,7 +508,7 @@ class TestCLI(TestCase):
             # Should not crash but may return non-zero exit code due to syntax error
             assert result.exit_code in [0, 1, 2]  # Allow various error codes
 
-    def test_31_error_summary_display(self) -> None:
+    def test_25_error_summary_display(self) -> None:
         """
         Test error summary display functionality.
         """
@@ -527,7 +528,7 @@ class TestCLI(TestCase):
             assert "functions over" in clean(result.output)
             assert "files" in clean(result.output)
 
-    def test_32_quiet_mode_single_file_single_function(self) -> None:
+    def test_26_quiet_mode_single_file_single_function(self) -> None:
         """
         Test quiet mode with single file and single function (coverage for total_files == 1 and total_functions == 1).
         """
@@ -543,7 +544,7 @@ class TestCLI(TestCase):
         finally:
             Path(temp_file_name).unlink(missing_ok=True)
 
-    def test_32_quiet_mode_multiple_files_multiple_functions(self) -> None:
+    def test_27_quiet_mode_multiple_files_multiple_functions(self) -> None:
         """
         Test quiet mode with multiple files and functions (coverage for else branches).
         """
@@ -568,7 +569,7 @@ class TestClass:
             assert "functions over" in clean(result.output)
             assert "files" in clean(result.output)
 
-    def test_32_list_output_with_compound_errors(self) -> None:
+    def test_28_list_output_with_compound_errors(self) -> None:
         """
         Test list output with compound error messages that contain '; ' separators.
         This tests the missing lines 443-451 in cli.py.
@@ -602,7 +603,7 @@ class TestClass:
         finally:
             Path(temp_file_name).unlink(missing_ok=True)
 
-    def test_32_list_output_with_compound_errors_no_line_number(self) -> None:
+    def test_29_list_output_with_compound_errors_no_line_number(self) -> None:
         """
         Test list output with compound errors that have no line number (line 451).
         """
@@ -622,7 +623,7 @@ class TestClass:
         finally:
             Path(temp_file_name).unlink(missing_ok=True)
 
-    def test_33_check_directory_verbose_message(self) -> None:
+    def test_30_check_directory_verbose_message(self) -> None:
         """
         Test verbose message for directory checking.
         """
@@ -658,7 +659,7 @@ class TestClass:
             ), f"Expected exit code 0, got {result.exit_code}. Output: {clean(result.output)}"
             assert "✓ All docstrings are valid!" in clean(result.output)
 
-    def test_34_check_command_exception_handling(self) -> None:
+    def test_31_check_command_exception_handling(self) -> None:
         """
         Test exception handling in check command.
         """
@@ -682,7 +683,7 @@ class TestClass:
                 assert result.exit_code == 1
                 assert "Error during checking: Test error" in clean(result.output)
 
-    def test_35_check_file_specific_exception_handling(self) -> None:
+    def test_32_check_file_specific_exception_handling(self) -> None:
         """
         Test exception handling for file checking.
         """
@@ -706,7 +707,7 @@ class TestClass:
                 assert result.exit_code == 1
                 assert "Error during checking: File check error" in clean(result.output)
 
-    def test_23_format_error_messages(self) -> None:
+    def test_33_format_error_messages(self) -> None:
         """
         Test that _format_error_messages correctly formats error strings.
         """
@@ -733,7 +734,7 @@ class TestClass:
         expected_prefixed = "- Missing required admonition sections: ['Parameters']."
         assert _format_error_messages(prefixed_error) == expected_prefixed
 
-    def test_22_check_flag_exits_on_error(self) -> None:
+    def test_34_check_flag_exits_on_error(self) -> None:
         """
         Test that --check flag causes exit with error code 1 when issues are found.
         """
@@ -748,7 +749,7 @@ class TestClass:
 
             py_file.unlink(missing_ok=True)
 
-    def test_23_check_flag_succeeds_when_no_errors(self) -> None:
+    def test_35_check_flag_succeeds_when_no_errors(self) -> None:
         """
         Test that --check flag succeeds with exit code 0 when no issues are found.
         """
@@ -774,7 +775,7 @@ class TestClass:
 
             py_file.unlink(missing_ok=True)
 
-    def test_24_output_list_format(self) -> None:
+    def test_36_output_list_format(self) -> None:
         """
         Test that --output=list shows compact list format.
         """
@@ -793,7 +794,7 @@ class TestClass:
 
             py_file.unlink(missing_ok=True)
 
-    def test_25_output_table_format(self) -> None:
+    def test_37_output_table_format(self) -> None:
         """
         Test that --output=table shows detailed table format.
         """
@@ -812,7 +813,7 @@ class TestClass:
 
             py_file.unlink(missing_ok=True)
 
-    def test_26_output_short_alias(self) -> None:
+    def test_38_output_short_alias(self) -> None:
         """
         Test that -o is an alias for --output.
         """
@@ -829,7 +830,7 @@ class TestClass:
 
             py_file.unlink(missing_ok=True)
 
-    def test_27_quiet_with_check_flag(self) -> None:
+    def test_39_quiet_with_check_flag(self) -> None:
         """
         Test that --quiet --check shows minimal output but still exits with error.
         """
@@ -848,7 +849,7 @@ class TestClass:
 
             py_file.unlink(missing_ok=True)
 
-    def test_28_quiet_success_case(self) -> None:
+    def test_40_quiet_success_case(self) -> None:
         """
         Test that --quiet shows no output on success.
         """
@@ -874,7 +875,7 @@ class TestClass:
 
             py_file.unlink(missing_ok=True)
 
-    def test_30_check_flag_short_alias(self) -> None:
+    def test_41_check_flag_short_alias(self) -> None:
         """
         Test that -c works as short alias for --check.
         """
@@ -899,7 +900,7 @@ class TestClass:
         finally:
             py_file.unlink(missing_ok=True)
 
-    def test_31_config_flag_short_alias(self) -> None:
+    def test_42_config_flag_short_alias(self) -> None:
         """
         Test that -f works as short alias for --config.
         """
@@ -934,7 +935,7 @@ class TestClass:
         finally:
             py_file.unlink(missing_ok=True)
 
-    def test_36_example_callback_invalid_value(self) -> None:
+    def test_43_example_callback_invalid_value(self) -> None:
         """
         Test example callback with invalid value.
         """
@@ -943,7 +944,7 @@ class TestClass:
         assert "Invalid example type 'invalid'" in clean(result.output)
         assert "Use 'config' or 'usage'" in clean(result.output)
 
-    def test_37_config_loading_exception(self) -> None:
+    def test_44_config_loading_exception(self) -> None:
         """
         Test config loading exception handling.
         """
@@ -965,7 +966,7 @@ class TestClass:
         finally:
             py_file.unlink(missing_ok=True)
 
-    def test_38_no_path_shows_help(self) -> None:
+    def test_45_no_path_shows_help(self) -> None:
         """
         Test that no path argument shows help.
         """
@@ -979,7 +980,7 @@ class TestClass:
             for word in "A CLI tool to check and validate Python docstring formatting and completeness".split(" ")
         )
 
-    def test_39_invalid_output_format(self) -> None:
+    def test_46_invalid_output_format(self) -> None:
         """
         Test invalid output format error.
         """
@@ -998,7 +999,7 @@ class TestClass:
         finally:
             py_file.unlink(missing_ok=True)
 
-    def test_40_auto_config_discovery_no_config_found(self) -> None:
+    def test_47_auto_config_discovery_no_config_found(self) -> None:
         """
         Test auto config discovery when no config file is found.
         This covers the load_config() call without arguments (lines 493-494).
@@ -1046,7 +1047,7 @@ class TestClass:
             finally:
                 os.chdir(original_cwd)
 
-    def test_41_auto_config_discovery_with_found_config(self) -> None:
+    def test_48_auto_config_discovery_with_found_config(self) -> None:
         """
         Test auto config discovery when a config file is found.
         This covers the load_config(found_config) call (lines 491-492).
@@ -1096,7 +1097,7 @@ class TestClass:
             finally:
                 os.chdir(original_cwd)
 
-    def test_21_config_loading_exception_handling(self) -> None:
+    def test_49_config_loading_exception_handling(self) -> None:
         """
         Test that config loading exceptions are handled properly.
         """
@@ -1116,7 +1117,7 @@ class TestClass:
         finally:
             py_file.unlink(missing_ok=True)
 
-    def test_42_compound_errors_with_no_line_number(self) -> None:
+    def test_50_compound_errors_with_no_line_number(self) -> None:
         """Test list output with compound errors where line_number is 0 to hit cli.py:451."""
         # ## Python StdLib Imports ----
         from unittest.mock import patch

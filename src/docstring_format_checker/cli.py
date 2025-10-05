@@ -43,12 +43,14 @@
 
 
 # ## Python StdLib Imports ----
+import os
 from functools import partial
 from pathlib import Path
 from textwrap import dedent
 from typing import Optional
 
 # ## Python Third Party Imports ----
+import pyfiglet
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -160,29 +162,6 @@ def _version_callback(ctx: Context, param: CallbackParam, value: bool) -> None:
         raise Exit()
 
 
-def _help_callback_main(ctx: Context, param: CallbackParam, value: bool) -> None:
-    """
-    !!! note "Summary"
-        Show help and exit.
-
-    Params:
-        ctx (Context):
-            The context object.
-        param (CallbackParam):
-            The parameter object.
-        value (bool):
-            The boolean value indicating if the flag was set.
-
-    Returns:
-        (None):
-            Nothing is returned.
-    """
-    if not value or ctx.resilient_parsing:
-        return
-    echo(ctx.get_help())
-    raise Exit()
-
-
 def _example_callback(ctx: Context, param: CallbackParam, value: Optional[str]) -> None:
     """
     !!! note "Summary"
@@ -211,6 +190,7 @@ def _example_callback(ctx: Context, param: CallbackParam, value: Optional[str]) 
     else:
         console.print(_red(f"Error: Invalid example type '{value}'. Use 'config' or 'usage'."))
         raise Exit(1)
+    raise Exit()
 
 
 def _show_usage_examples_callback() -> None:
@@ -233,30 +213,31 @@ def _show_usage_examples_callback() -> None:
 
     examples_content: str = dedent(
         f"""
-        {_green("dfc myfile.py")}                   Check a single Python file (list output)
-        {_green("dfc src/")}                        Check all Python files in src/ directory
-        {_green("dfc --output=table myfile.py")}    Check with table output format
-        {_green("dfc -o list myfile.py")}           Check with list output format (default)
-        {_green("dfc --check myfile.py")}           Check and exit with error if issues found
-        {_green("dfc --quiet myfile.py")}           Check quietly, only show pass/fail
-        {_green("dfc --quiet --check myfile.py")}   Check quietly and exit with error if issues found
-        {_green("dfc . --exclude '*/tests/*'")}     Check current directory, excluding tests
-        {_green("dfc . -c custom.toml")}            Use custom configuration file
-        {_green("dfc --example=config")}            Show example configuration
-        {_green("dfc -e usage")}                    Show usage examples (this help)
+        Execute the below commands in any terminal after installing the package.
+
+        {_blue("dfc myfile.py")}                   {_green("# Check a single Python file (list output)")}
+        {_blue("dfc src/")}                        {_green("# Check all Python files in src/ directory")}
+        {_blue("dfc --output=table myfile.py")}    {_green("# Check with table output format")}
+        {_blue("dfc -o list myfile.py")}           {_green("# Check with list output format (default)")}
+        {_blue("dfc --check myfile.py")}           {_green("# Check and exit with error if issues found")}
+        {_blue("dfc --quiet myfile.py")}           {_green("# Check quietly, only show pass/fail")}
+        {_blue("dfc --quiet --check myfile.py")}   {_green("# Check quietly and exit with error if issues found")}
+        {_blue("dfc . --exclude '*/tests/*'")}     {_green("# Check current directory, excluding tests")}
+        {_blue("dfc . -c custom.toml")}            {_green("# Use custom configuration file")}
+        {_blue("dfc --example=config")}            {_green("# Show example configuration")}
+        {_blue("dfc -e usage")}                    {_green("# Show usage examples (this help)")}
         """
     ).strip()
 
     panel = Panel(
         examples_content,
-        title="Examples",
+        title="Usage Examples",
         title_align="left",
         border_style="dim",
         padding=(0, 1),
     )
 
     console.print(panel)
-    raise Exit()
 
 
 def _show_config_example_callback() -> None:
@@ -278,73 +259,84 @@ def _show_config_example_callback() -> None:
     """
 
     example_config: str = dedent(
-        """
-        # Example configuration for docstring-format-checker
-        # Place this in your pyproject.toml file
+        r"""
+        Place the below config in your `pyproject.toml` file.
 
-        [tool.dfc]
-        # or [tool.docstring-format-checker]
-
-        [[tool.dfc.sections]]
-        order = 1
-        name = "summary"
-        type = "free_text"
-        admonition = "note"
-        prefix = "!!!"
-        required = true
-
-        [[tool.dfc.sections]]
-        order = 2
-        name = "details"
-        type = "free_text"
-        admonition = "info"
-        prefix = "???+"
-        required = false
-
-        [[tool.dfc.sections]]
-        order = 3
-        name = "params"
-        type = "list_name_and_type"
-        required = true
-
-        [[tool.dfc.sections]]
-        order = 4
-        name = "returns"
-        type = "list_name_and_type"
-        required = false
-
-        [[tool.dfc.sections]]
-        order = 5
-        name = "yields"
-        type = "list_type"
-        required = false
-
-        [[tool.dfc.sections]]
-        order = 6
-        name = "raises"
-        type = "list_type"
-        required = false
-
-        [[tool.dfc.sections]]
-        order = 7
-        name = "examples"
-        type = "free_text"
-        admonition = "example"
-        prefix = "???+"
-        required = false
-
-        [[tool.dfc.sections]]
-        order = 8
-        name = "notes"
-        type = "free_text"
-        admonition = "note"
-        prefix = "???"
-        required = false
+        [blue]\[tool.dfc][/blue]
+        [green]# or \[tool.docstring-format-checker][/green]
+        [blue]allow_undefined_sections = false[/blue]
+        [blue]require_docstrings = true[/blue]
+        [blue]check_private = true[/blue]
+        [blue]sections = [[/blue]
+            [blue]{ order = 1, name = "summary",  type = "free_text",          required = true, admonition = "note", prefix = "!!!" },[/blue]
+            [blue]{ order = 2, name = "details",  type = "free_text",          required = false, admonition = "abstract", prefix = "???+" },[/blue]
+            [blue]{ order = 3, name = "params",   type = "list_name_and_type", required = false },[/blue]
+            [blue]{ order = 4, name = "raises",   type = "list_type",          required = false },[/blue]
+            [blue]{ order = 5, name = "returns",  type = "list_name_and_type", required = false },[/blue]
+            [blue]{ order = 6, name = "yields",   type = "list_type",          required = false },[/blue]
+            [blue]{ order = 7, name = "examples", type = "free_text",          required = false, admonition = "example", prefix = "???+" },[/blue]
+            [blue]{ order = 8, name = "notes",    type = "free_text",          required = false, admonition = "note", prefix = "???" },[/blue]
+        [blue]][/blue]
         """
     ).strip()
 
+    panel = Panel(
+        example_config,
+        title="Configuration Example",
+        title_align="left",
+        border_style="dim",
+        padding=(0, 1),
+    )
+
     # Print without Rich markup processing to avoid bracket interpretation
-    console.print(example_config, markup=False)
+    console.print(panel)
+
+
+def _help_callback_main(ctx: Context, param: CallbackParam, value: bool) -> None:
+    """
+    !!! note "Summary"
+        Show help and exit.
+
+    Params:
+        ctx (Context):
+            The context object.
+        param (CallbackParam):
+            The parameter object.
+        value (bool):
+            The boolean value indicating if the flag was set.
+
+    Returns:
+        (None):
+            Nothing is returned.
+    """
+
+    # Early exit if help flag is set
+    if not value or ctx.resilient_parsing:
+        return
+
+    # Determine terminal width for ASCII art
+    try:
+        terminal_width: int = os.get_terminal_size().columns
+    except OSError:
+        terminal_width = 80
+
+    # Determine title based on terminal width
+    title: str = "dfc" if terminal_width < 130 else "docstring-format-checker"
+
+    # Print ASCII art title
+    console.print(
+        pyfiglet.figlet_format(title, font="standard", justify="left", width=140),
+        style="magenta",
+        markup=False,
+    )
+
+    # Show help message
+    echo(ctx.get_help())
+
+    # Show usage and config examples
+    _show_usage_examples_callback()
+    _show_config_example_callback()
+
     raise Exit()
 
 
@@ -703,8 +695,4 @@ def entry_point() -> None:
     !!! note "Summary"
         Entry point for the CLI scripts defined in pyproject.toml.
     """
-    app()
-
-
-if __name__ == "__main__":
     app()
