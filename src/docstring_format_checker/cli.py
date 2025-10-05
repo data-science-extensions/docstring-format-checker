@@ -185,13 +185,12 @@ def _example_callback(ctx: Context, param: CallbackParam, value: Optional[str]) 
 
     if value == "config":
         _show_config_example_callback()
-        raise Exit()
     elif value == "usage":
         _show_usage_examples_callback()
-        raise Exit()
     else:
         console.print(_red(f"Error: Invalid example type '{value}'. Use 'config' or 'usage'."))
         raise Exit(1)
+    raise Exit()
 
 
 def _show_usage_examples_callback() -> None:
