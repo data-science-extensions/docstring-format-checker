@@ -216,7 +216,9 @@ def _show_usage_examples_callback() -> None:
         Execute the below commands in any terminal after installing the package.
 
         {_blue("dfc myfile.py")}                   {_green("# Check a single Python file (list output)")}
+        {_blue("dfc myfile.py other_file.py")}     {_green("# Check multiple Python files")}
         {_blue("dfc src/")}                        {_green("# Check all Python files in src/ directory")}
+        {_blue("dfc -x src/app/__init__.py src/")} {_green("# Check all Python files in src/ directory, excluding one init file")}
         {_blue("dfc --output=table myfile.py")}    {_green("# Check with table output format")}
         {_blue("dfc -o list myfile.py")}           {_green("# Check with list output format (default)")}
         {_blue("dfc --check myfile.py")}           {_green("# Check and exit with error if issues found")}
@@ -489,7 +491,7 @@ def _display_results(results: dict[str, list[DocstringError]], quiet: bool, outp
 
 # This will be the default behavior when no command is specified
 def check_docstrings(
-    path: str,
+    paths: list[str],
     config: Optional[str] = None,
     exclude: Optional[list[str]] = None,
     quiet: bool = False,
@@ -501,8 +503,8 @@ def check_docstrings(
         Core logic for checking docstrings.
 
     Params:
-        path (str):
-            The path to the file or directory to check.
+        paths (list[str]):
+            The path(s) to the file(s) or directory(ies) to check.
         config (Optional[str]):
             The path to the configuration file.
             Default: `None`.
@@ -524,14 +526,19 @@ def check_docstrings(
             Nothing is returned.
     """
 
-    target_path = Path(path)
+    # Validate all target paths
+    target_paths: list[Path] = [Path(path) for path in paths if Path(path).exists()]
+    invalid_paths: list[Path] = [Path(path) for path in paths if not Path(path).exists()]
 
-    # Validate target path
-    if not target_path.exists():
-        console.print(_red(f"Error: Path does not exist: '{path}'"))
+    if len(invalid_paths) > 0:
+        console.print(
+            _red(f"[bold]Error: Paths do not exist:[/bold]"),
+            NEW_LINE,
+            NEW_LINE.join([f"- '{invalid_path}'" for invalid_path in invalid_paths]),
+        )
         raise Exit(1)
 
-    # Load configuration
+    # Load configuration (use first path for config discovery if no config specified)
     try:
         if config:
             config_path = Path(config)
@@ -540,8 +547,9 @@ def check_docstrings(
                 raise Exit(1)
             config_obj = load_config(config_path)
         else:
-            # Try to find config file automatically
-            found_config: Optional[Path] = find_config_file(target_path if target_path.is_dir() else target_path.parent)
+            # Try to find config file automatically using the first path
+            first_path: Path = target_paths[0]
+            found_config: Optional[Path] = find_config_file(first_path if first_path.is_dir() else first_path.parent)
             if found_config:
                 config_obj: Config = load_config(found_config)
             else:
@@ -554,19 +562,27 @@ def check_docstrings(
     # Initialize checker
     checker = DocstringChecker(config_obj)
 
-    # Check files
+    # Check all paths and collect results
+    all_results: dict[str, list[DocstringError]] = {}
+
     try:
-        if target_path.is_file():
-            errors: list[DocstringError] = checker.check_file(target_path)
-            results: dict[str, list[DocstringError]] = {str(target_path): errors} if errors else {}
-        else:
-            results: dict[str, list[DocstringError]] = checker.check_directory(target_path, exclude_patterns=exclude)
+        for target_path in target_paths:
+            if target_path.is_file():
+                errors: list[DocstringError] = checker.check_file(target_path)
+                if errors:
+                    all_results[str(target_path)] = errors
+            else:
+                directory_results: dict[str, list[DocstringError]] = checker.check_directory(
+                    target_path, exclude_patterns=exclude
+                )
+                all_results.update(directory_results)
+
     except Exception as e:
         console.print(_red(f"Error during checking: {e}"))
         raise Exit(1)
 
     # Display results
-    exit_code: int = _display_results(results, quiet, output, check)
+    exit_code: int = _display_results(all_results, quiet, output, check)
 
     # Always exit with error code if issues are found, regardless of check flag
     if exit_code != 0:
@@ -584,7 +600,7 @@ def check_docstrings(
 @app.callback(invoke_without_command=True)
 def main(
     ctx: Context,
-    path: Optional[str] = Argument(None, help="Path to Python file or directory to check"),
+    paths: Optional[list[str]] = Argument(None, help="Path(s) to Python file(s) or directory(s) for DFC to check"),
     config: Optional[str] = Option(None, "--config", "-f", help="Path to configuration file (TOML format)"),
     exclude: Optional[list[str]] = Option(
         None,
@@ -646,8 +662,8 @@ def main(
     Params:
         ctx (Context):
             The context object for the command.
-        path (Optional[str]):
-            Path to Python file or directory to check.
+        paths (Optional[list[str]]):
+            Path(s) to Python file(s) or directory(ies) to check.
         config (Optional[str]):
             Path to configuration file (TOML format).
         exclude (Optional[list[str]]):
@@ -670,8 +686,8 @@ def main(
             Nothing is returned.
     """
 
-    # If no path is provided, show help
-    if path is None:
+    # If no paths are provided, show help
+    if not paths:
         echo(ctx.get_help())
         raise Exit(0)
 
@@ -681,7 +697,7 @@ def main(
         raise Exit(1)
 
     check_docstrings(
-        path=path,
+        paths=paths,
         config=config,
         exclude=exclude,
         quiet=quiet,

@@ -97,7 +97,7 @@ class TestCLI(TestCase):
         """
         result: Result = self.runner.invoke(app, ["nonexistent.py"])
         assert result.exit_code == 1
-        assert "Error: Path does not exist" in clean(result.output)
+        assert "Error: Paths do not exist" in clean(result.output)
 
     def test_07_check_valid_python_file(self) -> None:
         """
@@ -1160,3 +1160,334 @@ def test_function():
 
         finally:
             Path(temp_file_name).unlink(missing_ok=True)
+
+    def test_51_multiple_files_success(self) -> None:
+        """
+        Test checking multiple valid files succeeds.
+        """
+        # Create two temporary files with valid docstrings
+        temp_file1_name: str = ""
+        temp_file2_name: str = ""
+
+        try:
+            # Create first file
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file1:
+                temp_file1.write(
+                    dedent(
+                        '''
+                        def example_function():
+                            """
+                            !!! note "Summary"
+                                This is a valid example function.
+                            """
+                            pass
+                        '''
+                    ).strip()
+                )
+                temp_file1_name = temp_file1.name
+
+            # Create second file
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file2:
+                temp_file2.write(
+                    dedent(
+                        '''
+                        def another_function():
+                            """
+                            !!! note "Summary"
+                                This is another valid example function.
+                            """
+                            pass
+                        '''
+                    ).strip()
+                )
+                temp_file2_name = temp_file2.name
+
+            result: Result = self.runner.invoke(app, [temp_file1_name, temp_file2_name])
+            assert result.exit_code == 0
+            assert "All docstrings are valid!" in clean(result.output)
+
+        finally:
+            Path(temp_file1_name).unlink(missing_ok=True)
+            Path(temp_file2_name).unlink(missing_ok=True)
+
+    def test_52_multiple_files_with_errors(self) -> None:
+        """
+        Test checking multiple files where some have errors.
+        """
+        temp_file1_name: str = ""
+        temp_file2_name: str = ""
+
+        try:
+            # Create first file with valid docstring
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file1:
+                temp_file1.write(
+                    dedent(
+                        '''
+                        def valid_function():
+                            """
+                            !!! note "Summary"
+                                This is a valid function.
+                            """
+                            pass
+                        '''
+                    ).strip()
+                )
+                temp_file1_name = temp_file1.name
+
+            # Create second file with invalid docstring
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file2:
+                temp_file2.write(
+                    dedent(
+                        '''
+                        def invalid_function():
+                            """
+                            This is missing the required admonition.
+                            """
+                            pass
+                        '''
+                    ).strip()
+                )
+                temp_file2_name = temp_file2.name
+
+            result: Result = self.runner.invoke(app, [temp_file1_name, temp_file2_name])
+            assert result.exit_code == 1
+            assert "Missing required section: summary" in clean(result.output)
+
+        finally:
+            Path(temp_file1_name).unlink(missing_ok=True)
+            Path(temp_file2_name).unlink(missing_ok=True)
+
+    def test_53_multiple_files_with_check_flag(self) -> None:
+        """
+        Test multiple files with --check flag exits with proper code.
+        """
+        temp_file1_name: str = ""
+        temp_file2_name: str = ""
+
+        try:
+            # Create two files with valid docstrings
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file1:
+                temp_file1.write(
+                    dedent(
+                        '''
+                        def function_one():
+                            """
+                            !!! note "Summary"
+                                First function.
+                            """
+                            pass
+                        '''
+                    ).strip()
+                )
+                temp_file1_name = temp_file1.name
+
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file2:
+                temp_file2.write(
+                    dedent(
+                        '''
+                        def function_two():
+                            """
+                            !!! note "Summary"
+                                Second function.
+                            """
+                            pass
+                        '''
+                    ).strip()
+                )
+                temp_file2_name = temp_file2.name
+
+            result: Result = self.runner.invoke(app, ["--check", temp_file1_name, temp_file2_name])
+            assert result.exit_code == 0
+            assert "All docstrings are valid!" in clean(result.output)
+
+        finally:
+            Path(temp_file1_name).unlink(missing_ok=True)
+            Path(temp_file2_name).unlink(missing_ok=True)
+
+    def test_54_multiple_files_nonexistent_path(self) -> None:
+        """
+        Test multiple files where one path doesn't exist.
+        """
+        temp_file_name: str = ""
+
+        try:
+            # Create one valid file
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+                temp_file.write(
+                    dedent(
+                        '''
+                        def valid_function():
+                            """
+                            !!! note "Summary"
+                                This is a valid function.
+                            """
+                            pass
+                        '''
+                    ).strip()
+                )
+                temp_file_name = temp_file.name
+
+            # Include a nonexistent file
+            result: Result = self.runner.invoke(app, [temp_file_name, "nonexistent_file.py"])
+            assert result.exit_code == 1
+            assert "Error: Paths do not exist" in clean(result.output)
+            assert "nonexistent_file.py" in clean(result.output)
+
+        finally:
+            Path(temp_file_name).unlink(missing_ok=True)
+
+    def test_55_multiple_files_mixed_types(self) -> None:
+        """
+        Test multiple paths with mix of files and directories.
+        """
+        temp_file_name: str = ""
+        temp_dir_name: str = ""
+
+        try:
+            # Create a temporary file
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+                temp_file.write(
+                    dedent(
+                        '''
+                        def file_function():
+                            """
+                            !!! note "Summary"
+                                Function in a file.
+                            """
+                            pass
+                        '''
+                    ).strip()
+                )
+                temp_file_name = temp_file.name
+
+            # Create a temporary directory with a Python file
+            # ## Python StdLib Imports ----
+            import tempfile as tf
+
+            temp_dir = tf.mkdtemp()
+            temp_dir_name = temp_dir
+
+            dir_file_path = Path(temp_dir) / "dir_file.py"
+            dir_file_path.write_text(
+                dedent(
+                    '''
+                    def dir_function():
+                        """
+                        !!! note "Summary"
+                            Function in a directory.
+                        """
+                        pass
+                    '''
+                ).strip()
+            )
+
+            result: Result = self.runner.invoke(app, [temp_file_name, temp_dir_name])
+            assert result.exit_code == 0
+            assert "All docstrings are valid!" in clean(result.output)
+
+        finally:
+            Path(temp_file_name).unlink(missing_ok=True)
+            if temp_dir_name:
+                # ## Python StdLib Imports ----
+                import shutil
+
+                shutil.rmtree(temp_dir_name, ignore_errors=True)
+
+    def test_56_multiple_files_table_output(self) -> None:
+        """
+        Test multiple files with table output format.
+        """
+        temp_file1_name: str = ""
+        temp_file2_name: str = ""
+
+        try:
+            # Create files with valid docstrings
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file1:
+                temp_file1.write(
+                    dedent(
+                        '''
+                        def function_one():
+                            """
+                            !!! note "Summary"
+                                First function.
+                            """
+                            pass
+                        '''
+                    ).strip()
+                )
+                temp_file1_name = temp_file1.name
+
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file2:
+                temp_file2.write(
+                    dedent(
+                        '''
+                        def function_two():
+                            """
+                            !!! note "Summary"
+                                Second function.
+                            """
+                            pass
+                        '''
+                    ).strip()
+                )
+                temp_file2_name = temp_file2.name
+
+            result: Result = self.runner.invoke(app, ["--output=table", temp_file1_name, temp_file2_name])
+            assert result.exit_code == 0
+            assert "All docstrings are valid!" in clean(result.output)
+
+        finally:
+            Path(temp_file1_name).unlink(missing_ok=True)
+            Path(temp_file2_name).unlink(missing_ok=True)
+
+    def test_57_multiple_files_quiet_mode(self) -> None:
+        """
+        Test multiple files with quiet mode.
+        """
+        temp_file1_name: str = ""
+        temp_file2_name: str = ""
+
+        try:
+            # Create files with valid docstrings
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file1:
+                temp_file1.write(
+                    dedent(
+                        '''
+                        def function_one():
+                            """
+                            !!! note "Summary"
+                                First function.
+                            """
+                            pass
+                        '''
+                    ).strip()
+                )
+                temp_file1_name = temp_file1.name
+
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file2:
+                temp_file2.write(
+                    dedent(
+                        '''
+                        def function_two():
+                            """
+                            !!! note "Summary"
+                                Second function.
+                            """
+                            pass
+                        '''
+                    ).strip()
+                )
+                temp_file2_name = temp_file2.name
+
+            result: Result = self.runner.invoke(app, ["--quiet", temp_file1_name, temp_file2_name])
+            assert result.exit_code == 0
+
+            # In quiet mode with success, should show minimal output (might be empty or just warnings)
+            # The important thing is that it doesn't show detailed errors
+            output = clean(result.output)
+            # Should not contain detailed error information
+            assert "Missing required section" not in output
+
+        finally:
+            Path(temp_file1_name).unlink(missing_ok=True)
+            Path(temp_file2_name).unlink(missing_ok=True)
