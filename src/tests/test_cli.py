@@ -11,6 +11,8 @@
 
 
 # ## Python StdLib Imports ----
+import os
+import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -25,6 +27,8 @@ from typer.testing import CliRunner
 # ## Local First Party Imports ----
 from docstring_format_checker import __version__
 from docstring_format_checker.cli import _format_error_messages, app, entry_point
+from docstring_format_checker.core import DocstringChecker
+from docstring_format_checker.utils.exceptions import DocstringError
 from tests.setup import clean
 
 
@@ -1005,9 +1009,6 @@ class TestClass:
         This covers the load_config() call without arguments (lines 493-494).
         """
 
-        # ## Python StdLib Imports ----
-        import os
-
         # Create a temporary directory without any pyproject.toml
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -1052,8 +1053,6 @@ class TestClass:
         Test auto config discovery when a config file is found.
         This covers the load_config(found_config) call (lines 491-492).
         """
-        # ## Python StdLib Imports ----
-        import os
 
         # Create a temporary directory with a pyproject.toml
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -1119,20 +1118,16 @@ class TestClass:
 
     def test_50_compound_errors_with_no_line_number(self) -> None:
         """Test list output with compound errors where line_number is 0 to hit cli.py:451."""
-        # ## Python StdLib Imports ----
-        from unittest.mock import patch
-
-        # ## Local First Party Imports ----
-        from docstring_format_checker.core import DocstringChecker
-        from docstring_format_checker.utils.exceptions import DocstringError
 
         with tempfile.NamedTemporaryFile(mode="w+", suffix=".py", delete=False) as test_file:
             test_file.write(
+                dedent(
+                    '''
+                def test_function():
+                    """Summary here."""
+                    pass
                 '''
-def test_function():
-    """Summary here."""
-    pass
-'''
+                ).strip()
             )
             test_file.flush()
             temp_file_name = test_file.name
@@ -1361,10 +1356,8 @@ def test_function():
                 temp_file_name = temp_file.name
 
             # Create a temporary directory with a Python file
-            # ## Python StdLib Imports ----
-            import tempfile as tf
 
-            temp_dir = tf.mkdtemp()
+            temp_dir = tempfile.mkdtemp()
             temp_dir_name = temp_dir
 
             dir_file_path = Path(temp_dir) / "dir_file.py"
@@ -1388,8 +1381,6 @@ def test_function():
         finally:
             Path(temp_file_name).unlink(missing_ok=True)
             if temp_dir_name:
-                # ## Python StdLib Imports ----
-                import shutil
 
                 shutil.rmtree(temp_dir_name, ignore_errors=True)
 
