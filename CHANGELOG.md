@@ -19,7 +19,414 @@
 
     ??? note "Release Notes"
 
-        ### 🎯 Summary                Introduce the inaugural major release of `docstring-format-checker`, a comprehensive Python CLI tool that validates docstring formatting and completeness using AST parsing. This milestone release represents the culmination of extensive development spanning 12 minor versions, 12 major pull requests, and countless iterative improvements, delivering a production-ready solution for ensuring consistent, high-quality documentation across Python codebases.                Transform from initial concept to enterprise-grade tool with configurable validation rules, rich terminal output, comprehensive test coverage, and robust cross-platform compatibility. Establish `docstring-format-checker` as the definitive solution for Python docstring validation, offering flexibility for diverse documentation standards whilst maintaining strict quality enforcement.                **Core Capabilities:**        - **AST-Based Parsing**: Robust code analysis without regex fragility        - **Configurable Validation**: Four distinct section types with TOML-based configuration        - **Cross-Platform Reliability**: 100% test coverage across Windows, macOS, and Linux        - **Rich Terminal Output**: Beautiful coloured output with structured error tables        - **Dual CLI Entry Points**: Accessible via `docstring-format-checker` or `dfc` commands        - **Modern Packaging**: Dynamic version management with `importlib.metadata` integration                        ### 🚀 Foundational Architecture                        #### 🏗️ Core Validation Engine                Establish a sophisticated docstring validation system built on Python AST parsing:                - **`DocstringChecker()`**: Primary validation engine with comprehensive rule enforcement        - **`FunctionAndClassDetails()`**: Structured representation of code elements for precise analysis        - **AST Integration**: Robust parsing of Python source files without dependency on fragile regex patterns        - **Multi-Format Support**: Handle functions, methods, classes, and async functions uniformly        - **Overload Detection**: Intelligent handling of `@overload` decorated functions to avoid duplicate validation                **Validation Rule Categories:**        ```python        VALID_TYPES = (            "free_text",        # Summary, details, examples, notes            "list_name",        # Simple name sections            "list_type",        # Type-only sections (raises, yields)            "list_name_and_type",  # Parameter-style sections with descriptions        )        ```                        #### ⚙️ Configuration Management System                  Implement hierarchical configuration discovery with TOML-based section definitions:                - **`Config()`**: Top-level configuration container with global settings and section definitions        - **`SectionConfig()`**: Individual section configuration with validation rules and admonition support        - **`GlobalConfig()`**: Global validation behaviour control flags        - **Automatic Discovery**: Hierarchical search for `pyproject.toml` configuration files up directory tree        - **Validation Enforcement**: Strict configuration validation with comprehensive error reporting                **Configuration Architecture:**        ```toml        [tool.dfc]  # or [tool.docstring-format-checker]                [[tool.dfc.sections]]        order = 1        name = "summary"        type = "free_text"        admonition = "note"        required = true                [[tool.dfc.sections]]        order = 2        name = "params"        type = "list_name_and_type"        required = true        ```                        #### 🖥️ Rich CLI Interface                Deliver an intuitive command-line interface with comprehensive functionality:                - **Dual Entry Points**: Both `docstring-format-checker` and `dfc` commands for flexibility        - **Rich Output Formatting**: Coloured terminal output with structured error tables and panels        - **Multiple Output Formats**: Support for both `table` and `list` display formats        - **Comprehensive Help**: Built-in examples, configuration generation, and detailed usage instructions        - **Error Handling**: Graceful error reporting with structured exit codes                **CLI Features:**        ```bash        # Multiple invocation methods        dfc check src/                           # Check directory        docstring-format-checker check file.py   # Check single file        dfc config-example                       # Generate example configuration        dfc check --output table --quiet src/    # Customised output        ```                        ### 🔧 Development Evolution                        #### 📦 Version Management Modernisation                Replace custom version management with industry-standard approaches:                - **Remove Custom Scripts**: Eliminate 149-line `bump_version.py` script in favour of native UV commands        - **Dynamic Metadata Integration**: Leverage `importlib.metadata` for runtime version detection from `pyproject.toml`        - **Single Source Truth**: Centralise all package metadata exclusively in `pyproject.toml`        - **Automatic Synchronisation**: Ensure version consistency without manual intervention across all modules                **Enhanced Package Initialisation:**        ```python        # src/docstring_format_checker/__init__.py        from importlib.metadata import metadata                _metadata = metadata("docstring-format-checker")        __version__: str = _metadata["Version"]  # Dynamic from pyproject.toml        __author__: str = _metadata["Author"]        __email__: str = _metadata.get("Email", "")        ```                        #### 🔧 CI/CD Infrastructure Enhancement                Modernise continuous integration and deployment workflows:                - **Official UV GitHub Action**: Replace manual UV installation with `astral-sh/setup-uv@v6` action        - **Streamlined Dependency Management**: Let UV handle Python installation and dependency resolution        - **Native Version Bumping**: Use `uv version` command instead of custom Python scripts        - **Improved Workflow Efficiency**: Reduce CI execution time and improve reliability                **GitHub Actions Modernisation:**        ```yaml        # .github/workflows/cd.yml        - name: Setup UV          uses: astral-sh/setup-uv@v6                - name: Bump version          run: uv version --project-root . patch        ```                        #### 🧪 Comprehensive Test Suite                Achieve 100% test coverage with robust validation:                - **167 Test Cases**: Comprehensive coverage across all modules and edge cases        - **Cross-Platform Compatibility**: Validated across Windows, macOS, and Linux environments        - **CLI Testing**: Thorough validation of command-line interface with `typer.testing.CliRunner`        - **Configuration Testing**: Extensive TOML configuration validation and error handling        - **AST Parsing Tests**: Complete validation of Python code analysis functionality                **Coverage Breakdown:**        ```        src/docstring_format_checker/__init__.py:      100%        src/docstring_format_checker/cli.py:           100%        src/docstring_format_checker/config.py:        100%        src/docstring_format_checker/core.py:          100%        src/docstring_format_checker/utils/exceptions.py: 100%        ------------------------------------------------------        TOTAL COVERAGE:                                100%        ```                        ### 📋 Feature Completeness                        #### 🔍 Advanced Validation Rules                Implement comprehensive docstring validation logic:                - **Section Detection**: Intelligent parsing of docstring sections with admonition support        - **Title Case Validation**: Ensure proper capitalisation of section headers        - **Colon Usage Checks**: Validate proper punctuation in section definitions        - **Parentheses Validation**: Check type annotations and parameter formatting        - **Blank Line Requirements**: Enforce proper spacing and structure        - **Type Annotation Validation**: Comprehensive parameter and return type checking                **Validation Categories:**        ```python        # Section validation types with specific rules        "free_text": {            "admonition_support": True,            "content_validation": "flexible",            "examples": ["summary", "details", "examples", "notes"]        }        "list_name_and_type": {            "parameter_parsing": True,            "type_validation": True,            "examples": ["params", "returns", "attributes"]        }        ```                        #### 🛠️ Configuration Flexibility                Provide extensive customisation options:                - **Four Section Types**: Support for all common docstring patterns and formats        - **Admonition Integration**: Rich admonition support with customisable prefixes        - **Global Configuration**: Workspace-wide settings for consistent validation        - **Section Ordering**: Enforce specific section order with configurable priorities        - **Required vs Optional**: Flexible enforcement of mandatory and optional sections                **Advanced Configuration:**        ```toml        [tool.dfc.global]        require_docstrings = true        check_class_docstrings = true        check_method_docstrings = true        check_function_docstrings = true                [[tool.dfc.sections]]        order = 1        name = "summary"        type = "free_text"        admonition = "note"        prefix = "!!!"        required = true        ```                        #### 📊 Rich Output Formatting                Deliver beautiful, informative terminal output:                - **Structured Error Reporting**: Clear, actionable error messages with file and line references          - **Progress Indicators**: Visual feedback during directory scanning and validation        - **Summary Statistics**: Comprehensive success/failure rates and file counts        - **Colour-Coded Results**: Green for success, red for errors, with emoji indicators        - **Table and List Formats**: Multiple display options for different terminal preferences                **Example Output:**        ```        📋 Docstring Format Checker Results                ✅ src/utils/helpers.py        ❌ src/models/user.py           └── Function 'create_user' missing required section: 'params'           └── Function 'delete_user' missing required section: 'returns'                📊 Summary: 1/3 files passed (33.3%)        ```                        ### 🏆 Technical Excellence                        #### 🎯 Code Quality Standards                Maintain exceptional code quality with comprehensive validation:                - **Type Safety**: Complete type hint coverage with dataclass-based configuration        - **Import Organisation**: Consistent three-tier import structure (stdlib, third-party, local)        - **Error Handling**: Comprehensive exception hierarchy with structured error messages        - **Code Organisation**: Modular architecture with clear separation of concerns        - **Documentation**: Enhanced docstrings following project standards across all modules                **Module Structure:**        ```python        # Consistent import organisation        # ### Python StdLib Imports ----        import ast        from pathlib import Path                # ### Python Third Party Imports ----        import typer        from rich.console import Console                # ### Local First Party Imports ----        from docstring_format_checker.config import load_config        ```                        #### 🚀 Performance Optimisation                Deliver efficient validation with optimised processing:                - **AST Parsing**: Efficient code analysis with minimal memory overhead        - **File Processing**: Optimised directory traversal with glob pattern matching        - **Error Reporting**: Structured error collection with minimal performance impact        - **Configuration Caching**: Cached configuration parsing for repeated operations        - **Lazy Loading**: On-demand module loading to reduce startup time                        #### 🔐 Robust Error Handling                Implement comprehensive error management:                - **Custom Exception Hierarchy**: Structured exceptions for different failure scenarios        - **Graceful Degradation**: Intelligent handling of malformed files and configurations        - **User-Friendly Messages**: Clear, actionable error descriptions with remediation suggestions        - **Exit Code Management**: Proper CLI exit codes for integration with CI/CD systems        - **Validation Failures**: Detailed reporting of docstring validation errors                        ### 📚 Documentation and Examples                        #### 📖 Comprehensive Documentation                Provide extensive documentation and usage examples:                - **API Documentation**: Complete module documentation with examples        - **Configuration Guide**: Detailed configuration options with real-world examples        - **Usage Examples**: Practical examples for common use cases        - **Integration Guide**: Instructions for CI/CD integration and pre-commit hooks        - **Architecture Overview**: Detailed explanation of tool internals and design decisions                        #### 🎯 Example Configurations                Include practical configuration templates:                - **Default Configuration**: Production-ready configuration for most projects        - **Minimal Configuration**: Lightweight setup for simple projects        - **Advanced Configuration**: Comprehensive setup with all features enabled        - **Framework-Specific**: Tailored configurations for popular Python frameworks                **Configuration Examples:**        ```toml        # Simple configuration        [tool.dfc]        [[tool.dfc.sections]]        order = 1        name = "summary"        type = "free_text"        required = true                # Advanced configuration with admonitions        [[tool.dfc.sections]]        order = 2        name = "details"        type = "free_text"        admonition = "abstract"        prefix = "???"        required = false        ```                        ### 🎊 Release Highlights                        #### ✨ First Major Release                Mark the transition to stable, production-ready status:                - **Semantic Versioning**: Adopt semantic versioning with v1.0.1 marking API stability        - **Production Readiness**: Comprehensive testing and validation across all supported platforms        - **Backward Compatibility**: Commitment to maintaining API compatibility in future releases        - **Enterprise Grade**: Suitable for large-scale projects and enterprise environments                **Development Timeline:**        - **12 Version Releases**: From v0.1.0 through v1.0.0 with iterative improvements        - **12 Pull Requests**: Systematic feature development and bug fixes        - **100% Test Coverage**: Comprehensive validation across all code paths        - **Cross-Platform Support**: Validated on Windows, macOS, and Linux                        #### 🔄 Continuous Evolution                Establish foundation for continued development:                - **Modular Architecture**: Clean separation enabling easy feature additions        - **Extensible Configuration**: Framework for adding new validation rules        - **Rich Plugin System**: Foundation for third-party extensions        - **Community Contributions**: Clear contribution guidelines and development workflows                        ### 🚀 Getting Started                Begin using `docstring-format-checker` immediately:                ```bash        # Install with UV        uv add docstring-format-checker                # Quick start - check a file        dfc check my_module.py                # Check entire project        dfc check src/                # Generate configuration template        dfc config-example                # Advanced usage with custom configuration        dfc check --config pyproject.toml --output table --quiet src/        ```                        #### 🎯 Next Steps                Continue enhancing your documentation workflow:                1. **Generate Configuration**: Use `dfc config-example` to create project-specific rules        2. **CI Integration**: Add docstring validation to continuous integration workflows          3. **Pre-commit Hooks**: Enforce validation before code commits        4. **Team Standards**: Establish consistent documentation standards across your team        5. **Advanced Features**: Explore custom section types and validation rules                **CI Integration Example:**        ```yaml        # .github/workflows/test.yml        - name: Check docstrings          run: dfc check src/ --check        ```                Transform your Python project's documentation quality with `docstring-format-checker` v1.0.1 – the comprehensive, configurable, and reliable solution for docstring validation and enforcement.                        ### 💪 Pull Requests                * Modernise Version Management and GitHub Actions Integration by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/12                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.0.0...v1.0.1        
+        ### 🎯 Summary
+
+        Introduce the inaugural major release of `docstring-format-checker`, a comprehensive Python CLI tool that validates docstring formatting and completeness using AST parsing. This milestone release represents the culmination of extensive development spanning 12 minor versions, 12 major pull requests, and countless iterative improvements, delivering a production-ready solution for ensuring consistent, high-quality documentation across Python codebases.
+
+        Transform from initial concept to enterprise-grade tool with configurable validation rules, rich terminal output, comprehensive test coverage, and robust cross-platform compatibility. Establish `docstring-format-checker` as the definitive solution for Python docstring validation, offering flexibility for diverse documentation standards whilst maintaining strict quality enforcement.
+
+        **Core Capabilities:**
+        - **AST-Based Parsing**: Robust code analysis without regex fragility
+        - **Configurable Validation**: Four distinct section types with TOML-based configuration
+        - **Cross-Platform Reliability**: 100% test coverage across Windows, macOS, and Linux
+        - **Rich Terminal Output**: Beautiful coloured output with structured error tables
+        - **Dual CLI Entry Points**: Accessible via `docstring-format-checker` or `dfc` commands
+        - **Modern Packaging**: Dynamic version management with `importlib.metadata` integration
+
+
+        ### 🚀 Foundational Architecture
+
+
+        #### 🏗️ Core Validation Engine
+
+        Establish a sophisticated docstring validation system built on Python AST parsing:
+
+        - **`DocstringChecker()`**: Primary validation engine with comprehensive rule enforcement
+        - **`FunctionAndClassDetails()`**: Structured representation of code elements for precise analysis
+        - **AST Integration**: Robust parsing of Python source files without dependency on fragile regex patterns
+        - **Multi-Format Support**: Handle functions, methods, classes, and async functions uniformly
+        - **Overload Detection**: Intelligent handling of `@overload` decorated functions to avoid duplicate validation
+
+        **Validation Rule Categories:**
+        ```python
+        VALID_TYPES = (
+            "free_text",  # Summary, details, examples, notes
+            "list_name",  # Simple name sections
+            "list_type",  # Type-only sections (raises, yields)
+            "list_name_and_type",  # Parameter-style sections with descriptions
+        )
+        ```
+
+
+        #### ⚙️ Configuration Management System
+
+        Implement hierarchical configuration discovery with TOML-based section definitions:
+
+        - **`Config()`**: Top-level configuration container with global settings and section definitions
+        - **`SectionConfig()`**: Individual section configuration with validation rules and admonition support
+        - **`GlobalConfig()`**: Global validation behaviour control flags
+        - **Automatic Discovery**: Hierarchical search for `pyproject.toml` configuration files up directory tree
+        - **Validation Enforcement**: Strict configuration validation with comprehensive error reporting
+
+        **Configuration Architecture:**
+        ```toml
+        [tool.dfc]  # or [tool.docstring-format-checker]
+
+        [[tool.dfc.sections]]
+        order = 1
+        name = "summary"
+        type = "free_text"
+        admonition = "note"
+        required = true
+
+        [[tool.dfc.sections]]
+        order = 2
+        name = "params"
+        type = "list_name_and_type"
+        required = true
+        ```
+
+
+        #### 🖥️ Rich CLI Interface
+
+        Deliver an intuitive command-line interface with comprehensive functionality:
+
+        - **Dual Entry Points**: Both `docstring-format-checker` and `dfc` commands for flexibility
+        - **Rich Output Formatting**: Coloured terminal output with structured error tables and panels
+        - **Multiple Output Formats**: Support for both `table` and `list` display formats
+        - **Comprehensive Help**: Built-in examples, configuration generation, and detailed usage instructions
+        - **Error Handling**: Graceful error reporting with structured exit codes
+
+        **CLI Features:**
+        ```bash
+        # Multiple invocation methods
+        dfc check src/                           # Check directory
+        docstring-format-checker check file.py   # Check single file
+        dfc config-example                       # Generate example configuration
+        dfc check --output table --quiet src/    # Customised output
+        ```
+
+
+        ### 🔧 Development Evolution
+
+
+        #### 📦 Version Management Modernisation
+
+        Replace custom version management with industry-standard approaches:
+
+        - **Remove Custom Scripts**: Eliminate 149-line `bump_version.py` script in favour of native UV commands
+        - **Dynamic Metadata Integration**: Leverage `importlib.metadata` for runtime version detection from `pyproject.toml`
+        - **Single Source Truth**: Centralise all package metadata exclusively in `pyproject.toml`
+        - **Automatic Synchronisation**: Ensure version consistency without manual intervention across all modules
+
+        **Enhanced Package Initialisation:**
+        ```python
+        # src/docstring_format_checker/__init__.py
+        from importlib.metadata import metadata
+
+        _metadata = metadata("docstring-format-checker")
+        __version__: str = _metadata["Version"]  # Dynamic from pyproject.toml
+        __author__: str = _metadata["Author"]
+        __email__: str = _metadata.get("Email", "")
+        ```
+
+
+        #### 🔧 CI/CD Infrastructure Enhancement
+
+        Modernise continuous integration and deployment workflows:
+
+        - **Official UV GitHub Action**: Replace manual UV installation with `astral-sh/setup-uv@v6` action
+        - **Streamlined Dependency Management**: Let UV handle Python installation and dependency resolution
+        - **Native Version Bumping**: Use `uv version` command instead of custom Python scripts
+        - **Improved Workflow Efficiency**: Reduce CI execution time and improve reliability
+
+        **GitHub Actions Modernisation:**
+        ```yaml
+        # .github/workflows/cd.yml
+        - name: Setup UV
+          uses: astral-sh/setup-uv@v6
+
+        - name: Bump version
+          run: uv version --project-root . patch
+        ```
+
+
+        #### 🧪 Comprehensive Test Suite
+
+        Achieve 100% test coverage with robust validation:
+
+        - **167 Test Cases**: Comprehensive coverage across all modules and edge cases
+        - **Cross-Platform Compatibility**: Validated across Windows, macOS, and Linux environments
+        - **CLI Testing**: Thorough validation of command-line interface with `typer.testing.CliRunner`
+        - **Configuration Testing**: Extensive TOML configuration validation and error handling
+        - **AST Parsing Tests**: Complete validation of Python code analysis functionality
+
+        **Coverage Breakdown:**
+        ```
+        src/docstring_format_checker/__init__.py:      100%
+        src/docstring_format_checker/cli.py:           100%
+        src/docstring_format_checker/config.py:        100%
+        src/docstring_format_checker/core.py:          100%
+        src/docstring_format_checker/utils/exceptions.py: 100%
+        ------------------------------------------------------
+        TOTAL COVERAGE:                                100%
+        ```
+
+
+        ### 📋 Feature Completeness
+
+
+        #### 🔍 Advanced Validation Rules
+
+        Implement comprehensive docstring validation logic:
+
+        - **Section Detection**: Intelligent parsing of docstring sections with admonition support
+        - **Title Case Validation**: Ensure proper capitalisation of section headers
+        - **Colon Usage Checks**: Validate proper punctuation in section definitions
+        - **Parentheses Validation**: Check type annotations and parameter formatting
+        - **Blank Line Requirements**: Enforce proper spacing and structure
+        - **Type Annotation Validation**: Comprehensive parameter and return type checking
+
+        **Validation Categories:**
+        ```python
+        # Section validation types with specific rules
+        "free_text": {
+            "admonition_support": True,
+            "content_validation": "flexible",
+            "examples": ["summary", "details", "examples", "notes"],
+        }
+        "list_name_and_type": {
+            "parameter_parsing": True,
+            "type_validation": True,
+            "examples": ["params", "returns", "attributes"],
+        }
+        ```
+
+
+        #### 🛠️ Configuration Flexibility
+
+        Provide extensive customisation options:
+
+        - **Four Section Types**: Support for all common docstring patterns and formats
+        - **Admonition Integration**: Rich admonition support with customisable prefixes
+        - **Global Configuration**: Workspace-wide settings for consistent validation
+        - **Section Ordering**: Enforce specific section order with configurable priorities
+        - **Required vs Optional**: Flexible enforcement of mandatory and optional sections
+
+        **Advanced Configuration:**
+        ```toml
+        [tool.dfc.global]
+        require_docstrings = true
+        check_class_docstrings = true
+        check_method_docstrings = true
+        check_function_docstrings = true
+
+        [[tool.dfc.sections]]
+        order = 1
+        name = "summary"
+        type = "free_text"
+        admonition = "note"
+        prefix = "!!!"
+        required = true
+        ```
+
+
+        #### 📊 Rich Output Formatting
+
+        Deliver beautiful, informative terminal output:
+
+        - **Structured Error Reporting**: Clear, actionable error messages with file and line references
+        - **Progress Indicators**: Visual feedback during directory scanning and validation
+        - **Summary Statistics**: Comprehensive success/failure rates and file counts
+        - **Colour-Coded Results**: Green for success, red for errors, with emoji indicators
+        - **Table and List Formats**: Multiple display options for different terminal preferences
+
+        **Example Output:**
+        ```
+        📋 Docstring Format Checker Results
+
+        ✅ src/utils/helpers.py
+        ❌ src/models/user.py
+           └── Function 'create_user' missing required section: 'params'
+           └── Function 'delete_user' missing required section: 'returns'
+
+        📊 Summary: 1/3 files passed (33.3%)
+        ```
+
+
+        ### 🏆 Technical Excellence
+
+
+        #### 🎯 Code Quality Standards
+
+        Maintain exceptional code quality with comprehensive validation:
+
+        - **Type Safety**: Complete type hint coverage with dataclass-based configuration
+        - **Import Organisation**: Consistent three-tier import structure (stdlib, third-party, local)
+        - **Error Handling**: Comprehensive exception hierarchy with structured error messages
+        - **Code Organisation**: Modular architecture with clear separation of concerns
+        - **Documentation**: Enhanced docstrings following project standards across all modules
+
+        **Module Structure:**
+        ```python
+        # Consistent import organisation
+        # ### Python StdLib Imports ----
+        import ast
+        from pathlib import Path
+
+        # ### Python Third Party Imports ----
+        import typer
+        from rich.console import Console
+
+        # ### Local First Party Imports ----
+        from docstring_format_checker.config import load_config
+        ```
+
+
+        #### 🚀 Performance Optimisation
+
+        Deliver efficient validation with optimised processing:
+
+        - **AST Parsing**: Efficient code analysis with minimal memory overhead
+        - **File Processing**: Optimised directory traversal with glob pattern matching
+        - **Error Reporting**: Structured error collection with minimal performance impact
+        - **Configuration Caching**: Cached configuration parsing for repeated operations
+        - **Lazy Loading**: On-demand module loading to reduce startup time
+
+
+        #### 🔐 Robust Error Handling
+
+        Implement comprehensive error management:
+
+        - **Custom Exception Hierarchy**: Structured exceptions for different failure scenarios
+        - **Graceful Degradation**: Intelligent handling of malformed files and configurations
+        - **User-Friendly Messages**: Clear, actionable error descriptions with remediation suggestions
+        - **Exit Code Management**: Proper CLI exit codes for integration with CI/CD systems
+        - **Validation Failures**: Detailed reporting of docstring validation errors
+
+
+        ### 📚 Documentation and Examples
+
+
+        #### 📖 Comprehensive Documentation
+
+        Provide extensive documentation and usage examples:
+
+        - **API Documentation**: Complete module documentation with examples
+        - **Configuration Guide**: Detailed configuration options with real-world examples
+        - **Usage Examples**: Practical examples for common use cases
+        - **Integration Guide**: Instructions for CI/CD integration and pre-commit hooks
+        - **Architecture Overview**: Detailed explanation of tool internals and design decisions
+
+
+        #### 🎯 Example Configurations
+
+        Include practical configuration templates:
+
+        - **Default Configuration**: Production-ready configuration for most projects
+        - **Minimal Configuration**: Lightweight setup for simple projects
+        - **Advanced Configuration**: Comprehensive setup with all features enabled
+        - **Framework-Specific**: Tailored configurations for popular Python frameworks
+
+        **Configuration Examples:**
+        ```toml
+        # Simple configuration
+        [tool.dfc]
+        [[tool.dfc.sections]]
+        order = 1
+        name = "summary"
+        type = "free_text"
+        required = true
+
+        # Advanced configuration with admonitions
+        [[tool.dfc.sections]]
+        order = 2
+        name = "details"
+        type = "free_text"
+        admonition = "abstract"
+        prefix = "???"
+        required = false
+        ```
+
+
+        ### 🎊 Release Highlights
+
+
+        #### ✨ First Major Release
+
+        Mark the transition to stable, production-ready status:
+
+        - **Semantic Versioning**: Adopt semantic versioning with v1.0.1 marking API stability
+        - **Production Readiness**: Comprehensive testing and validation across all supported platforms
+        - **Backward Compatibility**: Commitment to maintaining API compatibility in future releases
+        - **Enterprise Grade**: Suitable for large-scale projects and enterprise environments
+
+        **Development Timeline:**
+        - **12 Version Releases**: From v0.1.0 through v1.0.0 with iterative improvements
+        - **12 Pull Requests**: Systematic feature development and bug fixes
+        - **100% Test Coverage**: Comprehensive validation across all code paths
+        - **Cross-Platform Support**: Validated on Windows, macOS, and Linux
+
+
+        #### 🔄 Continuous Evolution
+
+        Establish foundation for continued development:
+
+        - **Modular Architecture**: Clean separation enabling easy feature additions
+        - **Extensible Configuration**: Framework for adding new validation rules
+        - **Rich Plugin System**: Foundation for third-party extensions
+        - **Community Contributions**: Clear contribution guidelines and development workflows
+
+
+        ### 🚀 Getting Started
+
+        Begin using `docstring-format-checker` immediately:
+
+        ```bash
+        # Install with UV
+        uv add docstring-format-checker
+
+        # Quick start - check a file
+        dfc check my_module.py
+
+        # Check entire project
+        dfc check src/
+
+        # Generate configuration template
+        dfc config-example
+
+        # Advanced usage with custom configuration
+        dfc check --config pyproject.toml --output table --quiet src/
+        ```
+
+
+        #### 🎯 Next Steps
+
+        Continue enhancing your documentation workflow:
+
+        1. **Generate Configuration**: Use `dfc config-example` to create project-specific rules
+        2. **CI Integration**: Add docstring validation to continuous integration workflows
+        3. **Pre-commit Hooks**: Enforce validation before code commits
+        4. **Team Standards**: Establish consistent documentation standards across your team
+        5. **Advanced Features**: Explore custom section types and validation rules
+
+        **CI Integration Example:**
+        ```yaml
+        # .github/workflows/test.yml
+        - name: Check docstrings
+          run: dfc check src/ --check
+        ```
+
+        Transform your Python project's documentation quality with `docstring-format-checker` v1.0.1 – the comprehensive, configurable, and reliable solution for docstring validation and enforcement.
+
+
+        ### 💪 Pull Requests
+
+        * Modernise Version Management and GitHub Actions Integration by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/12
+
+
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.0.0...v1.0.1
+
 
     ??? abstract "Updates"
 
@@ -52,7 +459,416 @@
 
     ??? note "Release Notes"
 
-        ### 🎯 Summary                Introduce the inaugural major release of `docstring-format-checker`, a powerful Python CLI tool that validates docstring formatting and completeness using AST parsing. This milestone release represents the culmination of comprehensive development spanning 11 minor versions and 11 major pull requests, delivering a production-ready solution for ensuring consistent, high-quality documentation across Python codebases.                Transform from initial concept to enterprise-grade tool with configurable validation rules, rich terminal output, comprehensive test coverage, and robust cross-platform compatibility. Establish `docstring-format-checker` as the definitive solution for Python docstring validation, offering flexibility for diverse documentation standards whilst maintaining strict quality enforcement.                **Core Capabilities:**        - **AST-Based Parsing**: Robust code analysis without regex fragility        - **Configurable Validation**: Four distinct section types with TOML-based configuration        - **Cross-Platform Reliability**: 100% test coverage across Windows, macOS, and Linux        - **Rich Terminal Output**: Beautiful coloured output with structured error tables        - **Dual CLI Entry Points**: Accessible via `docstring-format-checker` or `dfc` commands                        ### 🚀 Foundational Architecture                        #### 🏗️ Core Validation Engine                Establish a sophisticated docstring validation system built on Python AST parsing:                - **`DocstringChecker()`**: Primary validation engine with comprehensive rule enforcement        - **`FunctionAndClassDetails()`**: Structured representation of code elements for precise analysis        - **AST Integration**: Robust parsing of Python source files without dependency on fragile regex patterns        - **Multi-Format Support**: Handle functions, methods, classes, and async functions uniformly                **Validation Rule Categories:**        ```python        VALID_TYPES = (            "free_text",           # Summary, details, examples, notes            "list_name",           # Simple name sections            "list_type",           # Type-only sections (raises, yields)            "list_name_and_type",  # Parameter-style sections with descriptions        )        ```                #### ⚙️ Configuration Management System                  Implement hierarchical configuration discovery with TOML-based section definitions:                - **`Config()`**: Top-level configuration container with global settings and section definitions        - **`SectionConfig()`**: Individual section configuration with validation rules        - **`GlobalConfig()`**: Global validation behaviour control flags        - **Automatic Discovery**: Hierarchical search for `pyproject.toml` configuration files                **Configuration Architecture:**        ```toml        [tool.dfc]        allow_undefined_sections = false        require_docstrings = true        check_private = true        sections = [            { order = 1, name = "summary", type = "free_text", required = true },            { order = 2, name = "params", type = "list_name_and_type", required = true },            # ... additional sections        ]        ```                #### 🖥️ Command-Line Interface Excellence                Deliver a polished CLI experience with comprehensive features:                - **Typer Integration**: Modern CLI framework with automatic help generation        - **Rich Output**: Structured error tables and coloured terminal output        - **Multiple Output Formats**: Table format for detailed analysis, list format for CI/CD integration        - **Example System**: Built-in configuration and usage examples accessible via `--example` flag                        ### 🎨 User Experience Enhancements                        #### 🌈 Rich Terminal Output                Provide professional-grade terminal output with visual clarity:                - **Error Tables**: Structured display of validation errors with file, function, and line details        - **Colour Coding**: Green for success, red for errors, cyan for information        - **Cross-Platform Compatibility**: Handle terminal width variations and Unicode support differences        - **Quiet Modes**: Minimal output options for automated workflows and CI/CD integration                #### 📋 Flexible Output Formats                Support diverse workflow requirements with multiple output modes:                - **Table Format**: Rich structured display ideal for interactive development        - **List Format**: Simple line-by-line output perfect for CI/CD parsing and automation        - **Summary Statistics**: Clear reporting of validation results with error counts        - **Exit Code Standards**: Consistent return codes (0=success, 1=validation errors, 2=CLI errors)                #### 🔧 Dual CLI Entry Points                Provide convenient access through multiple command interfaces:                - **`docstring-format-checker`**: Full descriptive command name for clarity        - **`dfc`**: Abbreviated form for frequent use and scripting        - **Consistent Behaviour**: Identical functionality across both entry points        - **Auto-completion Support**: Built-in shell completion capabilities                        ### 🧪 Comprehensive Validation Logic                        #### 📝 Section Type Validation                Implement sophisticated validation for four distinct docstring section types:                **Free Text Sections (`free_text`):**        - Summary, details, examples, notes sections        - Support for admonition syntax with customisable prefixes        - Flexible content validation with configurable requirements                **List Name Sections (`list_name`):**        - Simple name-only lists for basic documentation        - Validation of proper formatting and structure        - Support for bullet points and indentation requirements                **List Type Sections (`list_type`):**          - Exception and yield type documentation        - Type information validation with parentheses checking        - Title case enforcement for consistency                **List Name and Type Sections (`list_name_and_type`):**        - Parameter documentation with name, type, and description        - Advanced parsing to distinguish definitions from descriptions        - Multi-criteria validation including indentation and word count analysis                #### 🎯 Advanced Rule Enforcement                Deliver comprehensive validation with intelligent error detection:                - **Colon Usage Validation**: Ensure proper colon placement in admonition and non-admonition sections        - **Title Case Enforcement**: Validate section headers follow proper capitalisation        - **Parentheses Requirements**: Check type definitions include required parentheses        - **Indentation Analysis**: Multi-level validation of content structure and formatting        - **Blank Line Requirements**: Enforce proper spacing after docstrings for readability                #### 🚫 Smart Error Prevention                Reduce false positives whilst maintaining strict validation:                - **Context-Aware Parsing**: Distinguish between parameter definitions and description content        - **Bullet Point Detection**: Recognise legitimate description patterns vs. malformed parameters        - **Word Count Analysis**: Use intelligent thresholds to identify content vs. structure issues        - **Configuration Flexibility**: Allow customisation of validation strictness per project requirements                        ### 🔄 Continuous Integration Excellence                        #### 🏗️ GitHub Actions Integration                Establish robust CI/CD workflows with comprehensive testing:                - **Multi-Platform Testing**: Validate functionality across Ubuntu, macOS, and Windows        - **Python Version Matrix**: Support Python 3.9 through 3.13 with comprehensive compatibility testing        - **UV Package Manager**: Modern dependency management with faster resolution and caching        - **Automated Versioning**: Streamlined release processes with automatic changelog generation                #### 📊 Quality Assurance Standards                Maintain exceptional code quality with comprehensive validation:                - **100% Test Coverage**: Complete test suite with 199 individual test cases across all modules        - **Cross-Platform Reliability**: Resolve Windows-specific issues with file locking and terminal formatting        - **Pre-commit Hooks**: Automated code quality checks with Black formatting and lint validation        - **Documentation Standards**: Consistent docstring formatting across entire codebase                #### 🚀 Release Automation                Streamline release processes with automated workflows:                - **Version Bumping**: Automated version management with changelog generation        - **Coverage Reporting**: Automatic generation and publication of test coverage reports        - **Documentation Deployment**: Automated documentation site updates with MkDocs integration        - **PyPI Publishing**: Seamless package distribution with automated release workflows                        ### 🧬 Exception Handling Architecture                        #### 🎯 Structured Error Classes                Implement comprehensive exception hierarchy for clear error communication:                - **`DocstringError()`**: Base exception for docstring validation issues with detailed context        - **`InvalidConfigError()`**: Configuration file validation with specific error details        - **`InvalidTypeValuesError()`**: Type validation errors with suggestions for correction        - **`DirectoryNotFoundError()`**: File system errors with helpful resolution guidance                #### 📋 Error Reporting Excellence                Provide detailed error information for rapid issue resolution:                - **Line Number Precision**: Exact location reporting for validation errors        - **Context Information**: Include surrounding code context for error understanding        - **Suggestion Engine**: Provide specific recommendations for error resolution        - **Batch Error Processing**: Handle multiple errors efficiently with comprehensive reporting                        ### 📈 Platform Compatibility Achievements                        #### 🌐 Cross-Platform Reliability                Resolve critical compatibility issues across operating systems:                - **Windows File Locking**: Fix temporary file management with proper handle cleanup and `flush()` calls        - **Terminal Width Handling**: Accommodate varying terminal sizes and line wrapping differences        - **Unicode Support**: Handle diverse character sets and border compatibility across terminals        - **Path Management**: Ensure consistent absolute path usage across all platforms                #### 🧪 Test Suite Robustness                Achieve comprehensive test reliability with platform-agnostic approaches:                - **Isolated Test Environments**: Prevent interference with temporary directories and proper cleanup        - **ANSI Code Handling**: Strip formatting codes for consistent output validation across terminals        - **Help Text Flexibility**: Handle platform-specific formatting variations in CLI output        - **Assertion Robustness**: Use flexible matching patterns for cross-platform compatibility                        ### 🔍 Development Workflow Excellence                        #### 📝 Documentation Standards                Establish comprehensive documentation practices throughout the project:                - **Docstring Standardisation**: Implement consistent `!!! note "Summary"` format across all modules        - **API Documentation**: Complete function and class documentation with parameter details        - **Usage Examples**: Built-in examples accessible through CLI for immediate reference        - **Contributing Guidelines**: Detailed development and contribution documentation                #### 🛠️ Developer Experience                Provide exceptional development tooling and workflows:                - **Utility Scripts**: Comprehensive automation for linting, testing, and version management        - **Pre-commit Integration**: Automated code quality enforcement with configurable rules        - **Coverage Reporting**: Detailed test coverage analysis with HTML and XML output formats        - **Modern Tooling**: Integration with contemporary Python tools including UV, Typer, and Rich                        ### 🎯 Configuration Flexibility                        #### 📋 TOML Integration                Provide comprehensive configuration management through TOML files:                - **Multiple Configuration Names**: Support both `[tool.dfc]` and `[tool.docstring-format-checker]` sections        - **Hierarchical Discovery**: Automatic search for configuration files in project hierarchy        - **Validation Engine**: Comprehensive configuration validation with detailed error reporting        - **Default Configuration**: Sensible defaults for immediate use without configuration                #### 🔧 Customisation Options                Enable extensive customisation for diverse project requirements:                - **Section Definition**: Complete control over docstring section requirements and order        - **Admonition Support**: Configurable admonition types with custom prefixes        - **Global Flags**: Control validation behaviour with `allow_undefined_sections`, `require_docstrings`, and `check_private`        - **Type System**: Four distinct section types to accommodate different documentation patterns                #### 📊 Configuration Examples                Provide comprehensive examples for immediate implementation:                - **Default Configuration**: Production-ready configuration suitable for most Python projects        - **Custom Sections**: Examples of specialised section configurations for specific needs        - **Integration Patterns**: Demonstrate integration with existing project configurations        - **Migration Guides**: Support for updating configurations across versions                        ### 🏆 Quality Metrics                        #### 📈 Test Coverage Excellence                Achieve and maintain exceptional test coverage across all components:                ```        Module Coverage Statistics:        - src/docstring_format_checker/__init__.py:      100%        - src/docstring_format_checker/cli.py:           100%          - src/docstring_format_checker/config.py:        100%        - src/docstring_format_checker/core.py:          100%        - src/docstring_format_checker/utils/exceptions.py: 100%        ------------------------------------------------------        TOTAL COVERAGE:                                  100%        ```                #### 🎯 Code Quality Standards                Maintain exceptional code quality with comprehensive validation:                - **Type Safety**: Complete type hint coverage with dataclass-based configuration        - **Error Handling**: Comprehensive exception hierarchy with structured error messages          - **Code Organisation**: Consistent import structure and modular architecture        - **Documentation**: Enhanced docstrings following project standards across all modules                #### 🚀 Performance Benchmarks                Deliver efficient validation with optimised processing:                - **AST Parsing**: Efficient code analysis with minimal memory overhead        - **File Processing**: Optimised directory traversal with pattern matching        - **Error Reporting**: Structured error collection with minimal performance impact        - **Configuration Loading**: Cached configuration parsing for repeated operations                        ### 🌟 User Benefits                        #### 👥 For Development Teams                Enable consistent documentation standards across development teams:                - **Standardised Documentation**: Enforce consistent docstring formats across entire codebase        - **Flexible Configuration**: Adapt validation rules to match team conventions and standards        - **CI/CD Integration**: Automated validation with reliable exit codes for build pipelines        - **Rich Feedback**: Detailed error reporting with specific suggestions for resolution                #### 🏢 For Enterprise Users                Provide enterprise-grade documentation validation capabilities:                - **Scalable Architecture**: Handle large codebases with efficient processing        - **Compliance Support**: Configurable validation rules for documentation standards compliance        - **Cross-Platform Deployment**: Consistent behaviour across diverse development environments        - **Quality Assurance**: 100% test coverage ensuring reliable operation in production environments                #### 🛠️ For Open Source Projects                Support open source development with comprehensive validation tools:                - **Easy Integration**: Simple installation and configuration for immediate use        - **Documentation Excellence**: Enforce high-quality documentation standards for contributors        - **CI/CD Ready**: Seamless integration with GitHub Actions and other CI platforms        - **Community Standards**: Support common Python documentation patterns and conventions                        ### 📊 Version Evolution Summary                        #### 🎯 Release Timeline                Track the comprehensive evolution from initial concept to production release:                - **v0.1.0**: Initial release with basic validation functionality        - **v0.2.0**: Add `@overload` function support and CI/CD workflows        - **v0.3.0**: Enhance error message formatting and admonition validation        - **v0.4.0**: Remove recursive flags, add examples system, improve CLI interface        - **v0.5.0**: Resolve output formatting issues with list mode and summary statistics        - **v0.6.0**: Fix description line validation and list output formatting        - **v0.7.0**: Improve validation logic for list sections with enhanced type handling        - **v0.8.0**: Introduce global configuration architecture with comprehensive control flags        - **v0.9.0**: Refactor configuration structure and enhance test reliability        - **v0.10.0**: Resolve Windows CI issues and improve cross-platform compatibility        - **v0.11.0**: Standardise documentation formats and complete test suite reliability improvements                #### 📈 Cumulative Improvements                Demonstrate the comprehensive scope of development across all versions:                - **199 Test Cases**: Comprehensive test suite covering all functionality and edge cases        - **11 Pull Requests**: Major feature additions and reliability improvements        - **74 Files Modified**: Extensive codebase development with complete project structure          - **21,938 Lines Added**: Substantial functionality implementation with comprehensive documentation        - **100% Coverage**: Complete test coverage across all modules and functions                        ### 🔮 Future Roadmap Foundation                Establish architectural foundation for continued evolution:                - **Plugin System**: Configuration structure ready for extensible validation rules        - **Custom Section Types**: Framework prepared for additional docstring section types        - **IDE Integration**: Rich error reporting suitable for editor integration and tooling        - **Performance Optimisation**: Modular architecture enabling targeted performance enhancements        - **Community Extensions**: Extensible design supporting community-contributed validation rules                        ### 💪 Pull Requests                 ### What's Changed        * Complete Foundation Setup: Introduce Docstring Format Checker CLI Tool with 100% Test Coverage and Professional Documentation by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/1        * Fix `@overload` Function Handling: Enhance Docstring Checker to Properly Ignore Function Type Overloads by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/2        * Comprehensive Docstring Validation Enhancement: Introduce Advanced Rule Enforcement and Achieve 100% Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/3        * Enhanced CLI Error Output Formatting: Improve Multi-Error Message Presentation and Achieve Comprehensive Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/4        * Streamline CLI Architecture: Simplify Interface Design and Achieve Complete Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/5        * Advanced List Output Formatting & Error Summary Display by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/6        * Enhanced Docstring Validation Logic: Description Line Colon Handling & Complete Code Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/7        * Enhanced Docstring Validation Logic: Advanced Parameter Description Handling by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/8        * Major Test Suite Refactor and Configuration Architecture Enhancement by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/9        * Enhanced CLI Architecture and Cross-Platform Test Reliability by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/10        * Comprehensive Docstring Validation Enhancement and Test Suite Reliability Improvement by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/11                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.1.0...v1.0.0                        ---                **Version**: v0.0.0 → v1.0.0          **Tests**: 199 comprehensive test cases (100% coverage)          **Platforms**: Windows, macOS, Linux          **Python**: 3.9+ supported          **PyPI Status**: Production/Stable        
+        ### 🎯 Summary
+
+        Introduce the inaugural major release of `docstring-format-checker`, a powerful Python CLI tool that validates docstring formatting and completeness using AST parsing. This milestone release represents the culmination of comprehensive development spanning 11 minor versions and 11 major pull requests, delivering a production-ready solution for ensuring consistent, high-quality documentation across Python codebases.
+
+        Transform from initial concept to enterprise-grade tool with configurable validation rules, rich terminal output, comprehensive test coverage, and robust cross-platform compatibility. Establish `docstring-format-checker` as the definitive solution for Python docstring validation, offering flexibility for diverse documentation standards whilst maintaining strict quality enforcement.
+
+        **Core Capabilities:**
+        - **AST-Based Parsing**: Robust code analysis without regex fragility
+        - **Configurable Validation**: Four distinct section types with TOML-based configuration
+        - **Cross-Platform Reliability**: 100% test coverage across Windows, macOS, and Linux
+        - **Rich Terminal Output**: Beautiful coloured output with structured error tables
+        - **Dual CLI Entry Points**: Accessible via `docstring-format-checker` or `dfc` commands
+
+
+        ### 🚀 Foundational Architecture
+
+
+        #### 🏗️ Core Validation Engine
+
+        Establish a sophisticated docstring validation system built on Python AST parsing:
+
+        - **`DocstringChecker()`**: Primary validation engine with comprehensive rule enforcement
+        - **`FunctionAndClassDetails()`**: Structured representation of code elements for precise analysis
+        - **AST Integration**: Robust parsing of Python source files without dependency on fragile regex patterns
+        - **Multi-Format Support**: Handle functions, methods, classes, and async functions uniformly
+
+        **Validation Rule Categories:**
+        ```python
+        VALID_TYPES = (
+            "free_text",  # Summary, details, examples, notes
+            "list_name",  # Simple name sections
+            "list_type",  # Type-only sections (raises, yields)
+            "list_name_and_type",  # Parameter-style sections with descriptions
+        )
+        ```
+
+        #### ⚙️ Configuration Management System
+
+        Implement hierarchical configuration discovery with TOML-based section definitions:
+
+        - **`Config()`**: Top-level configuration container with global settings and section definitions
+        - **`SectionConfig()`**: Individual section configuration with validation rules
+        - **`GlobalConfig()`**: Global validation behaviour control flags
+        - **Automatic Discovery**: Hierarchical search for `pyproject.toml` configuration files
+
+        **Configuration Architecture:**
+        ```toml
+        [tool.dfc]
+        allow_undefined_sections = false
+        require_docstrings = true
+        check_private = true
+        sections = [
+            { order = 1, name = "summary", type = "free_text", required = true },
+            { order = 2, name = "params", type = "list_name_and_type", required = true },
+            # ... additional sections
+        ]
+        ```
+
+        #### 🖥️ Command-Line Interface Excellence
+
+        Deliver a polished CLI experience with comprehensive features:
+
+        - **Typer Integration**: Modern CLI framework with automatic help generation
+        - **Rich Output**: Structured error tables and coloured terminal output
+        - **Multiple Output Formats**: Table format for detailed analysis, list format for CI/CD integration
+        - **Example System**: Built-in configuration and usage examples accessible via `--example` flag
+
+
+        ### 🎨 User Experience Enhancements
+
+
+        #### 🌈 Rich Terminal Output
+
+        Provide professional-grade terminal output with visual clarity:
+
+        - **Error Tables**: Structured display of validation errors with file, function, and line details
+        - **Colour Coding**: Green for success, red for errors, cyan for information
+        - **Cross-Platform Compatibility**: Handle terminal width variations and Unicode support differences
+        - **Quiet Modes**: Minimal output options for automated workflows and CI/CD integration
+
+        #### 📋 Flexible Output Formats
+
+        Support diverse workflow requirements with multiple output modes:
+
+        - **Table Format**: Rich structured display ideal for interactive development
+        - **List Format**: Simple line-by-line output perfect for CI/CD parsing and automation
+        - **Summary Statistics**: Clear reporting of validation results with error counts
+        - **Exit Code Standards**: Consistent return codes (0=success, 1=validation errors, 2=CLI errors)
+
+        #### 🔧 Dual CLI Entry Points
+
+        Provide convenient access through multiple command interfaces:
+
+        - **`docstring-format-checker`**: Full descriptive command name for clarity
+        - **`dfc`**: Abbreviated form for frequent use and scripting
+        - **Consistent Behaviour**: Identical functionality across both entry points
+        - **Auto-completion Support**: Built-in shell completion capabilities
+
+
+        ### 🧪 Comprehensive Validation Logic
+
+
+        #### 📝 Section Type Validation
+
+        Implement sophisticated validation for four distinct docstring section types:
+
+        **Free Text Sections (`free_text`):**
+        - Summary, details, examples, notes sections
+        - Support for admonition syntax with customisable prefixes
+        - Flexible content validation with configurable requirements
+
+        **List Name Sections (`list_name`):**
+        - Simple name-only lists for basic documentation
+        - Validation of proper formatting and structure
+        - Support for bullet points and indentation requirements
+
+        **List Type Sections (`list_type`):**
+        - Exception and yield type documentation
+        - Type information validation with parentheses checking
+        - Title case enforcement for consistency
+
+        **List Name and Type Sections (`list_name_and_type`):**
+        - Parameter documentation with name, type, and description
+        - Advanced parsing to distinguish definitions from descriptions
+        - Multi-criteria validation including indentation and word count analysis
+
+        #### 🎯 Advanced Rule Enforcement
+
+        Deliver comprehensive validation with intelligent error detection:
+
+        - **Colon Usage Validation**: Ensure proper colon placement in admonition and non-admonition sections
+        - **Title Case Enforcement**: Validate section headers follow proper capitalisation
+        - **Parentheses Requirements**: Check type definitions include required parentheses
+        - **Indentation Analysis**: Multi-level validation of content structure and formatting
+        - **Blank Line Requirements**: Enforce proper spacing after docstrings for readability
+
+        #### 🚫 Smart Error Prevention
+
+        Reduce false positives whilst maintaining strict validation:
+
+        - **Context-Aware Parsing**: Distinguish between parameter definitions and description content
+        - **Bullet Point Detection**: Recognise legitimate description patterns vs. malformed parameters
+        - **Word Count Analysis**: Use intelligent thresholds to identify content vs. structure issues
+        - **Configuration Flexibility**: Allow customisation of validation strictness per project requirements
+
+
+        ### 🔄 Continuous Integration Excellence
+
+
+        #### 🏗️ GitHub Actions Integration
+
+        Establish robust CI/CD workflows with comprehensive testing:
+
+        - **Multi-Platform Testing**: Validate functionality across Ubuntu, macOS, and Windows
+        - **Python Version Matrix**: Support Python 3.9 through 3.13 with comprehensive compatibility testing
+        - **UV Package Manager**: Modern dependency management with faster resolution and caching
+        - **Automated Versioning**: Streamlined release processes with automatic changelog generation
+
+        #### 📊 Quality Assurance Standards
+
+        Maintain exceptional code quality with comprehensive validation:
+
+        - **100% Test Coverage**: Complete test suite with 199 individual test cases across all modules
+        - **Cross-Platform Reliability**: Resolve Windows-specific issues with file locking and terminal formatting
+        - **Pre-commit Hooks**: Automated code quality checks with Black formatting and lint validation
+        - **Documentation Standards**: Consistent docstring formatting across entire codebase
+
+        #### 🚀 Release Automation
+
+        Streamline release processes with automated workflows:
+
+        - **Version Bumping**: Automated version management with changelog generation
+        - **Coverage Reporting**: Automatic generation and publication of test coverage reports
+        - **Documentation Deployment**: Automated documentation site updates with MkDocs integration
+        - **PyPI Publishing**: Seamless package distribution with automated release workflows
+
+
+        ### 🧬 Exception Handling Architecture
+
+
+        #### 🎯 Structured Error Classes
+
+        Implement comprehensive exception hierarchy for clear error communication:
+
+        - **`DocstringError()`**: Base exception for docstring validation issues with detailed context
+        - **`InvalidConfigError()`**: Configuration file validation with specific error details
+        - **`InvalidTypeValuesError()`**: Type validation errors with suggestions for correction
+        - **`DirectoryNotFoundError()`**: File system errors with helpful resolution guidance
+
+        #### 📋 Error Reporting Excellence
+
+        Provide detailed error information for rapid issue resolution:
+
+        - **Line Number Precision**: Exact location reporting for validation errors
+        - **Context Information**: Include surrounding code context for error understanding
+        - **Suggestion Engine**: Provide specific recommendations for error resolution
+        - **Batch Error Processing**: Handle multiple errors efficiently with comprehensive reporting
+
+
+        ### 📈 Platform Compatibility Achievements
+
+
+        #### 🌐 Cross-Platform Reliability
+
+        Resolve critical compatibility issues across operating systems:
+
+        - **Windows File Locking**: Fix temporary file management with proper handle cleanup and `flush()` calls
+        - **Terminal Width Handling**: Accommodate varying terminal sizes and line wrapping differences
+        - **Unicode Support**: Handle diverse character sets and border compatibility across terminals
+        - **Path Management**: Ensure consistent absolute path usage across all platforms
+
+        #### 🧪 Test Suite Robustness
+
+        Achieve comprehensive test reliability with platform-agnostic approaches:
+
+        - **Isolated Test Environments**: Prevent interference with temporary directories and proper cleanup
+        - **ANSI Code Handling**: Strip formatting codes for consistent output validation across terminals
+        - **Help Text Flexibility**: Handle platform-specific formatting variations in CLI output
+        - **Assertion Robustness**: Use flexible matching patterns for cross-platform compatibility
+
+
+        ### 🔍 Development Workflow Excellence
+
+
+        #### 📝 Documentation Standards
+
+        Establish comprehensive documentation practices throughout the project:
+
+        - **Docstring Standardisation**: Implement consistent `!!! note "Summary"` format across all modules
+        - **API Documentation**: Complete function and class documentation with parameter details
+        - **Usage Examples**: Built-in examples accessible through CLI for immediate reference
+        - **Contributing Guidelines**: Detailed development and contribution documentation
+
+        #### 🛠️ Developer Experience
+
+        Provide exceptional development tooling and workflows:
+
+        - **Utility Scripts**: Comprehensive automation for linting, testing, and version management
+        - **Pre-commit Integration**: Automated code quality enforcement with configurable rules
+        - **Coverage Reporting**: Detailed test coverage analysis with HTML and XML output formats
+        - **Modern Tooling**: Integration with contemporary Python tools including UV, Typer, and Rich
+
+
+        ### 🎯 Configuration Flexibility
+
+
+        #### 📋 TOML Integration
+
+        Provide comprehensive configuration management through TOML files:
+
+        - **Multiple Configuration Names**: Support both `[tool.dfc]` and `[tool.docstring-format-checker]` sections
+        - **Hierarchical Discovery**: Automatic search for configuration files in project hierarchy
+        - **Validation Engine**: Comprehensive configuration validation with detailed error reporting
+        - **Default Configuration**: Sensible defaults for immediate use without configuration
+
+        #### 🔧 Customisation Options
+
+        Enable extensive customisation for diverse project requirements:
+
+        - **Section Definition**: Complete control over docstring section requirements and order
+        - **Admonition Support**: Configurable admonition types with custom prefixes
+        - **Global Flags**: Control validation behaviour with `allow_undefined_sections`, `require_docstrings`, and `check_private`
+        - **Type System**: Four distinct section types to accommodate different documentation patterns
+
+        #### 📊 Configuration Examples
+
+        Provide comprehensive examples for immediate implementation:
+
+        - **Default Configuration**: Production-ready configuration suitable for most Python projects
+        - **Custom Sections**: Examples of specialised section configurations for specific needs
+        - **Integration Patterns**: Demonstrate integration with existing project configurations
+        - **Migration Guides**: Support for updating configurations across versions
+
+
+        ### 🏆 Quality Metrics
+
+
+        #### 📈 Test Coverage Excellence
+
+        Achieve and maintain exceptional test coverage across all components:
+
+        ```
+        Module Coverage Statistics:
+        - src/docstring_format_checker/__init__.py:      100%
+        - src/docstring_format_checker/cli.py:           100%
+        - src/docstring_format_checker/config.py:        100%
+        - src/docstring_format_checker/core.py:          100%
+        - src/docstring_format_checker/utils/exceptions.py: 100%
+        ------------------------------------------------------
+        TOTAL COVERAGE:                                  100%
+        ```
+
+        #### 🎯 Code Quality Standards
+
+        Maintain exceptional code quality with comprehensive validation:
+
+        - **Type Safety**: Complete type hint coverage with dataclass-based configuration
+        - **Error Handling**: Comprehensive exception hierarchy with structured error messages
+        - **Code Organisation**: Consistent import structure and modular architecture
+        - **Documentation**: Enhanced docstrings following project standards across all modules
+
+        #### 🚀 Performance Benchmarks
+
+        Deliver efficient validation with optimised processing:
+
+        - **AST Parsing**: Efficient code analysis with minimal memory overhead
+        - **File Processing**: Optimised directory traversal with pattern matching
+        - **Error Reporting**: Structured error collection with minimal performance impact
+        - **Configuration Loading**: Cached configuration parsing for repeated operations
+
+
+        ### 🌟 User Benefits
+
+
+        #### 👥 For Development Teams
+
+        Enable consistent documentation standards across development teams:
+
+        - **Standardised Documentation**: Enforce consistent docstring formats across entire codebase
+        - **Flexible Configuration**: Adapt validation rules to match team conventions and standards
+        - **CI/CD Integration**: Automated validation with reliable exit codes for build pipelines
+        - **Rich Feedback**: Detailed error reporting with specific suggestions for resolution
+
+        #### 🏢 For Enterprise Users
+
+        Provide enterprise-grade documentation validation capabilities:
+
+        - **Scalable Architecture**: Handle large codebases with efficient processing
+        - **Compliance Support**: Configurable validation rules for documentation standards compliance
+        - **Cross-Platform Deployment**: Consistent behaviour across diverse development environments
+        - **Quality Assurance**: 100% test coverage ensuring reliable operation in production environments
+
+        #### 🛠️ For Open Source Projects
+
+        Support open source development with comprehensive validation tools:
+
+        - **Easy Integration**: Simple installation and configuration for immediate use
+        - **Documentation Excellence**: Enforce high-quality documentation standards for contributors
+        - **CI/CD Ready**: Seamless integration with GitHub Actions and other CI platforms
+        - **Community Standards**: Support common Python documentation patterns and conventions
+
+
+        ### 📊 Version Evolution Summary
+
+
+        #### 🎯 Release Timeline
+
+        Track the comprehensive evolution from initial concept to production release:
+
+        - **v0.1.0**: Initial release with basic validation functionality
+        - **v0.2.0**: Add `@overload` function support and CI/CD workflows
+        - **v0.3.0**: Enhance error message formatting and admonition validation
+        - **v0.4.0**: Remove recursive flags, add examples system, improve CLI interface
+        - **v0.5.0**: Resolve output formatting issues with list mode and summary statistics
+        - **v0.6.0**: Fix description line validation and list output formatting
+        - **v0.7.0**: Improve validation logic for list sections with enhanced type handling
+        - **v0.8.0**: Introduce global configuration architecture with comprehensive control flags
+        - **v0.9.0**: Refactor configuration structure and enhance test reliability
+        - **v0.10.0**: Resolve Windows CI issues and improve cross-platform compatibility
+        - **v0.11.0**: Standardise documentation formats and complete test suite reliability improvements
+
+        #### 📈 Cumulative Improvements
+
+        Demonstrate the comprehensive scope of development across all versions:
+
+        - **199 Test Cases**: Comprehensive test suite covering all functionality and edge cases
+        - **11 Pull Requests**: Major feature additions and reliability improvements
+        - **74 Files Modified**: Extensive codebase development with complete project structure
+        - **21,938 Lines Added**: Substantial functionality implementation with comprehensive documentation
+        - **100% Coverage**: Complete test coverage across all modules and functions
+
+
+        ### 🔮 Future Roadmap Foundation
+
+        Establish architectural foundation for continued evolution:
+
+        - **Plugin System**: Configuration structure ready for extensible validation rules
+        - **Custom Section Types**: Framework prepared for additional docstring section types
+        - **IDE Integration**: Rich error reporting suitable for editor integration and tooling
+        - **Performance Optimisation**: Modular architecture enabling targeted performance enhancements
+        - **Community Extensions**: Extensible design supporting community-contributed validation rules
+
+
+        ### 💪 Pull Requests
+
+        ### What's Changed
+        * Complete Foundation Setup: Introduce Docstring Format Checker CLI Tool with 100% Test Coverage and Professional Documentation by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/1
+        * Fix `@overload` Function Handling: Enhance Docstring Checker to Properly Ignore Function Type Overloads by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/2
+        * Comprehensive Docstring Validation Enhancement: Introduce Advanced Rule Enforcement and Achieve 100% Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/3
+        * Enhanced CLI Error Output Formatting: Improve Multi-Error Message Presentation and Achieve Comprehensive Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/4
+        * Streamline CLI Architecture: Simplify Interface Design and Achieve Complete Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/5
+        * Advanced List Output Formatting & Error Summary Display by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/6
+        * Enhanced Docstring Validation Logic: Description Line Colon Handling & Complete Code Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/7
+        * Enhanced Docstring Validation Logic: Advanced Parameter Description Handling by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/8
+        * Major Test Suite Refactor and Configuration Architecture Enhancement by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/9
+        * Enhanced CLI Architecture and Cross-Platform Test Reliability by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/10
+        * Comprehensive Docstring Validation Enhancement and Test Suite Reliability Improvement by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/11
+
+
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.1.0...v1.0.0
+
+
+        ---
+
+        **Version**: v0.0.0 → v1.0.0
+        **Tests**: 199 comprehensive test cases (100% coverage)
+        **Platforms**: Windows, macOS, Linux
+        **Python**: 3.9+ supported
+        **PyPI Status**: Production/Stable
+
 
     ??? abstract "Updates"
 
@@ -70,7 +886,11 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed        * Comprehensive Docstring Validation Enhancement and Test Suite Reliability Improvement by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/11                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.10.0...v0.11.0
+        ### What's Changed
+        * Comprehensive Docstring Validation Enhancement and Test Suite Reliability Improvement by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/11
+
+
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.10.0...v0.11.0
 
     ??? abstract "Updates"
 
@@ -100,7 +920,11 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed        * Enhanced CLI Architecture and Cross-Platform Test Reliability by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/10                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.9.0...v0.10.0
+        ### What's Changed
+        * Enhanced CLI Architecture and Cross-Platform Test Reliability by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/10
+
+
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.9.0...v0.10.0
 
     ??? abstract "Updates"
 
@@ -140,7 +964,11 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed        * Major Test Suite Refactor and Configuration Architecture Enhancement by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/9                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.8.0...v0.9.0
+        ### What's Changed
+        * Major Test Suite Refactor and Configuration Architecture Enhancement by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/9
+
+
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.8.0...v0.9.0
 
     ??? abstract "Updates"
 
@@ -162,7 +990,11 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed        * Enhanced Docstring Validation Logic: Advanced Parameter Description Handling by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/8                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.7.0...v0.8.0
+        ### What's Changed
+        * Enhanced Docstring Validation Logic: Advanced Parameter Description Handling by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/8
+
+
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.7.0...v0.8.0
 
     ??? abstract "Updates"
 
@@ -187,7 +1019,11 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed        * Enhanced Docstring Validation Logic: Description Line Colon Handling & Complete Code Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/7                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.6.0...v0.7.0
+        ### What's Changed
+        * Enhanced Docstring Validation Logic: Description Line Colon Handling & Complete Code Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/7
+
+
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.6.0...v0.7.0
 
     ??? abstract "Updates"
 
@@ -217,11 +1053,15 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed        * Advanced List Output Formatting & Error Summary Display by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/6                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.5.0...v0.6.0
+        ### What's Changed
+        * Advanced List Output Formatting & Error Summary Display by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/6
+
+
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.5.0...v0.6.0
 
     ??? abstract "Updates"
 
-        * Resove issues with the output when `-o list` and with the summary stats on the printed output (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/44578b4dcbad4e0fc14f7c9fae73fca020426bd8)
+        * Resolve issues with the output when `-o list` and with the summary stats on the printed output (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/44578b4dcbad4e0fc14f7c9fae73fca020426bd8)
 
 
 
@@ -235,7 +1075,11 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed        * Streamline CLI Architecture: Simplify Interface Design and Achieve Complete Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/5                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.4.0...v0.5.0
+        ### What's Changed
+        * Streamline CLI Architecture: Simplify Interface Design and Achieve Complete Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/5
+
+
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.4.0...v0.5.0
 
     ??? abstract "Updates"
 
@@ -263,7 +1107,11 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed        * Enhanced CLI Error Output Formatting: Improve Multi-Error Message Presentation and Achieve Comprehensive Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/4                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.3.0...v0.4.0
+        ### What's Changed
+        * Enhanced CLI Error Output Formatting: Improve Multi-Error Message Presentation and Achieve Comprehensive Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/4
+
+
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.3.0...v0.4.0
 
     ??? abstract "Updates"
 
@@ -283,7 +1131,11 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed        * Comprehensive Docstring Validation Enhancement: Introduce Advanced Rule Enforcement and Achieve 100% Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/3                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.2.0...v0.3.0
+        ### What's Changed
+        * Comprehensive Docstring Validation Enhancement: Introduce Advanced Rule Enforcement and Achieve 100% Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/3
+
+
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.2.0...v0.3.0
 
     ??? abstract "Updates"
 
@@ -322,7 +1174,11 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed        * Fix `@overload` Function Handling: Enhance Docstring Checker to Properly Ignore Function Type Overloads by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/2                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.1.0...v0.2.0
+        ### What's Changed
+        * Fix `@overload` Function Handling: Enhance Docstring Checker to Properly Ignore Function Type Overloads by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/2
+
+
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.1.0...v0.2.0
 
     ??? abstract "Updates"
 
@@ -346,7 +1202,13 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed        * Complete Foundation Setup: Introduce Docstring Format Checker CLI Tool with 100% Test Coverage and Professional Documentation by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/1                ### New Contributors        * @chrimaho made their first contribution in https://github.com/data-science-extensions/docstring-format-checker/pull/1                **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/commits/v0.1.0
+        ### What's Changed
+        * Complete Foundation Setup: Introduce Docstring Format Checker CLI Tool with 100% Test Coverage and Professional Documentation by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/1
+
+        ### New Contributors
+        * @chrimaho made their first contribution in https://github.com/data-science-extensions/docstring-format-checker/pull/1
+
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/commits/v0.1.0
 
     ??? abstract "Updates"
 
@@ -393,7 +1255,7 @@
 
         * Update `pyupgrade` pre-commit config to target Python 3.7 features (previously 3.9) (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/7cf45329e5fd36647bdb5e6d089e01ea30868e69)
 
-        * Refactor all type hints to use `Optional` and `Union` instead of ` | ` for improved clarity,  consistency, and compatability (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/373939f8a718c40094771ef15cbb21a931817a30)
+        * Refactor all type hints to use `Optional` and `Union` instead of ` | ` for improved clarity,  consistency, and compatibility (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/373939f8a718c40094771ef15cbb21a931817a30)
 
         * Add Python 3.7 to CI workflow matrix for enhanced compatibility (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/7e69f566727349ff98f48c5feccaa263a9818a46)
 
@@ -435,8 +1297,10 @@
 
         * Add CI workflow (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/79daa31e5946df1bc42f25017ae4fc6e32d3a576)
 
-        * Fix hardcoding in the Unit Tests<br>
-            <br>
+        * Fix hardcoding in the Unit Tests
+<br>
+
+<br>
             Hardcoded absolute path used in test. The `cwd` parameter contains a hardcoded personal directory path that will not work on other systems. This should use a relative path or be made configurable.<br>
             Co-authored-by: Copilot <175728472+Copilot@users.noreply.github.com> (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/050b397ec5b46df608df59b86acd1166c688be6f)
 
@@ -491,6 +1355,3 @@
         * Initial commit of package config (by []()) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/32acad04208e5ac6302e261dcd5f76f7b09d61a1)
 
         * Initial commit (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/416b0b36cf5c4615295a7464a1544911aaa253d5)
-
-
-
