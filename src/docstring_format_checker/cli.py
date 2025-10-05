@@ -259,24 +259,24 @@ def _show_config_example_callback() -> None:
     """
 
     example_config: str = dedent(
-        f"""
+        r"""
         Place the below config in your `pyproject.toml` file.
 
-        {_blue(r"\[tool.dfc]")}
-        {_green(r"# or \[tool.docstring-format-checker]")}
-        {_blue("allow_undefined_sections = false")}
-        {_blue("require_docstrings = true")}
-        {_blue("check_private = true")}
-        {_blue("sections = [")}
-            {_blue('{ order = 1, name = "summary",  type = "free_text",          required = true, admonition = "note", prefix = "!!!" },')}
-            {_blue('{ order = 2, name = "details",  type = "free_text",          required = false, admonition = "abstract", prefix = "???+" },')}
-            {_blue('{ order = 3, name = "params",   type = "list_name_and_type", required = false },')}
-            {_blue('{ order = 4, name = "raises",   type = "list_type",          required = false },')}
-            {_blue('{ order = 5, name = "returns",  type = "list_name_and_type", required = false },')}
-            {_blue('{ order = 6, name = "yields",   type = "list_type",          required = false },')}
-            {_blue('{ order = 7, name = "examples", type = "free_text",          required = false, admonition = "example", prefix = "???+" },')}
-            {_blue('{ order = 8, name = "notes",    type = "free_text",          required = false, admonition = "note", prefix = "???" },')}
-        {_blue("]")}
+        [blue]\[tool.dfc][/blue]
+        [green]# or \[tool.docstring-format-checker][/green]
+        [blue]allow_undefined_sections = false[/blue]
+        [blue]require_docstrings = true[/blue]
+        [blue]check_private = true[/blue]
+        [blue]sections = [[/blue]
+            [blue]{ order = 1, name = "summary",  type = "free_text",          required = true, admonition = "note", prefix = "!!!" },[/blue]
+            [blue]{ order = 2, name = "details",  type = "free_text",          required = false, admonition = "abstract", prefix = "???+" },[/blue]
+            [blue]{ order = 3, name = "params",   type = "list_name_and_type", required = false },[/blue]
+            [blue]{ order = 4, name = "raises",   type = "list_type",          required = false },[/blue]
+            [blue]{ order = 5, name = "returns",  type = "list_name_and_type", required = false },[/blue]
+            [blue]{ order = 6, name = "yields",   type = "list_type",          required = false },[/blue]
+            [blue]{ order = 7, name = "examples", type = "free_text",          required = false, admonition = "example", prefix = "???+" },[/blue]
+            [blue]{ order = 8, name = "notes",    type = "free_text",          required = false, admonition = "note", prefix = "???" },[/blue]
+        [blue]][/blue]
         """
     ).strip()
 
