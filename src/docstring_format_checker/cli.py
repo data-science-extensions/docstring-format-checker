@@ -311,23 +311,34 @@ def _help_callback_main(ctx: Context, param: CallbackParam, value: bool) -> None
         (None):
             Nothing is returned.
     """
+
+    # Early exit if help flag is set
     if not value or ctx.resilient_parsing:
         return
-    # console.print(f"width = {os.get_terminal_size().columns}")
+
+    # Determine terminal width for ASCII art
     try:
-        terminal_width = os.get_terminal_size().columns
+        terminal_width: int = os.get_terminal_size().columns
     except OSError:
-        # Default to 80 columns if no terminal is available (e.g., in tests)
         terminal_width = 80
+
+    # Determine title based on terminal width
     title: str = "dfc" if terminal_width < 130 else "docstring-format-checker"
+
+    # Print ASCII art title
     console.print(
         pyfiglet.figlet_format(title, font="standard", justify="left", width=140),
         style="magenta",
         markup=False,
     )
+
+    # Show help message
     echo(ctx.get_help())
+
+    # Show usage and config examples
     _show_usage_examples_callback()
     _show_config_example_callback()
+
     raise Exit()
 
 
