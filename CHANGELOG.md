@@ -23,32 +23,30 @@
 
     ??? abstract "Updates"
 
-        * Refactor test imports to improve code organisation<br>
+        * [`0e17a2f`](https://github.com/data-science-extensions/docstring-format-checker/commit/0e17a2f78cd3d8c6b8df5452bbc2546d9877215a): Refactor test imports to improve code organisation<br>
             - Move repeated local imports to module level to reduce duplication<br>
             - Consolidate standard library imports at the top of the file<br>
             - Remove redundant inline import statements scattered throughout test methods<br>
             - Replace aliased `tempfile` import with direct module usage for consistency<br>
-            - Standardise code formatting with proper `dedent()` usage in test strings (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/0e17a2f78cd3d8c6b8df5452bbc2546d9877215a)
-
-        * Streamline `Path()` object creation<br>
-            <br>
-            The path validation creates Path objects twice for each path. Consider creating Path objects once and then filtering based on existence to avoid redundant object creation.<br>
-            Co-authored-by: Copilot <175728472+Copilot@users.noreply.github.com> (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/e1a318e88712d696639195f2911bd1411deffa3b)
-
-        * Fix formatting (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/7741d7c1dd5e1c137539ff97576ee2e33f434b0b)
-
-        * Remove deprecated python version warning flag from `uv pip install` command<br>
+            - Standardise code formatting with proper `dedent()` usage in test strings
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`e1a318e`](https://github.com/data-science-extensions/docstring-format-checker/commit/e1a318e88712d696639195f2911bd1411deffa3b): Streamline `Path()` object creation<br>
+            The path validation creates Path objects twice for each path. Consider creating Path objects once and then filtering based on existence to avoid redundant object creation.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`7741d7c`](https://github.com/data-science-extensions/docstring-format-checker/commit/7741d7c1dd5e1c137539ff97576ee2e33f434b0b): Fix formatting
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`fc0f0e0`](https://github.com/data-science-extensions/docstring-format-checker/commit/fc0f0e071566bdb5fbbd9449bd7d84918b1bd4af): Remove deprecated python version warning flag from `uv pip install` command<br>
             - Remove `--no-python-version-warning` flag from the package installation command<br>
             - Simplify the installation process by removing an obsolete warning suppression option<br>
-            - Maintain existing installation behaviour with `--no-cache` and `--verbose` flags (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/fc0f0e071566bdb5fbbd9449bd7d84918b1bd4af)
-
-        * Add support for checking multiple files and directories simultaneously<br>
+            - Maintain existing installation behaviour with `--no-cache` and `--verbose` flags
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`76211c3`](https://github.com/data-science-extensions/docstring-format-checker/commit/76211c3e0c9ea4871f3bf260e24bf55fa4d98d94): Add support for checking multiple files and directories simultaneously<br>
             - Change CLI argument from single `path` to multiple `paths` to enable batch processing<br>
             - Update `check_docstrings()` function to handle list of paths and aggregate results from all targets<br>
             - Enhance path validation to report all invalid paths at once rather than failing on first error<br>
             - Add comprehensive test coverage for multiple file scenarios including mixed file types, error handling, and output formats<br>
-            - Update usage examples in help text to demonstrate new multi-path capabilities with exclusion patterns (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/76211c3e0c9ea4871f3bf260e24bf55fa4d98d94)
-
+            - Update usage examples in help text to demonstrate new multi-path capabilities with exclusion patterns
+            (by [chrimaho](https://github.com/chrimaho))
 
 
 !!! info "v1.1.0"
@@ -65,48 +63,44 @@
 
     ??? abstract "Updates"
 
-        * Replace colour helper functions with rich markup tags<br>
+        * [`cb4594b`](https://github.com/data-science-extensions/docstring-format-checker/commit/cb4594b4f4afd6bad07f5652923a52abedabd4f8): Replace colour helper functions with rich markup tags<br>
             - Remove f-string formatting and use raw string literal for config example<br>
             - Replace `_blue()` and `_green()` function calls with rich markup syntax<br>
             - Standardise colour formatting to use `[blue]` and `[green]` tags throughout example<br>
-            - Simplify template string handling by eliminating dynamic colour function invocations (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/cb4594b4f4afd6bad07f5652923a52abedabd4f8)
-
-        * Clean up comments<br>
-            <br>
-            Remove commented-out code. This appears to be leftover debugging code that should be cleaned up.<br>
-            Co-authored-by: Copilot <175728472+Copilot@users.noreply.github.com> (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/1d080fedcdbd33d0b605fbb2244c09de65211c90)
-
-        * Clean up `Exit()` calls in `if` blocks<br>
-            <br>
-            Adding `Exit()` calls after each branch makes the control flow inconsistent with the existing pattern where the function handles all cases and exits at the end. Consider removing these individual `Exit()` calls and letting the function complete naturally, then add a single `Exit()` at the end.<br>
-            Co-authored-by: Copilot <175728472+Copilot@users.noreply.github.com> (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/4f562e967bdd9eff53a7095d18508c905bff2d3d)
-
-        * Fix formatting (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/d7e83150b13fd401248b771d20b470500c14c049)
-
-        * Drop Python 3.7-3.8 support and standardise CI setup<br>
+            - Simplify template string handling by eliminating dynamic colour function invocations
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`1d080fe`](https://github.com/data-science-extensions/docstring-format-checker/commit/1d080fedcdbd33d0b605fbb2244c09de65211c90): Clean up comments<br>
+            Remove commented-out code. This appears to be leftover debugging code that should be cleaned up.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`4f562e9`](https://github.com/data-science-extensions/docstring-format-checker/commit/4f562e967bdd9eff53a7095d18508c905bff2d3d): Clean up `Exit()` calls in `if` blocks<br>
+            Adding `Exit()` calls after each branch makes the control flow inconsistent with the existing pattern where the function handles all cases and exits at the end. Consider removing these individual `Exit()` calls and letting the function complete naturally, then add a single `Exit()` at the end.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`d7e8315`](https://github.com/data-science-extensions/docstring-format-checker/commit/d7e83150b13fd401248b771d20b470500c14c049): Fix formatting
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`e5a467d`](https://github.com/data-science-extensions/docstring-format-checker/commit/e5a467d6ab048301a59a53dd43f2cb31e34067c0): Drop Python 3.7-3.8 support and standardise CI setup<br>
             - Remove Python 3.7 and 3.8 from CI test matrix to focus on actively supported versions<br>
             - Replace custom `uv python install` approach with standard `actions/setup-python@v5` action for better reliability<br>
             - Add explicit Python version verification step to ensure correct interpreter is used<br>
             - Clean up commented code in CI configuration for maintainability<br>
             - Import `sys` module in CLI module and improve code organisation with better spacing and comments<br>
-            - Enhance help callback function structure for better readability and maintenance (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/e5a467d6ab048301a59a53dd43f2cb31e34067c0)
-
-        * Enhance CLI with ASCII banner and improve help output formatting<br>
+            - Enhance help callback function structure for better readability and maintenance
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`a7f63ce`](https://github.com/data-science-extensions/docstring-format-checker/commit/a7f63ce90bd0a9baf47f671071e9605be56458ca): Enhance CLI with ASCII banner and improve help output formatting<br>
             - Add `pyfiglet` dependency to display ASCII art banner in help output<br>
             - Restructure help callback to show banner, standard help, usage examples, and configuration example in single command<br>
             - Update usage examples with improved formatting using colour-coded commands and comments<br>
             - Simplify configuration example format from nested TOML tables to inline array syntax<br>
             - Add explicit `raise Exit()` statements to example callbacks for proper command termination<br>
             - Remove standalone `if __name__ == "__main__"` execution block from CLI module<br>
-            - Update test assertions to match new configuration example format and help output structure (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/a7f63ce90bd0a9baf47f671071e9605be56458ca)
-
-        * Fix uv command syntax in CD workflow<br>
+            - Update test assertions to match new configuration example format and help output structure
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`33bfd55`](https://github.com/data-science-extensions/docstring-format-checker/commit/33bfd558f271b6b4fdc0c5741e24eec4c23a00d7): Fix uv command syntax in CD workflow<br>
             - Remove `run` subcommand from `uv pip install` to correct command syntax<br>
             - Ensure package installation step uses proper uv CLI interface<br>
-            - Prevent potential workflow failures due to invalid command structure (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/33bfd558f271b6b4fdc0c5741e24eec4c23a00d7)
-
-        * Fix method numbering in the `test_cli` unit tests module (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/9d70d30d8888761d3ed3c656a021af5ae7054b9d)
-
+            - Prevent potential workflow failures due to invalid command structure
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`9d70d30`](https://github.com/data-science-extensions/docstring-format-checker/commit/9d70d30d8888761d3ed3c656a021af5ae7054b9d): Fix method numbering in the `test_cli` unit tests module
+            (by [chrimaho](https://github.com/chrimaho))
 
 
 !!! info "v1.0.1"
@@ -123,23 +117,23 @@
 
     ??? abstract "Updates"
 
-        * Fix bug (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/d297f9729775cf53562531e1a7c7dc57a1d042fb)
-
-        * Remove `PackageMetadata` from `__init__.py` module (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/02c6733df7d02d9a7cc7e714914b91c7b6ebfe0c)
-
-        * Add GitHub Copilot instructions to gitignore<br>
+        * [`d297f97`](https://github.com/data-science-extensions/docstring-format-checker/commit/d297f9729775cf53562531e1a7c7dc57a1d042fb): Fix bug
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`02c6733`](https://github.com/data-science-extensions/docstring-format-checker/commit/02c6733df7d02d9a7cc7e714914b91c7b6ebfe0c): Remove `PackageMetadata` from `__init__.py` module
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`1185961`](https://github.com/data-science-extensions/docstring-format-checker/commit/1185961a83cce43c9c1f268e088d4f4532690226): Add GitHub Copilot instructions to gitignore<br>
             - Exclude `.github/copilot-instructions.md` from version control<br>
             - Prevent accidental commits of AI assistant configuration files<br>
-            - Maintain clean repository by ignoring environment-specific settings (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/1185961a83cce43c9c1f268e088d4f4532690226)
-
-        * Modernise GitHub Actions workflow to use official UV setup action<br>
+            - Maintain clean repository by ignoring environment-specific settings
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`acaf276`](https://github.com/data-science-extensions/docstring-format-checker/commit/acaf27678e655f7596545a6578308b4d02347f39): Modernise GitHub Actions workflow to use official UV setup action<br>
             - Replace manual UV installation script with official `astral-sh/setup-uv@v6` action<br>
             - Reorder steps to set up UV before Python for better dependency management<br>
             - Remove redundant Python setup action since UV handles Python installation<br>
-            - Simplify workflow by leveraging UV's built-in Python management capabilities (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/acaf27678e655f7596545a6578308b4d02347f39)
-
-        * Fix failing Unit Tests (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/893d2845ffcef9cd9f43b8b382e182c2225035a0)
-
+            - Simplify workflow by leveraging UV's built-in Python management capabilities
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`893d284`](https://github.com/data-science-extensions/docstring-format-checker/commit/893d2845ffcef9cd9f43b8b382e182c2225035a0): Fix failing Unit Tests
+            (by [chrimaho](https://github.com/chrimaho))
 
 
 !!! info "v1.0.0"
@@ -156,8 +150,8 @@
 
     ??? abstract "Updates"
 
-        * Fix typo (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/064a90528690d1c312f4e871b2d51b5e667eb3eb)
-
+        * [`064a905`](https://github.com/data-science-extensions/docstring-format-checker/commit/064a90528690d1c312f4e871b2d51b5e667eb3eb): Fix typo
+            (by [chrimaho](https://github.com/chrimaho))
 
 
 !!! info "v0.11.0"
@@ -174,20 +168,19 @@
 
     ??? abstract "Updates"
 
-        * Fix typo<br>
-            Co-authored-by: Copilot <175728472+Copilot@users.noreply.github.com> (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/d9494ddc679f1d1f883cdc3d046acfd13fed82ac)
-
-        * Standardise admonition types and isolate test environment<br>
+        * [`d9494dd`](https://github.com/data-science-extensions/docstring-format-checker/commit/d9494ddc679f1d1f883cdc3d046acfd13fed82ac): Fix typo
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`24de498`](https://github.com/data-science-extensions/docstring-format-checker/commit/24de49888f74583d24b78b50d2a1dec063408b82): Standardise admonition types and isolate test environment<br>
             - Change admonition type from `info` to `abstract` for consistency in documentation formatting<br>
             - Isolate configuration loading test by switching to temporary directory to prevent interference from existing project configuration files<br>
-            - Ensure test runs in clean environment by temporarily changing working directory and restoring original location afterwards (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/24de49888f74583d24b78b50d2a1dec063408b82)
-
-        * Add or fix package docstrings (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/d569da7fa1b23c70041562158e828913ee453534)
-
-        * Fix typo (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/581109e54069fe9ed971c1827edcac13ce4c17ed)
-
-        * Fix typo (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/ec7103e60b09fef3a226ca05a7f6307708ffadff)
-
+            - Ensure test runs in clean environment by temporarily changing working directory and restoring original location afterwards
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`d569da7`](https://github.com/data-science-extensions/docstring-format-checker/commit/d569da7fa1b23c70041562158e828913ee453534): Add or fix package docstrings
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`581109e`](https://github.com/data-science-extensions/docstring-format-checker/commit/581109e54069fe9ed971c1827edcac13ce4c17ed): Fix typo
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`ec7103e`](https://github.com/data-science-extensions/docstring-format-checker/commit/ec7103e60b09fef3a226ca05a7f6307708ffadff): Fix typo
+            (by [chrimaho](https://github.com/chrimaho))
 
 
 !!! info "v0.10.0"
@@ -204,30 +197,30 @@
 
     ??? abstract "Updates"
 
-        * Improve test assertion robustness for CLI help text validation<br>
+        * [`f795295`](https://github.com/data-science-extensions/docstring-format-checker/commit/f795295577721ad65c590c275c3438f2b16116a0): Improve test assertion robustness for CLI help text validation<br>
             - Replace exact string matching with word-by-word validation to handle platform-specific line wrapping<br>
             - Use `all()` function with generator expression to check each word individually in help output<br>
             - Add explicit type annotation for output variable to improve code clarity<br>
-            - Ensure tests pass consistently across different terminal widths and operating systems (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/f795295577721ad65c590c275c3438f2b16116a0)
-
-        * Fix test assertions to handle platform-specific line wrapping<br>
+            - Ensure tests pass consistently across different terminal widths and operating systems
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`145f68c`](https://github.com/data-science-extensions/docstring-format-checker/commit/145f68c0240668ad01b1c2546a11ffdd494e6e56): Fix test assertions to handle platform-specific line wrapping<br>
             - Remove trailing period from expected help text string to account for line wrapping variations across different platforms<br>
             - Extract cleaned output to variable for better readability and maintainability<br>
-            - Ensure test reliability when help text formatting differs due to terminal width constraints (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/145f68c0240668ad01b1c2546a11ffdd494e6e56)
-
-        * Fix Windows CI issues: resolve temp file locking and help text assertion mismatches<br>
+            - Ensure test reliability when help text formatting differs due to terminal width constraints
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`af74cc5`](https://github.com/data-science-extensions/docstring-format-checker/commit/af74cc520d4ddec561acdd1461ede1b9c5df516b): Fix Windows CI issues: resolve temp file locking and help text assertion mismatches<br>
             - Close all temporary files before CLI invocation to prevent Windows file locking errors<br>
             - Update help text assertions to match actual output (completeness. vs completeness)<br>
-            - All 167 tests now pass with 100% code coverage locally (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/af74cc520d4ddec561acdd1461ede1b9c5df516b)
-
-        * Improve CI setup and fix test reliability issues<br>
+            - All 167 tests now pass with 100% code coverage locally
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`e580876`](https://github.com/data-science-extensions/docstring-format-checker/commit/e580876c332ce1e8c008986ddd6650f423abcbcb): Improve CI setup and fix test reliability issues<br>
             - Add UV package manager setup in CD workflow for faster Python dependency management<br>
             - Fix Python version handling to use UV for installing matrix versions while maintaining setup consistency<br>
             - Improve test stability by adding `f.flush()` calls and proper temporary file name handling to prevent file system race conditions<br>
             - Expand table border detection to handle various Unicode characters for more robust output validation<br>
             - Update help text to better reflect tool capabilities including completeness checking<br>
-            - Fix test configuration to use proper `Config` objects instead of deprecated helper functions (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/e580876c332ce1e8c008986ddd6650f423abcbcb)
-
+            - Fix test configuration to use proper `Config` objects instead of deprecated helper functions
+            (by [chrimaho](https://github.com/chrimaho))
 
 
 !!! info "v0.9.0"
@@ -244,12 +237,12 @@
 
     ??? abstract "Updates"
 
-        * Refactor tests to utilize new Config structure and global configuration flags<br>
+        * [`46cd052`](https://github.com/data-science-extensions/docstring-format-checker/commit/46cd052d15f9e90592cfb944049c6892b33e5498): Refactor tests to utilize new Config structure and global configuration flags<br>
             - Updated test_config.py to reflect changes in load_config function, ensuring it returns a Config object instead of a list of SectionConfig.<br>
             - Enhanced assertions in test cases to validate global configuration values such as allow_undefined_sections, require_docstrings, and check_private.<br>
             - Introduced test_global_config.py to cover new global configuration features, including loading from TOML files and validating behavior based on global flags.<br>
-            - Added tests for scenarios where undefined sections and missing docstrings are handled according to the global configuration settings. (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/46cd052d15f9e90592cfb944049c6892b33e5498)
-
+            - Added tests for scenarios where undefined sections and missing docstrings are handled according to the global configuration settings.
+            (by [chrimaho](https://github.com/chrimaho))
 
 
 !!! info "v0.8.0"
@@ -266,15 +259,15 @@
 
     ??? abstract "Updates"
 
-        * Improves validation logic for list sections with types<br>
+        * [`1852daf`](https://github.com/data-science-extensions/docstring-format-checker/commit/1852dafd4b25ae7f54554bf5d5bca35711882416): Improves validation logic for list sections with types<br>
             Enhances the docstring checker to better distinguish between parameter<br>
             definitions and description content in list_name_and_type sections.<br>
             Previously flagged description lines containing colons as invalid parameter<br>
             definitions. Now uses multiple criteria including indentation levels, word<br>
             count analysis, and bullet point detection to avoid false positives.<br>
             Prevents validation errors on legitimate description content while maintaining<br>
-            strict checking for actual parameter definition lines. (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/1852dafd4b25ae7f54554bf5d5bca35711882416)
-
+            strict checking for actual parameter definition lines.
+            (by [chrimaho](https://github.com/chrimaho))
 
 
 !!! info "v0.7.0"
@@ -291,20 +284,19 @@
 
     ??? abstract "Updates"
 
-        * Updates test expectations for parentheses validation<br>
+        * [`cf9b610`](https://github.com/data-science-extensions/docstring-format-checker/commit/cf9b6104d5191aa50055dffc9f8307b6e8e58b29): Updates test expectations for parentheses validation<br>
             Adjusts test assertions to reflect current implementation behavior where certain type annotations are skipped when no parenthesized types have been found yet.<br>
-            Changes expected error types from missing parentheses violations to undefined section errors, and removes assertions for cases that no longer generate errors due to the permissive logic. (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/cf9b6104d5191aa50055dffc9f8307b6e8e58b29)
-
-        * Update src/docstring_format_checker/core.py<br>
-            Co-authored-by: Copilot <175728472+Copilot@users.noreply.github.com> (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/ce0cca0a66a5e152be37170d7a57fbab3c0a6519)
-
-        * Fixes description line validation in list_type sections<br>
+            Changes expected error types from missing parentheses violations to undefined section errors, and removes assertions for cases that no longer generate errors due to the permissive logic.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`ce0cca0`](https://github.com/data-science-extensions/docstring-format-checker/commit/ce0cca0a66a5e152be37170d7a57fbab3c0a6519): Update src/docstring_format_checker/core.py
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`39aaf52`](https://github.com/data-science-extensions/docstring-format-checker/commit/39aaf5214d3fe5624a2cbbcf9fa1481fc03cb479): Fixes description line validation in list_type sections<br>
             Improves docstring validation logic to properly handle description lines that contain colons in list_type sections.<br>
             Previously, description lines indented under type definitions were incorrectly flagged as requiring parenthesized types. Now tracks indentation levels to distinguish between type definition lines and their corresponding descriptions.<br>
-            Adds comprehensive test coverage for various scenarios including multi-line descriptions, same-line descriptions, and invalid formats to ensure robust validation behavior. (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/39aaf5214d3fe5624a2cbbcf9fa1481fc03cb479)
-
-        * Correct output as list, ensure errors are on individual lines (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/7f65068b61e296c156e3bd41e19a5eb089a0a63c)
-
+            Adds comprehensive test coverage for various scenarios including multi-line descriptions, same-line descriptions, and invalid formats to ensure robust validation behavior.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`7f65068`](https://github.com/data-science-extensions/docstring-format-checker/commit/7f65068b61e296c156e3bd41e19a5eb089a0a63c): Correct output as list, ensure errors are on individual lines
+            (by [chrimaho](https://github.com/chrimaho))
 
 
 !!! info "v0.6.0"
@@ -321,8 +313,8 @@
 
     ??? abstract "Updates"
 
-        * Resove issues with the output when `-o list` and with the summary stats on the printed output (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/44578b4dcbad4e0fc14f7c9fae73fca020426bd8)
-
+        * [`44578b4`](https://github.com/data-science-extensions/docstring-format-checker/commit/44578b4dcbad4e0fc14f7c9fae73fca020426bd8): Resove issues with the output when `-o list` and with the summary stats on the printed output
+            (by [chrimaho](https://github.com/chrimaho))
 
 
 !!! info "v0.5.0"
@@ -339,18 +331,18 @@
 
     ??? abstract "Updates"
 
-        * Increase code coverage (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/d29faf0a817f9f9d91b0b5580e076283e3405ee0)
-
-        * Fix failing unit tests (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/8b4f42aa6aec1e296d280bf22a31dade80da5f6f)
-
-        * Add `--examples`/`-e` flags to the CLI, instead of using a sub-command (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/dfccf355b3ded218b436249968a446e95b50f148)
-
-        * Remove the unnecessary `_parse_boolean_flag()` function and all associated unit tests (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/76cbd784df3e7bd364448ce6011947a243133481)
-
-        * Remove all references to the `--recursive`/`-r` flag, and ensure that it will always be recursive by default (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/3e583f52021fae17043ee51ac7b75eb5b41c43bf)
-
-        * Update docstring format in CLI module to be more pythonic (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/2614316794560fe6934673820f93e663af5cbb19)
-
+        * [`d29faf0`](https://github.com/data-science-extensions/docstring-format-checker/commit/d29faf0a817f9f9d91b0b5580e076283e3405ee0): Increase code coverage
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`8b4f42a`](https://github.com/data-science-extensions/docstring-format-checker/commit/8b4f42aa6aec1e296d280bf22a31dade80da5f6f): Fix failing unit tests
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`dfccf35`](https://github.com/data-science-extensions/docstring-format-checker/commit/dfccf355b3ded218b436249968a446e95b50f148): Add `--examples`/`-e` flags to the CLI, instead of using a sub-command
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`76cbd78`](https://github.com/data-science-extensions/docstring-format-checker/commit/76cbd784df3e7bd364448ce6011947a243133481): Remove the unnecessary `_parse_boolean_flag()` function and all associated unit tests
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`3e583f5`](https://github.com/data-science-extensions/docstring-format-checker/commit/3e583f52021fae17043ee51ac7b75eb5b41c43bf): Remove all references to the `--recursive`/`-r` flag, and ensure that it will always be recursive by default
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`2614316`](https://github.com/data-science-extensions/docstring-format-checker/commit/2614316794560fe6934673820f93e663af5cbb19): Update docstring format in CLI module to be more pythonic
+            (by [chrimaho](https://github.com/chrimaho))
 
 
 !!! info "v0.4.0"
@@ -367,10 +359,10 @@
 
     ??? abstract "Updates"
 
-        * Fix typo (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/8bf056c3587d5a85b69abe7e67efe352b91b6341)
-
-        * Enhance error message formatting in CLI output and add corresponding unit tests (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/a58c64e7a518111204c8d7dc1bb88cdb5f3c7ecd)
-
+        * [`8bf056c`](https://github.com/data-science-extensions/docstring-format-checker/commit/8bf056c3587d5a85b69abe7e67efe352b91b6341): Fix typo
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`a58c64e`](https://github.com/data-science-extensions/docstring-format-checker/commit/a58c64e7a518111204c8d7dc1bb88cdb5f3c7ecd): Enhance error message formatting in CLI output and add corresponding unit tests
+            (by [chrimaho](https://github.com/chrimaho))
 
 
 !!! info "v0.3.0"
@@ -387,29 +379,29 @@
 
     ??? abstract "Updates"
 
-        * Fix typo (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/c7ada96a7b74bb77b2027cadf57b1953c7991286)
-
-        * Add additional unit tests to check more edge cases (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/66de3cf68ee2ad2a56da67cd095dabe47a110de8)
-
-        * Add more unit tests for edge cases (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/1f35cc28bd1cafe00e6b6d086fccd43473cddfd5)
-
-        * Enhance admonition validation by ensuring admonition is a string and refining section name matching patterns (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/1110894183f3db53d602849e23bab88d9ffc4592)
-
-        * Add parentheses validation for list type sections in docstring checks (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/2e656f1a17ecc2c5492cd1fc47be459e39ea0673)
-
-        * Add title case validation for non-admonition sections in docstrings (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/2528a63239e0197d673ab8a14ea1fd829aa09799)
-
-        * Add colon usage checks for admonition and non-admonition sections in docstrings (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/186377a6e75f60ba03c1c304821229db96c2d78d)
-
-        * Add blank lines after docstrings for improved readability (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/1881e9012094ad0affc94197e1ebabde74447857)
-
-        * Refactor `SectionConfig()` to enhance admonition validation and type handling (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/ca5bbd904013297417b6f1310ecdadfd5052f580)
-
-        * Extend the `core` module to better handle edge-cases<br>
+        * [`c7ada96`](https://github.com/data-science-extensions/docstring-format-checker/commit/c7ada96a7b74bb77b2027cadf57b1953c7991286): Fix typo
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`66de3cf`](https://github.com/data-science-extensions/docstring-format-checker/commit/66de3cf68ee2ad2a56da67cd095dabe47a110de8): Add additional unit tests to check more edge cases
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`1f35cc2`](https://github.com/data-science-extensions/docstring-format-checker/commit/1f35cc28bd1cafe00e6b6d086fccd43473cddfd5): Add more unit tests for edge cases
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`1110894`](https://github.com/data-science-extensions/docstring-format-checker/commit/1110894183f3db53d602849e23bab88d9ffc4592): Enhance admonition validation by ensuring admonition is a string and refining section name matching patterns
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`2e656f1`](https://github.com/data-science-extensions/docstring-format-checker/commit/2e656f1a17ecc2c5492cd1fc47be459e39ea0673): Add parentheses validation for list type sections in docstring checks
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`2528a63`](https://github.com/data-science-extensions/docstring-format-checker/commit/2528a63239e0197d673ab8a14ea1fd829aa09799): Add title case validation for non-admonition sections in docstrings
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`186377a`](https://github.com/data-science-extensions/docstring-format-checker/commit/186377a6e75f60ba03c1c304821229db96c2d78d): Add colon usage checks for admonition and non-admonition sections in docstrings
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`1881e90`](https://github.com/data-science-extensions/docstring-format-checker/commit/1881e9012094ad0affc94197e1ebabde74447857): Add blank lines after docstrings for improved readability
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`ca5bbd9`](https://github.com/data-science-extensions/docstring-format-checker/commit/ca5bbd904013297417b6f1310ecdadfd5052f580): Refactor `SectionConfig()` to enhance admonition validation and type handling
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`8e3598a`](https://github.com/data-science-extensions/docstring-format-checker/commit/8e3598a711dfd30f3c5c2590b2ecc0ba092c867e): Extend the `core` module to better handle edge-cases<br>
             This will now throw errors when:<br>
             1. When there is a section in a docstring which are not defined in the config<br>
-            2. When the admonition used in the docstring does not match the admonition defined in the config (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/8e3598a711dfd30f3c5c2590b2ecc0ba092c867e)
-
+            2. When the admonition used in the docstring does not match the admonition defined in the config
+            (by [chrimaho](https://github.com/chrimaho))
 
 
 !!! info "v0.2.0"
@@ -426,14 +418,14 @@
 
     ??? abstract "Updates"
 
-        * typo (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/a4cde508b5bbf8c3f95f95326e773f9c7aaaf07a)
-
-        * Fix typo (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/42936b4793b043825ed3687209eb568ab23824d9)
-
-        * Fix bug regarding bumping versions during CD workflow (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/36f4d0769ae0762f02d82317c5f9a8a8623b1fd3)
-
-        * Add support for ignoring `@overload` functions in docstring checks (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/6e610c755049b51a9ff39466109a6d68fbd61fb4)
-
+        * [`a4cde50`](https://github.com/data-science-extensions/docstring-format-checker/commit/a4cde508b5bbf8c3f95f95326e773f9c7aaaf07a): typo
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`42936b4`](https://github.com/data-science-extensions/docstring-format-checker/commit/42936b4793b043825ed3687209eb568ab23824d9): Fix typo
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`36f4d07`](https://github.com/data-science-extensions/docstring-format-checker/commit/36f4d0769ae0762f02d82317c5f9a8a8623b1fd3): Fix bug regarding bumping versions during CD workflow
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`6e610c7`](https://github.com/data-science-extensions/docstring-format-checker/commit/6e610c755049b51a9ff39466109a6d68fbd61fb4): Add support for ignoring `@overload` functions in docstring checks
+            (by [chrimaho](https://github.com/chrimaho))
 
 
 !!! info "v0.1.0"
@@ -450,147 +442,144 @@
 
     ??? abstract "Updates"
 
-        * Fix bug in CD workflow when building package (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/59d7bf280fd7e682563a652b806f26ae8a6d4359)
-
-        * Fix bugs in Git commit processes during CD workflow (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/d5dadcd77cded98d7f08a50a934f4a12c61c0d7c)
-
-        * Fix bug (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/1b7c82486d5c3f86abd47519e908d2b1f2d2f81f)
-
-        * Fix git command for coverage report (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/d22d331ca7123f1923f48c92298acd93ba391a20)
-
-        * Fix git commands (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/1c12bdb1e24eb69eb8ca2571e8845cb51273a5b8)
-
-        * Update Code Coverage info (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/a600108fb7adb6a73bab85e35652e544042f977f)
-
-        * Ensure coverage report directory exists before copying files (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/b65ca7ee0b5bb69481682eecb7eec36ada5df9b5)
-
-        * Streamline constants in the `scripts` module<br>
-            Co-authored-by: Copilot <175728472+Copilot@users.noreply.github.com> (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/56333efa667b412081f495aa2cad0cd72addeb76)
-
-        * Fix failing unit tests for macos, caused by `rm` flags (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/6bac29ecef524537afecf94f354b1268ae70c44f)
-
-        * Enhance CLI test assertions for output flexibility and Windows compatibility (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/a20c997128433b8ce519181c130248a79e4fcd5e)
-
-        * Resolve failing unit tests on macos (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/233b01f5baee8e921a80aa334caf180e67702449)
-
-        * Fix failing unit tests (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/482346ef3cfcb406ca5e2e2dce6fd6bac63bef49)
-
-        * Restructure unit tests to better handle temp files on the windows os (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/2784a12894ab8f76452a2fddf645ef370b20b97c)
-
-        * Fix failing `macos` unit test (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/2a8016cfabd6ce64a03f953fbf46129400d8737c)
-
-        * Fix bug (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/6c02f676f4dd01c5d8268d6421a751e65d05ccbd)
-
-        * Fix configuration file path assertion in CLI tests (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/8428d919cf2e7ee905975a23d0067b79e7c3f6f2)
-
-        * Fix failing unit tests (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/e78f78bf2110fdf03a77db2b33c0103cc8e729ca)
-
-        * Update CI workflow to only run on Python versions 3.9 to 3.13 (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/cdaa76833d9dc0b575389e5c59aa0d3eb3c2457c)
-
-        * Refactor type hints in `test_config.py` for consistency and clarity (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/8cad4f415096291762d9fb36f3c94ff33a67af9b)
-
-        * Strip ANSI codes from all `CliRunner` output in unit tests (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/f31230d79aa4b118a3084301e7e5572d8a20550a)
-
-        * Update `pyupgrade` pre-commit config to target Python 3.7 features (previously 3.9) (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/7cf45329e5fd36647bdb5e6d089e01ea30868e69)
-
-        * Refactor all type hints to use `Optional` and `Union` instead of ` | ` for improved clarity,  consistency, and compatability (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/373939f8a718c40094771ef15cbb21a931817a30)
-
-        * Add Python 3.7 to CI workflow matrix for enhanced compatibility (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/7e69f566727349ff98f48c5feccaa263a9818a46)
-
-        * Add detailed docstrings to all core modules (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/8af990a71e92fc6d6497c02056c7acd293c287c5)
-
-        * Add `strip_ansi_codes()` function to generic Unit Tests setup and update CLI tests to use it for robust output validation (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/091f4c75eb8f9fcf0b74bcdaf6c7c27ee0391e74)
-
-        * Do more debugging in the CLI unit tests (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/023147d812b2c10934d33dcf3addb8c683755a3b)
-
-        * Add `re` to CLI unit tests (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/73d53e6e476402c5317556e6dcbb4f4b1674e98b)
-
-        * Add `strip_ansi_codes()` function to the CLI Unit Tests (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/e7a7264eea1cdd6fbaf84f8fc91f7a7f1e87b892)
-
-        * Debug CLI Unit Test 19 (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/36689f42a9aee82c64d9dfa88f05ee812ca1c733)
-
-        * Temporarily turn off `pylint` checks during pre-commit hooks (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/5028bddd016b251c6960c890bbf5f4701ed820b3)
-
-        * Refactor CLI to use Typer imports directly and improve error messages (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/ebc514e1a03dd45e986cb0643175088b4af466a3)
-
-        * Fix linting (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/64dd8d9cacdddf935a65609781b8b16f7675deb9)
-
-        * Remove redundant reference code (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/e1b34dd0e273356b54b217feab409ab18992e2b4)
-
-        * Update CI and CD workflows to use specific script paths for running checks (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/626a820a4ae4cb8662de927168d5fb085160f430)
-
-        * Fix CLI tests: Disable Rich colors to prevent ANSI formatting issues in CI<br>
+        * [`59d7bf2`](https://github.com/data-science-extensions/docstring-format-checker/commit/59d7bf280fd7e682563a652b806f26ae8a6d4359): Fix bug in CD workflow when building package
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`d5dadcd`](https://github.com/data-science-extensions/docstring-format-checker/commit/d5dadcd77cded98d7f08a50a934f4a12c61c0d7c): Fix bugs in Git commit processes during CD workflow
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`1b7c824`](https://github.com/data-science-extensions/docstring-format-checker/commit/1b7c82486d5c3f86abd47519e908d2b1f2d2f81f): Fix bug
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`d22d331`](https://github.com/data-science-extensions/docstring-format-checker/commit/d22d331ca7123f1923f48c92298acd93ba391a20): Fix git command for coverage report
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`1c12bdb`](https://github.com/data-science-extensions/docstring-format-checker/commit/1c12bdb1e24eb69eb8ca2571e8845cb51273a5b8): Fix git commands
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`a600108`](https://github.com/data-science-extensions/docstring-format-checker/commit/a600108fb7adb6a73bab85e35652e544042f977f): Update Code Coverage info
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`b65ca7e`](https://github.com/data-science-extensions/docstring-format-checker/commit/b65ca7ee0b5bb69481682eecb7eec36ada5df9b5): Ensure coverage report directory exists before copying files
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`56333ef`](https://github.com/data-science-extensions/docstring-format-checker/commit/56333efa667b412081f495aa2cad0cd72addeb76): Streamline constants in the `scripts` module
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`6bac29e`](https://github.com/data-science-extensions/docstring-format-checker/commit/6bac29ecef524537afecf94f354b1268ae70c44f): Fix failing unit tests for macos, caused by `rm` flags
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`a20c997`](https://github.com/data-science-extensions/docstring-format-checker/commit/a20c997128433b8ce519181c130248a79e4fcd5e): Enhance CLI test assertions for output flexibility and Windows compatibility
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`233b01f`](https://github.com/data-science-extensions/docstring-format-checker/commit/233b01f5baee8e921a80aa334caf180e67702449): Resolve failing unit tests on macos
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`482346e`](https://github.com/data-science-extensions/docstring-format-checker/commit/482346ef3cfcb406ca5e2e2dce6fd6bac63bef49): Fix failing unit tests
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`2784a12`](https://github.com/data-science-extensions/docstring-format-checker/commit/2784a12894ab8f76452a2fddf645ef370b20b97c): Restructure unit tests to better handle temp files on the windows os
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`2a8016c`](https://github.com/data-science-extensions/docstring-format-checker/commit/2a8016cfabd6ce64a03f953fbf46129400d8737c): Fix failing `macos` unit test
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`6c02f67`](https://github.com/data-science-extensions/docstring-format-checker/commit/6c02f676f4dd01c5d8268d6421a751e65d05ccbd): Fix bug
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`8428d91`](https://github.com/data-science-extensions/docstring-format-checker/commit/8428d919cf2e7ee905975a23d0067b79e7c3f6f2): Fix configuration file path assertion in CLI tests
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`e78f78b`](https://github.com/data-science-extensions/docstring-format-checker/commit/e78f78bf2110fdf03a77db2b33c0103cc8e729ca): Fix failing unit tests
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`cdaa768`](https://github.com/data-science-extensions/docstring-format-checker/commit/cdaa76833d9dc0b575389e5c59aa0d3eb3c2457c): Update CI workflow to only run on Python versions 3.9 to 3.13
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`8cad4f4`](https://github.com/data-science-extensions/docstring-format-checker/commit/8cad4f415096291762d9fb36f3c94ff33a67af9b): Refactor type hints in `test_config.py` for consistency and clarity
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`f31230d`](https://github.com/data-science-extensions/docstring-format-checker/commit/f31230d79aa4b118a3084301e7e5572d8a20550a): Strip ANSI codes from all `CliRunner` output in unit tests
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`7cf4532`](https://github.com/data-science-extensions/docstring-format-checker/commit/7cf45329e5fd36647bdb5e6d089e01ea30868e69): Update `pyupgrade` pre-commit config to target Python 3.7 features (previously 3.9)
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`373939f`](https://github.com/data-science-extensions/docstring-format-checker/commit/373939f8a718c40094771ef15cbb21a931817a30): Refactor all type hints to use `Optional` and `Union` instead of ` | ` for improved clarity,  consistency, and compatability
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`7e69f56`](https://github.com/data-science-extensions/docstring-format-checker/commit/7e69f566727349ff98f48c5feccaa263a9818a46): Add Python 3.7 to CI workflow matrix for enhanced compatibility
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`8af990a`](https://github.com/data-science-extensions/docstring-format-checker/commit/8af990a71e92fc6d6497c02056c7acd293c287c5): Add detailed docstrings to all core modules
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`091f4c7`](https://github.com/data-science-extensions/docstring-format-checker/commit/091f4c75eb8f9fcf0b74bcdaf6c7c27ee0391e74): Add `strip_ansi_codes()` function to generic Unit Tests setup and update CLI tests to use it for robust output validation
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`023147d`](https://github.com/data-science-extensions/docstring-format-checker/commit/023147d812b2c10934d33dcf3addb8c683755a3b): Do more debugging in the CLI unit tests
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`73d53e6`](https://github.com/data-science-extensions/docstring-format-checker/commit/73d53e6e476402c5317556e6dcbb4f4b1674e98b): Add `re` to CLI unit tests
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`e7a7264`](https://github.com/data-science-extensions/docstring-format-checker/commit/e7a7264eea1cdd6fbaf84f8fc91f7a7f1e87b892): Add `strip_ansi_codes()` function to the CLI Unit Tests
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`36689f4`](https://github.com/data-science-extensions/docstring-format-checker/commit/36689f42a9aee82c64d9dfa88f05ee812ca1c733): Debug CLI Unit Test 19
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`5028bdd`](https://github.com/data-science-extensions/docstring-format-checker/commit/5028bddd016b251c6960c890bbf5f4701ed820b3): Temporarily turn off `pylint` checks during pre-commit hooks
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`ebc514e`](https://github.com/data-science-extensions/docstring-format-checker/commit/ebc514e1a03dd45e986cb0643175088b4af466a3): Refactor CLI to use Typer imports directly and improve error messages
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`64dd8d9`](https://github.com/data-science-extensions/docstring-format-checker/commit/64dd8d9cacdddf935a65609781b8b16f7675deb9): Fix linting
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`e1b34dd`](https://github.com/data-science-extensions/docstring-format-checker/commit/e1b34dd0e273356b54b217feab409ab18992e2b4): Remove redundant reference code
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`626a820`](https://github.com/data-science-extensions/docstring-format-checker/commit/626a820a4ae4cb8662de927168d5fb085160f430): Update CI and CD workflows to use specific script paths for running checks
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`62b4f1a`](https://github.com/data-science-extensions/docstring-format-checker/commit/62b4f1a343c54925ccbfd994b66ba7753b6fd079): Fix CLI tests: Disable Rich colors to prevent ANSI formatting issues in CI<br>
             - Set NO_COLOR=1 environment variable in CliRunner to ensure consistent test output<br>
             - Resolves GitHub Actions test failures due to Rich library adding ANSI color codes<br>
             - Local and CI environments now produce identical plain text error messages<br>
-            - All 175 tests now pass with 100% coverage in both local and CI environments (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/62b4f1a343c54925ccbfd994b66ba7753b6fd079)
-
-        * Improve error message assertions for invalid recursive flag in CLI tests (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/174e6629344f31028b1c94f6abaef1a32e4ad786)
-
-        * Add CD workflow along with scripts to bump version and generate changelog (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/cef91a947063810f22e610b839b537c84a6eaaf3)
-
-        * Fix typo (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/235c66d49b90ec0d2b1f6ab2b41e4631de700ab5)
-
-        * Streamline automation scripts (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/741ceba0abedc885360f6e74c42641c5ec33cc56)
-
-        * Add CI workflow (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/79daa31e5946df1bc42f25017ae4fc6e32d3a576)
-
-        * Fix hardcoding in the Unit Tests<br>
-            <br>
-            Hardcoded absolute path used in test. The `cwd` parameter contains a hardcoded personal directory path that will not work on other systems. This should use a relative path or be made configurable.<br>
-            Co-authored-by: Copilot <175728472+Copilot@users.noreply.github.com> (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/050b397ec5b46df608df59b86acd1166c688be6f)
-
-        * Add a nice README (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/6db7b02cf00e7e931170055c30e17f2b3a48beda)
-
-        * Fix a typo (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/af7ac2cfa65570f0247195f19ce46d27a8f6e8eb)
-
-        * Add docs structure and config (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/44d4d04063ea3b21d4f7fc9266973ba0294baada)
-
-        * Add project guidelines (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/779197007301f3ee9fa8f997a0f39d577b096482)
-
-        * Refactor exception handling: rename exceptions for clarity and consistency (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/864f6021a25d165e50da7f4c5791e4922645797a)
-
-        * Remove `check-docstrings` from the `pre-commit` checks (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/f80b83a6cdcf156058218981fa3bc1f9d310659d)
-
-        * Fix failing Unit Tests (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/ec53fa70fe4c524ced0c05646b742e31ebc1415f)
-
-        * Clarify some of the `raise` sections to instead use Exceptions defined in the local module, instead of the default Exceptions from the builtins module (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/0719d8e11d3da4ed40d131d19ff2d61ceb494f14)
-
-        * Refine any sections which use the `/` operator to merge objects in the `Path` package to instead use the `.joinpath()` method. This is to make the code more robust and more readable. (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/cffa310c67ac19aca060b74f5d9616262f89140a)
-
-        * Correct and refine some of the docstrings in the `config` and `core` modules (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/8921f24d6096d5193ed5f4326cdbd41769b3a752)
-
-        * Add new `_validate_config_order()` function to the `config` module (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/98a2409976dec6daebe4d007ec3c14a0267cbfea)
-
-        * Refine how the `import`'s and `export`'s are defined across both the `cli` and `config` modules (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/f711ac7df7adc2d27f251238dcc84c551c8b4c8d)
-
-        * Restructure how the `VALID_TYPES` constant is defined and utilised in the `config` module (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/6cdc073a2c089ac4253102b9d176566b6d81e1f1)
-
-        * Add helpful docstrings and additional headers to the `cli` and `config` modules (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/5e9869a0612fb51eb072afe439554c3355f3bee9)
-
-        * Refactor the Callbacks in the `cli` module to have better structure and organisation (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/5e227ec35cc69cddcd4b6be244a7241ea1066112)
-
-        * Reorder the steps for the checks scripts (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/22286e4be755a13499b3cac7a06ad26910622dd8)
-
-        * Add new exception classes for improved clarity and organization (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/07799214a39c33aa82559b5df846f49cb68e778b)
-
-        * Bring code coverage for all unit tests up to 100% coverage (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/12aa070a8d220781789a7618d7a5e65510475a4b)
-
-        * Update dependencies and refine project configuration in `pyproject.toml` (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/d98ed78b8cf46b25d647f15c41b58efa4accc49e)
-
-        * Initial commit of all package unit tests (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/7331f758dcd4707af4a24065a81c2751a19fe0d6)
-
-        * Initial commit of all package modules (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/91493ee736bdbf4c840b523fcfeb7d5940e6a15c)
-
-        * Add utility scripts for command execution and linting checks (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/609e9cb37b1f5d68a0dd0970cce8cf3e5c6092ce)
-
-        * Fix typo (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/4c0e003d2226a19a8f0596f821f5ca8c9feafa7b)
-
-        * Tweak some of the core package config (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/7d870ad6959ed15496b74615b91517c1697fb4ff)
-
-        * Initial commit of package config (by []()) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/32acad04208e5ac6302e261dcd5f76f7b09d61a1)
-
-        * Initial commit (by [chrimaho](https://github.com/chrimaho)) [View](https://github.com/data-science-extensions/docstring-format-checker/commit/416b0b36cf5c4615295a7464a1544911aaa253d5)
-
+            - All 175 tests now pass with 100% coverage in both local and CI environments
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`174e662`](https://github.com/data-science-extensions/docstring-format-checker/commit/174e6629344f31028b1c94f6abaef1a32e4ad786): Improve error message assertions for invalid recursive flag in CLI tests
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`cef91a9`](https://github.com/data-science-extensions/docstring-format-checker/commit/cef91a947063810f22e610b839b537c84a6eaaf3): Add CD workflow along with scripts to bump version and generate changelog
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`235c66d`](https://github.com/data-science-extensions/docstring-format-checker/commit/235c66d49b90ec0d2b1f6ab2b41e4631de700ab5): Fix typo
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`741ceba`](https://github.com/data-science-extensions/docstring-format-checker/commit/741ceba0abedc885360f6e74c42641c5ec33cc56): Streamline automation scripts
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`79daa31`](https://github.com/data-science-extensions/docstring-format-checker/commit/79daa31e5946df1bc42f25017ae4fc6e32d3a576): Add CI workflow
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`050b397`](https://github.com/data-science-extensions/docstring-format-checker/commit/050b397ec5b46df608df59b86acd1166c688be6f): Fix hardcoding in the Unit Tests<br>
+            Hardcoded absolute path used in test. The `cwd` parameter contains a hardcoded personal directory path that will not work on other systems. This should use a relative path or be made configurable.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`6db7b02`](https://github.com/data-science-extensions/docstring-format-checker/commit/6db7b02cf00e7e931170055c30e17f2b3a48beda): Add a nice README
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`af7ac2c`](https://github.com/data-science-extensions/docstring-format-checker/commit/af7ac2cfa65570f0247195f19ce46d27a8f6e8eb): Fix a typo
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`44d4d04`](https://github.com/data-science-extensions/docstring-format-checker/commit/44d4d04063ea3b21d4f7fc9266973ba0294baada): Add docs structure and config
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`7791970`](https://github.com/data-science-extensions/docstring-format-checker/commit/779197007301f3ee9fa8f997a0f39d577b096482): Add project guidelines
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`864f602`](https://github.com/data-science-extensions/docstring-format-checker/commit/864f6021a25d165e50da7f4c5791e4922645797a): Refactor exception handling: rename exceptions for clarity and consistency
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`f80b83a`](https://github.com/data-science-extensions/docstring-format-checker/commit/f80b83a6cdcf156058218981fa3bc1f9d310659d): Remove `check-docstrings` from the `pre-commit` checks
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`ec53fa7`](https://github.com/data-science-extensions/docstring-format-checker/commit/ec53fa70fe4c524ced0c05646b742e31ebc1415f): Fix failing Unit Tests
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`0719d8e`](https://github.com/data-science-extensions/docstring-format-checker/commit/0719d8e11d3da4ed40d131d19ff2d61ceb494f14): Clarify some of the `raise` sections to instead use Exceptions defined in the local module, instead of the default Exceptions from the builtins module
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`cffa310`](https://github.com/data-science-extensions/docstring-format-checker/commit/cffa310c67ac19aca060b74f5d9616262f89140a): Refine any sections which use the `/` operator to merge objects in the `Path` package to instead use the `.joinpath()` method. This is to make the code more robust and more readable.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`8921f24`](https://github.com/data-science-extensions/docstring-format-checker/commit/8921f24d6096d5193ed5f4326cdbd41769b3a752): Correct and refine some of the docstrings in the `config` and `core` modules
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`98a2409`](https://github.com/data-science-extensions/docstring-format-checker/commit/98a2409976dec6daebe4d007ec3c14a0267cbfea): Add new `_validate_config_order()` function to the `config` module
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`f711ac7`](https://github.com/data-science-extensions/docstring-format-checker/commit/f711ac7df7adc2d27f251238dcc84c551c8b4c8d): Refine how the `import`'s and `export`'s are defined across both the `cli` and `config` modules
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`6cdc073`](https://github.com/data-science-extensions/docstring-format-checker/commit/6cdc073a2c089ac4253102b9d176566b6d81e1f1): Restructure how the `VALID_TYPES` constant is defined and utilised in the `config` module
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`5e9869a`](https://github.com/data-science-extensions/docstring-format-checker/commit/5e9869a0612fb51eb072afe439554c3355f3bee9): Add helpful docstrings and additional headers to the `cli` and `config` modules
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`5e227ec`](https://github.com/data-science-extensions/docstring-format-checker/commit/5e227ec35cc69cddcd4b6be244a7241ea1066112): Refactor the Callbacks in the `cli` module to have better structure and organisation
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`22286e4`](https://github.com/data-science-extensions/docstring-format-checker/commit/22286e4be755a13499b3cac7a06ad26910622dd8): Reorder the steps for the checks scripts
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`0779921`](https://github.com/data-science-extensions/docstring-format-checker/commit/07799214a39c33aa82559b5df846f49cb68e778b): Add new exception classes for improved clarity and organization
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`12aa070`](https://github.com/data-science-extensions/docstring-format-checker/commit/12aa070a8d220781789a7618d7a5e65510475a4b): Bring code coverage for all unit tests up to 100% coverage
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`d98ed78`](https://github.com/data-science-extensions/docstring-format-checker/commit/d98ed78b8cf46b25d647f15c41b58efa4accc49e): Update dependencies and refine project configuration in `pyproject.toml`
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`7331f75`](https://github.com/data-science-extensions/docstring-format-checker/commit/7331f758dcd4707af4a24065a81c2751a19fe0d6): Initial commit of all package unit tests
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`91493ee`](https://github.com/data-science-extensions/docstring-format-checker/commit/91493ee736bdbf4c840b523fcfeb7d5940e6a15c): Initial commit of all package modules
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`609e9cb`](https://github.com/data-science-extensions/docstring-format-checker/commit/609e9cb37b1f5d68a0dd0970cce8cf3e5c6092ce): Add utility scripts for command execution and linting checks
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`4c0e003`](https://github.com/data-science-extensions/docstring-format-checker/commit/4c0e003d2226a19a8f0596f821f5ca8c9feafa7b): Fix typo
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`7d870ad`](https://github.com/data-science-extensions/docstring-format-checker/commit/7d870ad6959ed15496b74615b91517c1697fb4ff): Tweak some of the core package config
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`32acad0`](https://github.com/data-science-extensions/docstring-format-checker/commit/32acad04208e5ac6302e261dcd5f76f7b09d61a1): Initial commit of package config
+            (by []())
+        * [`416b0b3`](https://github.com/data-science-extensions/docstring-format-checker/commit/416b0b36cf5c4615295a7464a1544911aaa253d5): Initial commit
+            (by [chrimaho](https://github.com/chrimaho))
 
 

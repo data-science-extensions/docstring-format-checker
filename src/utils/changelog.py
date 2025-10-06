@@ -23,7 +23,7 @@
 import os
 import re
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 # ## Python Third Party Imports ----
 from github import Auth, Github
@@ -49,13 +49,13 @@ if REPOSITORY_NAME is None:
 
 
 ### Static ----
-OUTPUT_FILENAME: str = "CHANGELOG.md"
+OUTPUT_FILENAME: Literal["CHANGELOG.md"] = "CHANGELOG.md"
 OUTPUT_FILEPATH: Path = Path(OUTPUT_FILENAME)
 AUTH: Token = Auth.Token(TOKEN)
-NEW_LINE: str = "\n"
-BLANK_LINE: str = "\n\n"
-LINE_BREAK: str = "<br>"
-TAB: str = "    "
+NEW_LINE: Literal["\n"] = "\n"
+BLANK_LINE: Literal["\n\n"] = "\n\n"
+LINE_BREAK: Literal["<br>"] = "<br>"
+TAB: Literal["    "] = "    "
 
 
 # ---------------------------------------------------------------------------- #
@@ -126,7 +126,7 @@ def add_release_info(release: GitRelease, repo: Repository) -> str:
     return (
         f'!!! info "{release.tag_name}"{NEW_LINE}'
         f"{NEW_LINE}"
-        f"{TAB}## **{release.title}**{BLANK_LINE}"
+        f"{TAB}## **{release.name}**{BLANK_LINE}"
         f"{TAB}<!-- md:tag {release.tag_name} -->{LINE_BREAK}{NEW_LINE}"
         f"{TAB}<!-- md:date {release.created_at.date()} -->{LINE_BREAK}{NEW_LINE}"
         f"{TAB}<!-- md:link [{repo.full_name}/releases/{release.tag_name}]({release.html_url}) -->{BLANK_LINE}"
@@ -154,13 +154,26 @@ def add_commit_info(commit: Commit) -> str:
     # NOTE: We write the commit message to the output file.
     # We format the commit message to replace newlines with `{LINE_BREAK}` tags for better readability in Markdown.
     # We also include the author's login and a link to their GitHub profile, as well as a link to the commit itself.
-    commit_message: str = commit.commit.message.replace(BLANK_LINE, NEW_LINE).replace(
-        NEW_LINE, f"{LINE_BREAK}{NEW_LINE}{TAB * 3}"
-    )
+
+    commit_message_list: list[str] = []
+    for idx, line in enumerate(commit.commit.message.split("\n")):
+        if idx == 0:
+            commit_message_list.append(line.strip())
+        elif line.strip() == "":
+            continue
+        elif line.lower().startswith("co-authored-by:"):
+            continue
+        else:
+            commit_message_list.append(line.strip())
+
+    commit_message_str: str = "\n".join(commit_message_list)
+    commit_message_str: str = commit_message_str.replace(NEW_LINE, f"{LINE_BREAK}{NEW_LINE}{TAB * 3}")
+
     return (
-        f"{TAB * 2}* {commit_message}"
-        f" (by [{commit.author.login if commit.author else ''}]({commit.author.html_url if commit.author else ''}))"
-        f" [View]({commit.html_url}){BLANK_LINE}"
+        f"{TAB * 2}* [`{commit.sha[:7]}`]({commit.html_url}): {commit_message_str}"
+        f"{NEW_LINE}"
+        f"{TAB * 3}(by [{commit.author.login if commit.author else ''}]({commit.author.html_url if commit.author else ''}))"
+        f"{NEW_LINE}"
     )
 
 
@@ -185,7 +198,7 @@ def main() -> None:
     with Github(auth=AUTH) as g, open(OUTPUT_FILENAME, "w") as f:
 
         ### Get the repository ----
-        REPO: Repository = g.get_repo(REPOSITORY_NAME)
+        REPO: Repository = g.get_repo(REPOSITORY_NAME)  # type:ignore
 
         ### Write the header to the output file ----
         f.write(add_header(REPO))
