@@ -221,25 +221,15 @@ jobs:
 
     steps:
 
-      - name: Set up UV
-        id: setup-uv
-        uses: astral-sh/setup-uv@v6
-
       - name: Set up Python
         id: setup-python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Verify Python Version
-        id: verify-python
-        run: |
-          uv --version
-          python --version
-
       - name: Install Package
         id: install-package
-        run: uv pip install --no-cache --verbose "${{ env.PACKAGE_NAME }}==${{ env.VERSION }}"
+        run: pip install --no-cache --verbose --no-python-version-warning "${{ env.PACKAGE_NAME }}==${{ env.VERSION }}"
 
   build-docs:
 

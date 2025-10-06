@@ -1,0 +1,6 @@
+- id: docstring-format-checker
+  name: docstring-format-checker
+  description: A CLI tool to check and format Python docstrings to adhere to specified style guidelines.
+  entry: docstring-format-checker
+  language: python
+  files: '\.(py)$'
