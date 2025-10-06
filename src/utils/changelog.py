@@ -198,7 +198,7 @@ def main() -> None:
     with Github(auth=AUTH) as g, open(OUTPUT_FILENAME, "w") as f:
 
         ### Get the repository ----
-        REPO: Repository = g.get_repo(REPOSITORY_NAME)  # type:ignore
+        REPO: Repository = g.get_repo(REPOSITORY_NAME)  # type: ignore
 
         ### Write the header to the output file ----
         f.write(add_header(REPO))
