@@ -156,7 +156,7 @@ def add_commit_info(commit: Commit) -> str:
     # We also include the author's login and a link to their GitHub profile, as well as a link to the commit itself.
 
     commit_message_list: list[str] = []
-    for idx, line in enumerate(commit.commit.message.split("\n")):
+    for idx, line in enumerate(commit.commit.message.split(NEW_LINE)):
         if idx == 0:
             commit_message_list.append(line.strip())
         elif line.strip() == "":
