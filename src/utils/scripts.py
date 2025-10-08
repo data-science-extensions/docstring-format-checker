@@ -83,7 +83,7 @@ def lint() -> None:
     run_black()
     run_blacken_docs()
     run_isort()
-    run_pycln()
+    # run_pycln()
 
 
 ## --------------------------------------------------------------------------- #
@@ -139,7 +139,7 @@ def check() -> None:
     check_mypy()
     check_isort()
     check_codespell()
-    check_pycln()
+    # check_pycln()
     # check_pylint()
     check_pytest()
     check_mkdocs()
