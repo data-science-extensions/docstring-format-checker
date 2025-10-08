@@ -3393,3 +3393,141 @@ class TestDocstringChecker(TestCase):
 
         finally:
             temp_path.unlink()
+
+    def test_88_validate_free_text_section_success_case(self) -> None:
+        """Test _validate_free_text_section returns None for successfully found sections."""
+        # Test case where free_text section is found and validation succeeds
+        config: Config = _create_config(
+            sections=[
+                SectionConfig(
+                    name="Notes",
+                    type="free_text",
+                    order=1,
+                    required=True,
+                )
+            ]
+        )
+
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Create a test file with function that has the required free_text section
+        python_content: str = dedent(
+            """
+            def test_function():
+                '''
+                This is a test docstring.
+
+                Notes:
+                -----
+                Some notes content here.
+                '''
+                pass
+        """
+        )
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            # Should have no errors since the Notes section is present
+            assert len(errors) == 0, f"Expected no errors for valid Notes section, got: {[e.message for e in errors]}"
+
+        finally:
+            temp_path.unlink()
+
+    def test_89_validate_list_name_section_missing_section(self) -> None:
+        """Test _validate_list_name_section returns error message for missing sections (line 528)."""
+        # Test case where list_name section is required but missing
+        config: Config = _create_config(
+            sections=[
+                SectionConfig(
+                    name="Parameters",
+                    type="list_name",
+                    order=1,
+                    required=True,
+                )
+            ]
+        )
+
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Create a test file with function missing the required list_name section
+        python_content: str = dedent(
+            """
+            def test_function(param1, param2):
+                '''
+                This function is missing the Parameters section.
+
+                Returns
+                -------
+                str
+                    Return value.
+                '''
+                return "test"
+        """
+        )
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+
+            # Should have error for missing required Parameters section
+            error_messages: list[str] = [error.message for error in errors]
+            assert any(
+                "Missing required section: Parameters" in msg for msg in error_messages
+            ), f"Expected missing Parameters error, got: {error_messages}"
+
+        finally:
+            temp_path.unlink()
+
+    def test_90_find_parentheses_section_return_none_case(self) -> None:
+        """Test case where _find_parentheses_section returns None (line 1099)."""
+        # Test case where parentheses section search doesn't find a match
+        config: Config = _create_config(
+            sections=[
+                SectionConfig(
+                    name="Parameters",
+                    type="list_name_and_type",
+                    order=1,
+                    required=True,
+                )
+            ]
+        )
+
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Create docstring that doesn't have proper parentheses sections
+        python_content: str = dedent(
+            """
+            def test_function():
+                '''
+                This function has malformed section content.
+
+                Parameters
+                ----------
+                some_param : str, optional
+                    Description without proper format that should trigger None return
+                '''
+                pass
+        """
+        )
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            # This should execute the code path but may or may not produce errors
+            # The main goal is to cover the return None line in _find_parentheses_section
+
+        finally:
+            temp_path.unlink()

@@ -16,7 +16,7 @@ import sys
 import tempfile
 from pathlib import Path
 from textwrap import dedent
-from typing import Optional
+from typing import Optional, Union
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
@@ -28,6 +28,7 @@ from pytest import raises
 from docstring_format_checker.config import (
     Config,
     SectionConfig,
+    _validate_config_order,
     find_config_file,
     load_config,
 )
@@ -487,10 +488,6 @@ class TestConfig(TestCase):
         Test that duplicate order values in configuration raise an error.
         """
 
-        # Test the validation function directly
-        # ## Local First Party Imports ----
-        from docstring_format_checker.config import _validate_config_order
-
         # Create config sections with duplicate orders
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True),
@@ -506,10 +503,6 @@ class TestConfig(TestCase):
         """
         Test that multiple duplicate order values are all reported.
         """
-
-        # Test the validation function directly
-        # ## Local First Party Imports ----
-        from docstring_format_checker.config import _validate_config_order
 
         # Create config sections with multiple duplicate orders
         sections: list[SectionConfig] = [
@@ -527,10 +520,6 @@ class TestConfig(TestCase):
         """
         Test that configuration with unique order values passes validation.
         """
-
-        # Test the validation function directly
-        # ## Local First Party Imports ----
-        from docstring_format_checker.config import _validate_config_order
 
         # Create config sections with unique orders
         sections: list[SectionConfig] = [
@@ -569,8 +558,6 @@ class TestConfig(TestCase):
         Test that empty string admonition values are treated as False.
         This covers line 306 in config.py.
         """
-        # ## Python StdLib Imports ----
-        from typing import Union
 
         # Test the actual config creation logic that covers line 306
         # This exactly replicates the logic from line 302-306 in config.py
@@ -604,10 +591,6 @@ class TestConfig(TestCase):
         Test loading config with explicit empty string admonition to trigger line 306.
         This ensures line 306 in config.py is covered by testing the empty string branch.
         """
-        # ## Python StdLib Imports ----
-        import os
-        import tempfile
-        from pathlib import Path
 
         config_content = dedent(
             """
@@ -641,6 +624,68 @@ class TestConfig(TestCase):
             # The admonition should be False due to empty string conversion
             if test_section:
                 assert test_section.admonition is False
+
+        finally:
+            os.unlink(temp_file)
+
+    def test_24_extract_tool_config_with_unsupported_tool_name(self) -> None:
+        """Test _extract_tool_config returns None when tool section exists but doesn't contain supported tool names."""
+        # Test the case where config has tool section but neither 'dfc' nor 'docstring-format-checker'
+        # This tests line 384 in config.py which was uncovered
+
+        content: str = dedent(
+            """
+            [tool.other-tool]
+            some_option = true
+
+            [tool.another-tool]
+            value = "test"
+            """
+        ).strip()
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
+            f.write(content)
+            f.flush()
+            temp_file: str = f.name
+
+        try:
+
+            # This should load default config since our tool config is not found
+            config: Config = load_config(Path(temp_file))
+
+            # Should get default config sections since no valid tool config was found
+            assert len(config.sections) > 0  # Default sections should be loaded
+
+        finally:
+            os.unlink(temp_file)
+
+    def test_25_extract_tool_config_no_tool_section(self) -> None:
+        """Test _extract_tool_config returns None when no tool section exists (line 384)."""
+        # Test the case where config has no tool section at all
+        # This should trigger line 384: return None when "tool" not in config_data
+
+        content: str = dedent(
+            """
+            [build-system]
+            requires = ["setuptools"]
+
+            [project]
+            name = "test-project"
+            """
+        ).strip()
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
+            f.write(content)
+            f.flush()
+            temp_file: str = f.name
+
+        try:
+
+            # This should load default config since no tool config exists
+            config: Config = load_config(Path(temp_file))
+
+            # Should get default config sections since no tool config was found
+            assert len(config.sections) > 0  # Default sections should be loaded
 
         finally:
             os.unlink(temp_file)

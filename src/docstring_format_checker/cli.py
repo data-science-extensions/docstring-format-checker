@@ -366,7 +366,12 @@ def _format_error_messages(error_message: str) -> str:
         return f"- {error_message.strip()}."
 
 
-def _display_results(results: dict[str, list[DocstringError]], quiet: bool, output: str, check: bool) -> int:
+def _display_results(
+    results: dict[str, list[DocstringError]],
+    quiet: bool,
+    output: str,
+    check: bool,
+) -> int:
     """
     !!! note "Summary"
         Display the results of docstring checking.
@@ -390,97 +395,103 @@ def _display_results(results: dict[str, list[DocstringError]], quiet: bool, outp
             console.print(_green("✓ All docstrings are valid!"))
         return 0
 
-    # Count total errors (individual error messages, not error objects)
+    # Count errors and generate summary statistics
+    error_stats = _count_errors_and_files(results)
+
+    if quiet:
+        _display_quiet_summary(error_stats)
+        return 1
+
+    # Display detailed results based on output format
+    if output == "table":
+        _display_table_output(results)
+    else:
+        _display_list_output(results)
+
+    # Display final summary
+    _display_final_summary(error_stats)
+    return 1
+
+
+def _count_errors_and_files(results: dict[str, list[DocstringError]]) -> dict[str, int]:
+    """Count total errors, functions, and files from results."""
     total_individual_errors: int = 0
     total_functions: int = 0
 
     for errors in results.values():
-        total_functions += len(errors)  # Count functions/items with errors
+        total_functions += len(errors)
         for error in errors:
-            # Count individual error messages within each error object
             if "; " in error.message:
                 individual_errors = [msg.strip() for msg in error.message.split("; ") if msg.strip()]
                 total_individual_errors += len(individual_errors)
             else:
                 total_individual_errors += 1
 
-    total_errors: int = total_individual_errors
-    total_files: int = len(results)
+    return {"total_errors": total_individual_errors, "total_functions": total_functions, "total_files": len(results)}
 
-    if quiet:
-        # In quiet mode, only show summary with improved format
-        if total_functions == 1:
-            functions_text: str = "1 function"
-        else:
-            functions_text: str = f"{total_functions} functions"
 
-        if total_files == 1:
-            files_text: str = "1 file"
-        else:
-            files_text: str = f"{total_files} files"
+def _display_quiet_summary(error_stats: dict[str, int]) -> None:
+    """Display summary in quiet mode."""
+    functions_text = (
+        "1 function" if error_stats["total_functions"] == 1 else f"{error_stats['total_functions']} functions"
+    )
+    files_text = "1 file" if error_stats["total_files"] == 1 else f"{error_stats['total_files']} files"
 
-        console.print(_red(f"{NEW_LINE}Found {total_errors} error(s) in {functions_text} over {files_text}"))
-        return 1
+    console.print(_red(f"{NEW_LINE}Found {error_stats['total_errors']} error(s) in {functions_text} over {files_text}"))
 
-    if output == "table":
-        # Show detailed table
-        table = Table(show_header=True, header_style="bold magenta")
-        table.add_column("File", style="cyan", no_wrap=False)
-        table.add_column("Line", justify="right", style="white")
-        table.add_column("Item", style="yellow")
-        table.add_column("Type", style="blue")
-        table.add_column("Error", style="red")
 
-        for file_path, errors in results.items():
-            for i, error in enumerate(errors):
-                file_display: str = file_path if i == 0 else ""
+def _display_table_output(results: dict[str, list[DocstringError]]) -> None:
+    """Display results in table format."""
+    table = Table(show_header=True, header_style="bold magenta")
+    table.add_column("File", style="cyan", no_wrap=False)
+    table.add_column("Line", justify="right", style="white")
+    table.add_column("Item", style="yellow")
+    table.add_column("Type", style="blue")
+    table.add_column("Error", style="red")
 
-                # Format error message with improved formatting
-                formatted_error_message: str = _format_error_messages(error.message)
+    for file_path, errors in results.items():
+        for i, error in enumerate(errors):
+            file_display = file_path if i == 0 else ""
+            formatted_error_message = _format_error_messages(error.message)
 
-                table.add_row(
-                    file_display,
-                    str(error.line_number) if error.line_number > 0 else "",
-                    error.item_name,
-                    error.item_type,
-                    formatted_error_message,
-                )
-        console.print(table)
+            table.add_row(
+                file_display,
+                str(error.line_number) if error.line_number > 0 else "",
+                error.item_name,
+                error.item_type,
+                formatted_error_message,
+            )
+    console.print(table)
 
-    else:
-        # Show compact output with grouped errors under function/class headers
-        for file_path, errors in results.items():
-            console.print(f"{NEW_LINE}{_cyan(file_path)}")
-            for error in errors:
-                # Print the header line with line number, item type and name
-                if error.line_number > 0:
-                    console.print(f"  [red]Line {error.line_number}[/red] - {error.item_type} '{error.item_name}':")
-                else:
-                    console.print(f"  {_red('Error')} - {error.item_type} '{error.item_name}':")
 
-                # Split error message into individual errors and indent them
-                if "; " in error.message:
-                    individual_errors = [msg.strip() for msg in error.message.split("; ") if msg.strip()]
-                    for individual_error in individual_errors:
-                        console.print(f"    - {individual_error}")
-                else:
-                    # Single error message
-                    console.print(f"    - {error.message.strip()}")
+def _display_list_output(results: dict[str, list[DocstringError]]) -> None:
+    """Display results in list format."""
+    for file_path, errors in results.items():
+        console.print(f"{NEW_LINE}{_cyan(file_path)}")
+        for error in errors:
+            # Print header with line number, item type and name
+            if error.line_number > 0:
+                console.print(f"  [red]Line {error.line_number}[/red] - {error.item_type} '{error.item_name}':")
+            else:
+                console.print(f"  {_red('Error')} - {error.item_type} '{error.item_name}':")
 
-    # Summary - more descriptive message
-    if total_functions == 1:
-        functions_text: str = "1 function"
-    else:
-        functions_text: str = f"{total_functions} functions"
+            # Format and print error messages
+            if "; " in error.message:
+                individual_errors = [msg.strip() for msg in error.message.split("; ") if msg.strip()]
+                for individual_error in individual_errors:
+                    console.print(f"    - {individual_error}")
+            else:
+                console.print(f"    - {error.message.strip()}")
 
-    if total_files == 1:
-        files_text: str = "1 file"
-    else:
-        files_text: str = f"{total_files} files"
 
-    console.print(_red(f"{NEW_LINE}Found {total_errors} error(s) in {functions_text} over {files_text}"))
+def _display_final_summary(error_stats: dict[str, int]) -> None:
+    """Display the final summary line."""
+    functions_text = (
+        "1 function" if error_stats["total_functions"] == 1 else f"{error_stats['total_functions']} functions"
+    )
+    files_text = "1 file" if error_stats["total_files"] == 1 else f"{error_stats['total_files']} files"
 
-    return 1
+    console.print(_red(f"{NEW_LINE}Found {error_stats['total_errors']} error(s) in {functions_text} over {files_text}"))
 
 
 # ---------------------------------------------------------------------------- #
@@ -526,13 +537,29 @@ def check_docstrings(
         (None):
             Nothing is returned.
     """
+    # Validate and process input paths
+    target_paths = _validate_and_process_paths(paths)
 
-    # Validate all target paths
+    # Load and validate configuration
+    config_obj = _load_and_validate_config(config, target_paths)
+
+    # Initialize checker and process all paths
+    checker = DocstringChecker(config_obj)
+    all_results = _process_all_paths(checker, target_paths, exclude)
+
+    # Display results and handle exit
+    exit_code = _display_results(all_results, quiet, output, check)
+    if exit_code != 0:
+        raise Exit(exit_code)
+
+
+def _validate_and_process_paths(paths: list[str]) -> list[Path]:
+    """Validate input paths and return valid paths."""
     path_objs: list[Path] = [Path(path) for path in paths]
     target_paths: list[Path] = [p for p in path_objs if p.exists()]
     invalid_paths: list[Path] = [p for p in path_objs if not p.exists()]
 
-    if len(invalid_paths) > 0:
+    if invalid_paths:
         console.print(
             _red("[bold]Error: Paths do not exist:[/bold]"),
             NEW_LINE,
@@ -540,55 +567,62 @@ def check_docstrings(
         )
         raise Exit(1)
 
-    # Load configuration (use first path for config discovery if no config specified)
+    return target_paths
+
+
+def _load_and_validate_config(config: Optional[str], target_paths: list[Path]) -> Config:
+    """Load and validate configuration from file or auto-discovery."""
     try:
         if config:
-            config_path = Path(config)
-            if not config_path.exists():
-                console.print(_red(f"Error: Configuration file does not exist: {config}"))
-                raise Exit(1)
-            config_obj = load_config(config_path)
+            return _load_explicit_config(config)
         else:
-            # Try to find config file automatically using the first path
-            first_path: Path = target_paths[0]
-            found_config: Optional[Path] = find_config_file(first_path if first_path.is_dir() else first_path.parent)
-            if found_config:
-                config_obj: Config = load_config(found_config)
-            else:
-                config_obj: Config = load_config()
-
+            return _load_auto_discovered_config(target_paths)
     except Exception as e:
         console.print(_red(f"Error loading configuration: {e}"))
         raise Exit(1) from e
 
-    # Initialize checker
-    checker = DocstringChecker(config_obj)
 
-    # Check all paths and collect results
+def _load_explicit_config(config: str) -> Config:
+    """Load configuration from explicitly specified path."""
+    config_path = Path(config)
+    if not config_path.exists():
+        console.print(_red(f"Error: Configuration file does not exist: {config}"))
+        raise Exit(1)
+    return load_config(config_path)
+
+
+def _load_auto_discovered_config(target_paths: list[Path]) -> Config:
+    """Load configuration from auto-discovery or defaults."""
+    first_path: Path = target_paths[0]
+    search_path = first_path if first_path.is_dir() else first_path.parent
+    found_config: Optional[Path] = find_config_file(search_path)
+
+    if found_config:
+        return load_config(found_config)
+    else:
+        return load_config()
+
+
+def _process_all_paths(
+    checker: DocstringChecker, target_paths: list[Path], exclude: Optional[list[str]]
+) -> dict[str, list[DocstringError]]:
+    """Process all target paths and collect docstring errors."""
     all_results: dict[str, list[DocstringError]] = {}
 
     try:
         for target_path in target_paths:
             if target_path.is_file():
-                errors: list[DocstringError] = checker.check_file(target_path)
+                errors = checker.check_file(target_path)
                 if errors:
                     all_results[str(target_path)] = errors
             else:
-                directory_results: dict[str, list[DocstringError]] = checker.check_directory(
-                    target_path, exclude_patterns=exclude
-                )
+                directory_results = checker.check_directory(target_path, exclude_patterns=exclude)
                 all_results.update(directory_results)
-
     except Exception as e:
         console.print(_red(f"Error during checking: {e}"))
         raise Exit(1) from e
 
-    # Display results
-    exit_code: int = _display_results(all_results, quiet, output, check)
-
-    # Always exit with error code if issues are found, regardless of check flag
-    if exit_code != 0:
-        raise Exit(exit_code)
+    return all_results
 
 
 # ---------------------------------------------------------------------------- #
