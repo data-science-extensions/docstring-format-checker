@@ -360,8 +360,9 @@ def _format_error_messages(error_message: str) -> str:
         errors: list[str] = error_message.split("; ")
         formatted_errors: list[str] = [f"- {error.strip()}" for error in errors if error.strip()]
         return ";\n".join(formatted_errors) + "."
+
+    # Single error message
     else:
-        # Single error message
         return f"- {error_message.strip()}."
 
 
@@ -409,14 +410,14 @@ def _display_results(results: dict[str, list[DocstringError]], quiet: bool, outp
     if quiet:
         # In quiet mode, only show summary with improved format
         if total_functions == 1:
-            functions_text = f"1 function"
+            functions_text: str = "1 function"
         else:
-            functions_text = f"{total_functions} functions"
+            functions_text: str = f"{total_functions} functions"
 
         if total_files == 1:
-            files_text = f"1 file"
+            files_text: str = "1 file"
         else:
-            files_text = f"{total_files} files"
+            files_text: str = f"{total_files} files"
 
         console.print(_red(f"{NEW_LINE}Found {total_errors} error(s) in {functions_text} over {files_text}"))
         return 1
@@ -468,14 +469,14 @@ def _display_results(results: dict[str, list[DocstringError]], quiet: bool, outp
 
     # Summary - more descriptive message
     if total_functions == 1:
-        functions_text = f"1 function"
+        functions_text: str = "1 function"
     else:
-        functions_text = f"{total_functions} functions"
+        functions_text: str = f"{total_functions} functions"
 
     if total_files == 1:
-        files_text = f"1 file"
+        files_text: str = "1 file"
     else:
-        files_text = f"{total_files} files"
+        files_text: str = f"{total_files} files"
 
     console.print(_red(f"{NEW_LINE}Found {total_errors} error(s) in {functions_text} over {files_text}"))
 
@@ -533,7 +534,7 @@ def check_docstrings(
 
     if len(invalid_paths) > 0:
         console.print(
-            _red(f"[bold]Error: Paths do not exist:[/bold]"),
+            _red("[bold]Error: Paths do not exist:[/bold]"),
             NEW_LINE,
             NEW_LINE.join([f"- '{invalid_path}'" for invalid_path in invalid_paths]),
         )
@@ -558,7 +559,7 @@ def check_docstrings(
 
     except Exception as e:
         console.print(_red(f"Error loading configuration: {e}"))
-        raise Exit(1)
+        raise Exit(1) from e
 
     # Initialize checker
     checker = DocstringChecker(config_obj)
@@ -580,7 +581,7 @@ def check_docstrings(
 
     except Exception as e:
         console.print(_red(f"Error during checking: {e}"))
-        raise Exit(1)
+        raise Exit(1) from e
 
     # Display results
     exit_code: int = _display_results(all_results, quiet, output, check)

@@ -1,13 +1,7 @@
 # ============================================================================ #
 #                                                                              #
-#     Title: Title                                                             #
-#     Purpose: Purpose                                                         #
-#     Notes: Notes                                                             #
-#     Author: chrimaho                                                         #
-#     Created: Created                                                         #
-#     References: References                                                   #
-#     Sources: Sources                                                         #
-#     Edited: Edited                                                           #
+#     Title: Docstring Format Checker Core Module                              #
+#     Purpose: Core docstring checking functionality.                          #
 #                                                                              #
 # ============================================================================ #
 
@@ -106,7 +100,7 @@ class DocstringChecker:
             config (Config):
                 Configuration object containing global settings and section definitions.
         """
-        self.config = config
+        self.config: Config = config
         self.sections_config: list[SectionConfig] = config.sections
         self.required_sections: list[SectionConfig] = [s for s in config.sections if s.required]
         self.optional_sections: list[SectionConfig] = [s for s in config.sections if not s.required]
@@ -529,24 +523,29 @@ class DocstringChecker:
                 `True` if the section exists, `False` otherwise.
         """
 
+        # Make the section name part case-insensitive too
         if isinstance(section.admonition, str) and section.admonition and section.prefix:
             # Format like: !!! note "Summary"
-            # Make the section name part case-insensitive too
-            escaped_name = re.escape(section.name)
-            pattern = rf'{re.escape(section.prefix)}\s+{re.escape(section.admonition)}\s+"[^"]*{escaped_name}[^"]*"'
+            escaped_name: str = re.escape(section.name)
+            pattern: str = (
+                rf'{re.escape(section.prefix)}\s+{re.escape(section.admonition)}\s+"[^"]*{escaped_name}[^"]*"'
+            )
             return bool(re.search(pattern, docstring, re.IGNORECASE))
-        elif section.name.lower() in ["summary"]:
-            # For summary, accept either formal format or simple docstring
+
+        # For summary, accept either formal format or simple docstring
+        if section.name.lower() in ["summary"]:
             formal_pattern = r'!!! note "Summary"'
             if re.search(formal_pattern, docstring, re.IGNORECASE):
                 return True
             # Accept any non-empty docstring as summary
             return len(docstring.strip()) > 0
+
+        # Look for examples section
         elif section.name.lower() in ["examples", "example"]:
-            # Look for examples section
             return bool(re.search(r'\?\?\?\+ example "Examples"', docstring, re.IGNORECASE))
 
-        return True  # Default to true for unknown free text sections
+        # Default to true for unknown free text sections
+        return True
 
     def _check_params_section(self, docstring: str, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> bool:
         """
@@ -957,8 +956,8 @@ class DocstringChecker:
 
         # Check each line in the docstring
         lines: list[str] = docstring.split("\n")
-        current_section = None
-        type_line_indent = None  # Track indentation of type definition lines
+        current_section: Optional[SectionConfig] = None
+        type_line_indent: Optional[int] = None  # Track indentation of type definition lines
 
         for i, line in enumerate(lines):
             stripped_line: str = line.strip()
@@ -973,7 +972,7 @@ class DocstringChecker:
                 current_section: Optional[SectionConfig] = next(
                     (s for s in parentheses_sections if s.name.lower() == section_name), None
                 )
-                type_line_indent = None  # Reset for new section
+                type_line_indent: Optional[int] = None  # Reset for new section
                 continue
 
             # Non-admonition sections - only match actual section headers, not indented content
@@ -991,19 +990,21 @@ class DocstringChecker:
                         current_section = next(
                             (s for s in parentheses_sections if s.name.lower() == section_name), None
                         )
-                        type_line_indent = None  # Reset for new section
+                        type_line_indent: Optional[int] = None  # Reset for new section
                         continue
                     # If it doesn't match a known section, fall through to content processing
 
             # Check content lines if we're in a parentheses-required section
             if current_section and stripped_line and not stripped_line.startswith(("!", "?", "#")):
+
                 # Look for parameter/type definitions
                 if ":" in stripped_line:
+
                     # Calculate current line indentation
-                    current_indent = len(line) - len(line.lstrip())
+                    current_indent: int = len(line) - len(line.lstrip())
 
                     # Skip description lines that start with common description words
-                    description_prefixes = [
+                    description_prefixes: list[str] = [
                         "default:",
                         "note:",
                         "example:",
@@ -1013,7 +1014,7 @@ class DocstringChecker:
                         "tip:",
                         "returns:",
                     ]
-                    is_description_line = any(
+                    is_description_line: bool = any(
                         stripped_line.lower().startswith(prefix) for prefix in description_prefixes
                     )
 
@@ -1028,35 +1029,43 @@ class DocstringChecker:
 
                     # For list_type sections, we need special handling
                     if current_section.type == "list_type":
+
                         # Check if this line has parentheses at the beginning
                         if re.search(r"^\s*\([^)]+\):", stripped_line):
                             # This is a valid type definition line, remember its indentation
-                            type_line_indent = current_indent
+                            type_line_indent: Optional[int] = current_indent
                             continue
+
                         else:
+
                             # If no type definition has been found yet, allow lines with colons as possible descriptions
                             if type_line_indent is None:
                                 continue
+
                             # Check if this is a description line (more indented than type line)
-                            if current_indent > type_line_indent:
+                            elif current_indent > type_line_indent:
                                 # This is a description line, skip validation
                                 continue
+
+                            # This should be a type definition but doesn't have proper format
                             else:
-                                # This should be a type definition but doesn't have proper format
                                 errors.append(
                                     f"Section '{current_section.name}' (type: '{current_section.type}') requires "
                                     f"parenthesized types, see: '{stripped_line}'"
                                 )
+
                     # For list_name_and_type sections, check format like "name (type):" or "(type):"
                     elif current_section.type == "list_name_and_type":
+
                         # Check if this line has parentheses and looks like a parameter definition
                         if re.search(r"\([^)]+\):", stripped_line):
                             # This is a valid parameter definition line, remember its indentation
-                            type_line_indent = current_indent
+                            type_line_indent: Optional[int] = current_indent
                             continue
+
                         else:
                             # Check if this is likely a description line based on various criteria
-                            colon_part = stripped_line.split(":")[0].strip()
+                            colon_part: str = stripped_line.split(":")[0].strip()
 
                             # Skip if it contains phrases that indicate it's a description, not a parameter
                             if any(
@@ -1071,12 +1080,13 @@ class DocstringChecker:
 
                             # If we have found a parameter definition, check if this is a description line
                             if type_line_indent is not None:
+
                                 # Skip if this is more indented than the parameter definition (description line)
                                 if current_indent > type_line_indent:
                                     continue
 
                             # Skip if the line before the colon contains multiple words (likely description)
-                            words_before_colon = colon_part.split()
+                            words_before_colon: list[str] = colon_part.split()
                             if len(words_before_colon) > 2:  # More than "param_name (type)"
                                 continue
 
