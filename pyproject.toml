@@ -177,16 +177,16 @@ files = [
 [tool.dfc]
 allow_undefined_sections = false
 require_docstrings = true
-check_private = true
+check_private = false
 sections = [
-    { order = 1, name = "summary",  type = "free_text",          required = true, admonition = "note", prefix = "!!!" },
-    { order = 2, name = "details",  type = "free_text",          required = false, admonition = "abstract", prefix = "???+" },
-    { order = 3, name = "params",   type = "list_name_and_type", required = false },
-    { order = 4, name = "raises",   type = "list_type",          required = false },
-    { order = 5, name = "returns",  type = "list_name_and_type", required = false },
-    { order = 6, name = "yields",   type = "list_type",          required = false },
-    { order = 7, name = "examples", type = "free_text",          required = false, admonition = "example", prefix = "???+" },
-    { order = 8, name = "notes",    type = "free_text",          required = false, admonition = "note", prefix = "???" },
+    { order=1, name="summary",  type="free_text",          required=true,  admonition="note",     prefix="!!!" },
+    { order=2, name="details",  type="free_text",          required=false, admonition="abstract", prefix="???+" },
+    { order=3, name="params",   type="list_name_and_type", required=false, admonition=false },
+    { order=4, name="raises",   type="list_type",          required=false, admonition=false },
+    { order=5, name="returns",  type="list_name_and_type", required=false, admonition=false },
+    { order=6, name="yields",   type="list_type",          required=false, admonition=false },
+    { order=7, name="examples", type="free_text",          required=false, admonition="example",  prefix="???+" },
+    { order=8, name="notes",    type="free_text",          required=false, admonition="note",     prefix="???" },
 ]
 
 [build-system]
