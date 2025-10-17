@@ -7,6 +7,7 @@
 import subprocess
 import sys
 from pathlib import Path
+from textwrap import dedent
 from typing import Union
 
 
@@ -134,7 +135,20 @@ def check_pytest() -> None:
 
 
 def check_docstrings() -> None:
-    run("dfc --output=table ./src/docstring_format_checker")
+    run(f"dfc --output=table ./src/{DIRECTORY_NAME}")
+
+
+def check_complexity() -> None:
+    notes: str = dedent(
+        """
+        Notes from: https://rohaquinlop.github.io/complexipy/#running-the-analysis
+        - Complexity <= 5: Simple, easy to understand
+        - Complexity 6-15: Moderate, acceptable for most cases
+        - Complexity >= 15: Complex, consider refactoring into simpler functions
+        """
+    )
+    print(notes)
+    run(f"complexipy --details=normal --sort=desc --ignore-complexity ./src/{DIRECTORY_NAME}")
 
 
 def check() -> None:
@@ -143,8 +157,9 @@ def check() -> None:
     check_mypy()
     check_isort()
     check_codespell()
-    # check_pycln()
+    # check_pycln()  # <-- pycln is currently incompatible with python 3.14
     check_pylint()
+    check_complexity()
     check_docstrings()
     check_pytest()
     check_mkdocs()
