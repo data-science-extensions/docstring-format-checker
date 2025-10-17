@@ -28,6 +28,7 @@ from pytest import raises
 from docstring_format_checker.config import (
     Config,
     SectionConfig,
+    _extract_tool_config,
     _validate_config_order,
     find_config_file,
     load_config,
@@ -52,6 +53,7 @@ class TestConfig(TestCase):
         """
         Test loading default configuration.
         """
+
         with tempfile.TemporaryDirectory() as temp_dir:
             # Change to temp directory to avoid loading pyproject.toml from current directory
             original_cwd = Path.cwd()
@@ -72,6 +74,9 @@ class TestConfig(TestCase):
                 os.chdir(original_cwd)
 
     def test_02_load_config_from_toml(self) -> None:
+        """
+        Test loading configuration from a TOML file.
+        """
 
         toml_content: str = dedent(
             """
@@ -108,6 +113,9 @@ class TestConfig(TestCase):
             config_file.unlink(missing_ok=True)
 
     def test_03_load_config_alternative_table_name(self) -> None:
+        """
+        Test loading configuration from an alternative TOML table name.
+        """
 
         toml_content: str = dedent(
             """
@@ -139,6 +147,7 @@ class TestConfig(TestCase):
         """
         Test error handling when config file doesn't exist.
         """
+
         with pytest.raises(FileNotFoundError):
             load_config("nonexistent.toml")
 
@@ -544,6 +553,7 @@ class TestConfig(TestCase):
         """
         Test SectionConfig validation with invalid admonition type.
         """
+
         with pytest.raises(ValueError, match="admonition must be a boolean or string"):
             # Create a SectionConfig with invalid admonition type by bypassing type checking
             section = SectionConfig(
@@ -629,7 +639,10 @@ class TestConfig(TestCase):
             os.unlink(temp_file)
 
     def test_24_extract_tool_config_with_unsupported_tool_name(self) -> None:
-        """Test _extract_tool_config returns None when tool section exists but doesn't contain supported tool names."""
+        """
+        Test _extract_tool_config returns None when tool section exists but doesn't contain supported tool names.
+        """
+
         # Test the case where config has tool section but neither 'dfc' nor 'docstring-format-checker'
         # This tests line 384 in config.py which was uncovered
 
@@ -660,7 +673,10 @@ class TestConfig(TestCase):
             os.unlink(temp_file)
 
     def test_25_extract_tool_config_no_tool_section(self) -> None:
-        """Test _extract_tool_config returns None when no tool section exists (line 384)."""
+        """
+        Test _extract_tool_config returns None when no tool section exists (line 384).
+        """
+
         # Test the case where config has no tool section at all
         # This should trigger line 384: return None when "tool" not in config_data
 
@@ -689,3 +705,37 @@ class TestConfig(TestCase):
 
         finally:
             os.unlink(temp_file)
+
+    def test_26_extract_tool_config_direct_call_with_other_tool(self) -> None:
+        """
+        Test _extract_tool_config directly when tool section exists but without dfc or docstring-format-checker.
+        """
+
+        # This directly tests line 392 (the final return None when tool section exists but no dfc/docstring-format-checker)
+        config_data: dict = {
+            "tool": {
+                "other-tool": {"some_option": True},
+                "another-tool": {"value": "test"},
+            }
+        }
+
+        result = _extract_tool_config(config_data)
+
+        # Should return None since neither 'dfc' nor 'docstring-format-checker' are present
+        assert result is None
+
+    def test_27_extract_tool_config_direct_call_no_tool_section(self) -> None:
+        """
+        Test _extract_tool_config directly when no tool section exists (line 384).
+        """
+
+        # This directly tests line 384 (the first return None when "tool" not in config_data)
+        config_data: dict = {
+            "project": {"name": "test"},
+            "build-system": {"requires": ["setuptools"]},
+        }
+
+        result = _extract_tool_config(config_data)
+
+        # Should return None since no tool section exists
+        assert result is None
