@@ -472,7 +472,7 @@ class DocstringChecker:
 
     def _validate_single_required_section(
         self, docstring: str, section: SectionConfig, item: FunctionAndClassDetails
-    ) -> str | None:
+    ) -> Optional[str]:
         """Validate a single required section based on its type."""
         if section.type == "free_text":
             return self._validate_free_text_section(docstring, section)
@@ -485,7 +485,7 @@ class DocstringChecker:
 
         return None
 
-    def _validate_free_text_section(self, docstring: str, section: SectionConfig) -> str | None:
+    def _validate_free_text_section(self, docstring: str, section: SectionConfig) -> Optional[str]:
         """Validate free text sections."""
         if not self._check_free_text_section(docstring, section):
             return f"Missing required section: {section.name}"
@@ -493,7 +493,7 @@ class DocstringChecker:
 
     def _validate_list_name_and_type_section(
         self, docstring: str, section: SectionConfig, item: FunctionAndClassDetails
-    ) -> str | None:
+    ) -> Optional[str]:
         """Validate list_name_and_type sections (params, returns)."""
         section_name = section.name.lower()
 
@@ -506,7 +506,7 @@ class DocstringChecker:
 
         return None
 
-    def _validate_list_type_section(self, docstring: str, section: SectionConfig) -> str | None:
+    def _validate_list_type_section(self, docstring: str, section: SectionConfig) -> Optional[str]:
         """Validate list_type sections (raises, yields)."""
         section_name = section.name.lower()
 
@@ -519,7 +519,7 @@ class DocstringChecker:
 
         return None
 
-    def _validate_list_name_section(self, docstring: str, section: SectionConfig) -> str | None:
+    def _validate_list_name_section(self, docstring: str, section: SectionConfig) -> Optional[str]:
         """Validate list_name sections."""
         if not self._check_simple_section(docstring, section.name):
             return f"Missing required section: {section.name}"
