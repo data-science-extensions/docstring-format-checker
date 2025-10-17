@@ -392,7 +392,7 @@ def _display_results(
     """
     if not results:
         if not quiet:
-            console.print(_green("✓ All docstrings are valid!"))
+            console.print(_green("✅ All docstrings are valid!"))
         return 0
 
     # Count errors and generate summary statistics
