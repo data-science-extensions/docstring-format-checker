@@ -133,6 +133,10 @@ def check_pytest() -> None:
     run("pytest --config-file=pyproject.toml")
 
 
+def check_docstrings() -> None:
+    run("dfc --output=table ./src/docstring_format_checker")
+
+
 def check() -> None:
     check_black()
     check_blacken_docs()
@@ -140,7 +144,8 @@ def check() -> None:
     check_isort()
     check_codespell()
     # check_pycln()
-    # check_pylint()
+    check_pylint()
+    check_docstrings()
     check_pytest()
     check_mkdocs()
     check_build()
