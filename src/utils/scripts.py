@@ -32,7 +32,7 @@ def expand_space(lst: Union[list[str], tuple[str, ...]]) -> list[str]:
 def run_command(*command, expand: bool = True) -> None:
     _command: list[str] = expand_space(command) if expand else list(command)
     print("\n", " ".join(_command), sep="", flush=True)
-    subprocess.run(_command, check=True)
+    subprocess.run(_command, check=True, encoding="utf-8")
 
 
 run = run_command
