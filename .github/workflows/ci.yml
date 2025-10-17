@@ -5,6 +5,7 @@ env:
   UV_LINK_MODE: copy
   UV_NO_SYNC: true
   UV_INDEX_STRATEGY: unsafe-best-match
+  PYTHONIOENCODING: utf-8
 
 jobs:
 

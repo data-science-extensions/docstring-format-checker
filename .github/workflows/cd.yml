@@ -32,6 +32,7 @@ env:
   REPOSITORY_NAME: data-science-extensions/docstring-format-checker
   GIT_BRANCH: ${{ github.event.release.target_commitish }}
   PYTHON_VERSION: '3.13'
+  PYTHONIOENCODING: utf-8
 
 jobs:
 
