@@ -1249,6 +1249,7 @@ class TestDocstringChecker(TestCase):
             ["dfc", "--help"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
             cwd=Path(__file__).parent.parent.parent.resolve(),
         )
 
