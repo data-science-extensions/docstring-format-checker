@@ -4,3 +4,9 @@
   entry: docstring-format-checker
   language: python
   files: '\.(py)$'
+- id: dfc
+  name: docstring-format-checker
+  description: A CLI tool to check and format Python docstrings to adhere to specified style guidelines.
+  entry: dfc
+  language: python
+  files: '\.(py)$'

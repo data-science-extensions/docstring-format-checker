@@ -268,6 +268,9 @@ def main() -> None:
             ### Add a newline after each release section ----
             f.write(f"{BLANK_LINE}")
 
+    ### Once file is written, run `blacken-docs` on it ----
+    os.system(f"blacken-docs {OUTPUT_FILENAME}")
+
 
 # ---------------------------------------------------------------------------- #
 #                                                                              #

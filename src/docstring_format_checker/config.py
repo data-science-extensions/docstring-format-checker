@@ -331,78 +331,111 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> Config:
         (Config):
             Configuration object containing global settings and section definitions.
     """
+    # Resolve config file path
+    resolved_path = _resolve_config_path(config_path)
+    if resolved_path is None:
+        return DEFAULT_CONFIG
 
+    # Parse TOML configuration
+    config_data = _parse_toml_file(resolved_path)
+
+    # Extract tool configuration
+    tool_config = _extract_tool_config(config_data)
+    if tool_config is None:
+        return DEFAULT_CONFIG
+
+    # Parse configuration components
+    global_config = _parse_global_config(tool_config)
+    sections_config = _parse_sections_config(tool_config)
+
+    return Config(global_config=global_config, sections=sections_config)
+
+
+def _resolve_config_path(config_path: Optional[Union[str, Path]]) -> Optional[Path]:
+    """Resolve configuration file path."""
     if config_path is None:
         # Look for pyproject.toml in current directory
         pyproject_path: Path = Path.cwd().joinpath("pyproject.toml")
         if pyproject_path.exists():
-            config_path = pyproject_path
+            return pyproject_path
         else:
-            return DEFAULT_CONFIG
+            return None
 
     # Convert to Path object and check existence
     config_path = Path(config_path)
     if not config_path.exists():
         raise FileNotFoundError(f"Configuration file not found: {config_path}")
 
+    return config_path
+
+
+def _parse_toml_file(config_path: Path) -> dict[str, Any]:
+    """Parse TOML configuration file."""
     try:
         with open(config_path, "rb") as f:
-            config_data: dict[str, Any] = tomllib.load(f)
+            return tomllib.load(f)
     except Exception as e:
         raise InvalidConfigError(f"Failed to parse TOML file {config_path}: {e}") from e
 
-    # Try to find configuration under [tool.dfc] or [tool.docstring-format-checker]
-    tool_config = None
-    if "tool" in config_data:
-        if "dfc" in config_data["tool"]:
-            tool_config = config_data["tool"]["dfc"]
-        elif "docstring-format-checker" in config_data["tool"]:
-            tool_config = config_data["tool"]["docstring-format-checker"]
 
-    if tool_config is None:
-        return DEFAULT_CONFIG
+def _extract_tool_config(config_data: dict[str, Any]) -> Optional[dict[str, Any]]:
+    """Extract tool configuration from TOML data."""
+    if "tool" not in config_data:
+        return None
 
-    # Parse global configuration flags
-    global_config = GlobalConfig(
+    tool_section = config_data["tool"]
+    if "dfc" in tool_section:
+        return tool_section["dfc"]
+    elif "docstring-format-checker" in tool_section:
+        return tool_section["docstring-format-checker"]
+
+    return None
+
+
+def _parse_global_config(tool_config: dict[str, Any]) -> GlobalConfig:
+    """Parse global configuration flags."""
+    return GlobalConfig(
         allow_undefined_sections=tool_config.get("allow_undefined_sections", False),
         require_docstrings=tool_config.get("require_docstrings", True),
         check_private=tool_config.get("check_private", False),
     )
 
-    # Parse sections configuration
+
+def _parse_sections_config(tool_config: dict[str, Any]) -> list[SectionConfig]:
+    """Parse sections configuration."""
+    if "sections" not in tool_config:
+        return DEFAULT_SECTIONS
+
     sections_config: list[SectionConfig] = []
-    if "sections" in tool_config:
-        sections_data = tool_config["sections"]
-        for section_data in sections_data:
-            try:
-                # Get admonition value with proper default handling
-                admonition_value: Union[str, bool] = section_data.get("admonition")
-                if admonition_value is None:
-                    admonition_value = False  # Use SectionConfig default
+    sections_data = tool_config["sections"]
 
-                section = SectionConfig(
-                    order=section_data.get("order", 0),
-                    name=section_data.get("name", ""),
-                    type=section_data.get("type", ""),
-                    admonition=admonition_value,
-                    prefix=section_data.get("prefix", ""),
-                    required=section_data.get("required", False),
-                )
-                sections_config.append(section)
-            except (KeyError, TypeError, ValueError, InvalidTypeValuesError) as e:
-                raise InvalidConfigError(f"Invalid section configuration: {section_data}. Error: {e}") from e
+    for section_data in sections_data:
+        try:
+            # Get admonition value with proper default handling
+            admonition_value: Union[str, bool] = section_data.get("admonition")
+            if admonition_value is None:
+                admonition_value = False  # Use SectionConfig default
 
-    # Use default sections if none provided, otherwise validate and sort
-    if not sections_config:
-        sections_config = DEFAULT_SECTIONS
-    else:
-        # Validate no duplicate order values
+            section = SectionConfig(
+                order=section_data.get("order", 0),
+                name=section_data.get("name", ""),
+                type=section_data.get("type", ""),
+                admonition=admonition_value,
+                prefix=section_data.get("prefix", ""),
+                required=section_data.get("required", False),
+            )
+            sections_config.append(section)
+        except (KeyError, TypeError, ValueError, InvalidTypeValuesError) as e:
+            raise InvalidConfigError(f"Invalid section configuration: {section_data}. Error: {e}") from e
+
+    # Validate and sort sections
+    if sections_config:
         _validate_config_order(config_sections=sections_config)
-
-        # Sort by order
         sections_config.sort(key=lambda x: x.order)
+    else:
+        sections_config = DEFAULT_SECTIONS
 
-    return Config(global_config=global_config, sections=sections_config)
+    return sections_config
 
 
 def find_config_file(start_path: Optional[Path] = None) -> Optional[Path]:

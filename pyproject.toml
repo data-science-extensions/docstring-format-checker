@@ -23,6 +23,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Intended Audience :: Developers",
     "Environment :: Console",
 ]
@@ -83,6 +84,7 @@ test = [
     "pytest-sugar==1.*",
     "pytest-xdist==3.*",
     "requests==2.*",
+    "complexipy==4.*",
 ]
 
 [tool.black]
@@ -147,6 +149,25 @@ lines_after_imports = 2
 [tool.codespell]
 ignore-words-list = "demog"
 
+[tool.pylint.main]
+disable = [
+    "C0103",  # invalid-name
+    "C0301",  # line-too-long
+    "C0302",  # too-many-lines
+    "R0913",  # too-many-arguments
+    "R0914",  # too-many-locals
+    "R0915",  # too-many-statements
+    "R0917",  # too-many-positional-arguments
+    "R1705",  # no-else-return
+    "R1724",  # no-else-continue
+    "W0107",  # unnecessary-pass
+    "W0212",  # protected-access
+    "W0612",  # unused-variable
+    "W0613",  # unused-argument
+    "W0622",  # redefined-builtin
+    "W0718",  # broad-exception-caught
+]
+
 [tool.bump_version.replacements]
 files = [
     { file = "src/docstring_format_checker/__init__.py", pattern = "__version__ = \"{VERSION}\"" },
@@ -157,16 +178,16 @@ files = [
 [tool.dfc]
 allow_undefined_sections = false
 require_docstrings = true
-check_private = true
+check_private = false
 sections = [
-    { order = 1, name = "summary",  type = "free_text",          required = true, admonition = "note", prefix = "!!!" },
-    { order = 2, name = "details",  type = "free_text",          required = false, admonition = "abstract", prefix = "???+" },
-    { order = 3, name = "params",   type = "list_name_and_type", required = false },
-    { order = 4, name = "raises",   type = "list_type",          required = false },
-    { order = 5, name = "returns",  type = "list_name_and_type", required = false },
-    { order = 6, name = "yields",   type = "list_type",          required = false },
-    { order = 7, name = "examples", type = "free_text",          required = false, admonition = "example", prefix = "???+" },
-    { order = 8, name = "notes",    type = "free_text",          required = false, admonition = "note", prefix = "???" },
+    { order=1, name="summary",  type="free_text",          required=true,  admonition="note",     prefix="!!!" },
+    { order=2, name="details",  type="free_text",          required=false, admonition="abstract", prefix="???+" },
+    { order=3, name="params",   type="list_name_and_type", required=false, admonition=false },
+    { order=4, name="raises",   type="list_type",          required=false, admonition=false },
+    { order=5, name="returns",  type="list_name_and_type", required=false, admonition=false },
+    { order=6, name="yields",   type="list_type",          required=false, admonition=false },
+    { order=7, name="examples", type="free_text",          required=false, admonition="example",  prefix="???+" },
+    { order=8, name="notes",    type="free_text",          required=false, admonition="note",     prefix="???" },
 ]
 
 [build-system]

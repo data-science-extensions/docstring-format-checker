@@ -1,3 +1,37 @@
+# ============================================================================ #
+#                                                                              #
+#     Title: Exceptions Module for Docstring Format Checker                    #
+#     Purpose: Custom exceptions for error handling in the docstring format    #
+#               checker.                                                       #
+#                                                                              #
+# ============================================================================ #
+
+
+# ---------------------------------------------------------------------------- #
+#                                                                              #
+#     Overview                                                              ####
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+
+
+# ---------------------------------------------------------------------------- #
+#  Description                                                              ####
+# ---------------------------------------------------------------------------- #
+
+
+"""
+!!! note "Summary"
+    This module defines custom exceptions for handling various error scenarios
+"""
+
+
+# ---------------------------------------------------------------------------- #
+#                                                                              #
+#     Main Section                                                          ####
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+
+
 class DocstringError(Exception):
     """
     !!! note "Summary"
@@ -16,11 +50,11 @@ class DocstringError(Exception):
         !!! note "Summary"
             Initialize a DocstringError.
         """
-        self.message = message
-        self.file_path = file_path
-        self.line_number = line_number
-        self.item_name = item_name
-        self.item_type = item_type
+        self.message: str = message
+        self.file_path: str = file_path
+        self.line_number: int = line_number
+        self.item_name: str = item_name
+        self.item_type: str = item_type
         super().__init__(f"Line {line_number}, {item_type} '{item_name}': {message}")
 
 

@@ -7,6 +7,7 @@
 import subprocess
 import sys
 from pathlib import Path
+from textwrap import dedent
 from typing import Union
 
 
@@ -31,7 +32,7 @@ def expand_space(lst: Union[list[str], tuple[str, ...]]) -> list[str]:
 def run_command(*command, expand: bool = True) -> None:
     _command: list[str] = expand_space(command) if expand else list(command)
     print("\n", " ".join(_command), sep="", flush=True)
-    subprocess.run(_command, check=True)
+    subprocess.run(_command, check=True, encoding="utf-8")
 
 
 run = run_command
@@ -83,7 +84,7 @@ def lint() -> None:
     run_black()
     run_blacken_docs()
     run_isort()
-    run_pycln()
+    # run_pycln()
 
 
 ## --------------------------------------------------------------------------- #
@@ -133,14 +134,33 @@ def check_pytest() -> None:
     run("pytest --config-file=pyproject.toml")
 
 
+def check_docstrings() -> None:
+    run(f"dfc --output=table ./src/{DIRECTORY_NAME}")
+
+
+def check_complexity() -> None:
+    notes: str = dedent(
+        """
+        Notes from: https://rohaquinlop.github.io/complexipy/#running-the-analysis
+        - Complexity <= 5: Simple, easy to understand
+        - Complexity 6-15: Moderate, acceptable for most cases
+        - Complexity >= 15: Complex, consider refactoring into simpler functions
+        """
+    )
+    print(notes)
+    run(f"complexipy --details=normal --sort=desc --ignore-complexity ./src/{DIRECTORY_NAME}")
+
+
 def check() -> None:
     check_black()
     check_blacken_docs()
     check_mypy()
     check_isort()
     check_codespell()
-    check_pycln()
-    # check_pylint()
+    # check_pycln()  # <-- pycln is currently incompatible with python 3.14
+    check_pylint()
+    check_complexity()
+    check_docstrings()
     check_pytest()
     check_mkdocs()
     check_build()

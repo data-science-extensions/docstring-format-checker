@@ -1,13 +1,7 @@
 # ============================================================================ #
 #                                                                              #
-#     Title: Title                                                             #
-#     Purpose: Purpose                                                         #
-#     Notes: Notes                                                             #
-#     Author: chrimaho                                                         #
-#     Created: Created                                                         #
-#     References: References                                                   #
-#     Sources: Sources                                                         #
-#     Edited: Edited                                                           #
+#     Title: Docstring Format Checker Core Module                              #
+#     Purpose: Core docstring checking functionality.                          #
 #                                                                              #
 # ============================================================================ #
 
@@ -106,7 +100,7 @@ class DocstringChecker:
             config (Config):
                 Configuration object containing global settings and section definitions.
         """
-        self.config = config
+        self.config: Config = config
         self.sections_config: list[SectionConfig] = config.sections
         self.required_sections: list[SectionConfig] = [s for s in config.sections if s.required]
         self.optional_sections: list[SectionConfig] = [s for s in config.sections if not s.required]
@@ -444,65 +438,17 @@ class DocstringChecker:
             (None):
                 Nothing is returned.
         """
-
         errors: list[str] = []
 
-        # Check each required section
-        for section in self.required_sections:
-            if section.type == "free_text":
-                if not self._check_free_text_section(docstring, section):
-                    errors.append(f"Missing required section: {section.name}")
+        # Validate required sections
+        required_section_errors = self._validate_all_required_sections(docstring, item)
+        errors.extend(required_section_errors)
 
-            elif section.type == "list_name_and_type":
-                if section.name.lower() == "params" and isinstance(item.node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    if not self._check_params_section(docstring, item.node):
-                        errors.append("Missing or invalid Params section")
-                elif section.name.lower() in ["returns", "return"]:
-                    if not self._check_returns_section(docstring):
-                        errors.append("Missing or invalid Returns section")
+        # Perform comprehensive validation checks
+        comprehensive_errors = self._perform_comprehensive_validation(docstring)
+        errors.extend(comprehensive_errors)
 
-            elif section.type == "list_type":
-                if section.name.lower() in ["raises", "raise"]:
-                    if not self._check_raises_section(docstring):
-                        errors.append("Missing or invalid Raises section")
-                elif section.name.lower() in ["yields", "yield"]:
-                    if not self._check_yields_section(docstring):
-                        errors.append("Missing or invalid Yields section")
-
-            elif section.type == "list_name":
-                # Simple name sections - check if they exist
-                if not self._check_simple_section(docstring, section.name):
-                    errors.append(f"Missing required section: {section.name}")
-
-        # Check section order
-        order_errors: list[str] = self._check_section_order(docstring)
-        errors.extend(order_errors)
-
-        # Check for mutual exclusivity (returns vs yields)
-        if self._has_both_returns_and_yields(docstring):
-            errors.append("Docstring cannot have both Returns and Yields sections")
-
-        # Check for undefined sections in docstring (only if not allowed)
-        if not self.config.global_config.allow_undefined_sections:
-            undefined_errors: list[str] = self._check_undefined_sections(docstring)
-            errors.extend(undefined_errors)
-
-        # Check admonition values match configuration
-        admonition_errors: list[str] = self._check_admonition_values(docstring)
-        errors.extend(admonition_errors)
-
-        # Check colon usage for admonition vs non-admonition sections
-        colon_errors: list[str] = self._check_colon_usage(docstring)
-        errors.extend(colon_errors)
-
-        # Check title case for non-admonition sections
-        title_case_errors: list[str] = self._check_title_case_sections(docstring)
-        errors.extend(title_case_errors)
-
-        # Check parentheses for list type sections
-        parentheses_errors: list[str] = self._check_parentheses_validation(docstring)
-        errors.extend(parentheses_errors)
-
+        # Report errors if found
         if errors:
             combined_message: str = "; ".join(errors)
             raise DocstringError(
@@ -512,6 +458,117 @@ class DocstringChecker:
                 item_name=item.name,
                 item_type=item.item_type,
             )
+
+    def _validate_all_required_sections(self, docstring: str, item: FunctionAndClassDetails) -> list[str]:
+        """Validate all required sections are present and valid."""
+        errors: list[str] = []
+
+        for section in self.required_sections:
+            section_error = self._validate_single_required_section(docstring, section, item)
+            if section_error:
+                errors.append(section_error)
+
+        return errors
+
+    def _validate_single_required_section(
+        self, docstring: str, section: SectionConfig, item: FunctionAndClassDetails
+    ) -> Optional[str]:
+        """Validate a single required section based on its type."""
+        if section.type == "free_text":
+            return self._validate_free_text_section(docstring, section)
+        elif section.type == "list_name_and_type":
+            return self._validate_list_name_and_type_section(docstring, section, item)
+        elif section.type == "list_type":
+            return self._validate_list_type_section(docstring, section)
+        elif section.type == "list_name":
+            return self._validate_list_name_section(docstring, section)
+
+        return None
+
+    def _validate_free_text_section(self, docstring: str, section: SectionConfig) -> Optional[str]:
+        """Validate free text sections."""
+        if not self._check_free_text_section(docstring, section):
+            return f"Missing required section: {section.name}"
+        return None
+
+    def _validate_list_name_and_type_section(
+        self, docstring: str, section: SectionConfig, item: FunctionAndClassDetails
+    ) -> Optional[str]:
+        """Validate list_name_and_type sections (params, returns)."""
+        section_name = section.name.lower()
+
+        if section_name == "params" and isinstance(item.node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if not self._check_params_section(docstring, item.node):
+                return "Missing or invalid Params section"
+        elif section_name in ["returns", "return"]:
+            if not self._check_returns_section(docstring):
+                return "Missing or invalid Returns section"
+
+        return None
+
+    def _validate_list_type_section(self, docstring: str, section: SectionConfig) -> Optional[str]:
+        """Validate list_type sections (raises, yields)."""
+        section_name = section.name.lower()
+
+        if section_name in ["raises", "raise"]:
+            if not self._check_raises_section(docstring):
+                return "Missing or invalid Raises section"
+        elif section_name in ["yields", "yield"]:
+            if not self._check_yields_section(docstring):
+                return "Missing or invalid Yields section"
+
+        return None
+
+    def _validate_list_name_section(self, docstring: str, section: SectionConfig) -> Optional[str]:
+        """Validate list_name sections."""
+        if not self._check_simple_section(docstring, section.name):
+            return f"Missing required section: {section.name}"
+        return None
+
+    def _perform_comprehensive_validation(self, docstring: str) -> list[str]:
+        """Perform comprehensive validation checks on docstring."""
+        errors: list[str] = []
+
+        # Check section order
+        order_errors = self._check_section_order(docstring)
+        errors.extend(order_errors)
+
+        # Check for mutual exclusivity (returns vs yields)
+        if self._has_both_returns_and_yields(docstring):
+            errors.append("Docstring cannot have both Returns and Yields sections")
+
+        # Check for undefined sections (only if not allowed)
+        if not self.config.global_config.allow_undefined_sections:
+            undefined_errors = self._check_undefined_sections(docstring)
+            errors.extend(undefined_errors)
+
+        # Perform formatting validation
+        formatting_errors = self._perform_formatting_validation(docstring)
+        errors.extend(formatting_errors)
+
+        return errors
+
+    def _perform_formatting_validation(self, docstring: str) -> list[str]:
+        """Perform formatting validation checks."""
+        errors: list[str] = []
+
+        # Check admonition values
+        admonition_errors = self._check_admonition_values(docstring)
+        errors.extend(admonition_errors)
+
+        # Check colon usage
+        colon_errors = self._check_colon_usage(docstring)
+        errors.extend(colon_errors)
+
+        # Check title case
+        title_case_errors = self._check_title_case_sections(docstring)
+        errors.extend(title_case_errors)
+
+        # Check parentheses
+        parentheses_errors = self._check_parentheses_validation(docstring)
+        errors.extend(parentheses_errors)
+
+        return errors
 
     def _check_free_text_section(self, docstring: str, section: SectionConfig) -> bool:
         """
@@ -529,24 +586,29 @@ class DocstringChecker:
                 `True` if the section exists, `False` otherwise.
         """
 
+        # Make the section name part case-insensitive too
         if isinstance(section.admonition, str) and section.admonition and section.prefix:
             # Format like: !!! note "Summary"
-            # Make the section name part case-insensitive too
-            escaped_name = re.escape(section.name)
-            pattern = rf'{re.escape(section.prefix)}\s+{re.escape(section.admonition)}\s+"[^"]*{escaped_name}[^"]*"'
+            escaped_name: str = re.escape(section.name)
+            pattern: str = (
+                rf'{re.escape(section.prefix)}\s+{re.escape(section.admonition)}\s+"[^"]*{escaped_name}[^"]*"'
+            )
             return bool(re.search(pattern, docstring, re.IGNORECASE))
-        elif section.name.lower() in ["summary"]:
-            # For summary, accept either formal format or simple docstring
+
+        # For summary, accept either formal format or simple docstring
+        if section.name.lower() in ["summary"]:
             formal_pattern = r'!!! note "Summary"'
             if re.search(formal_pattern, docstring, re.IGNORECASE):
                 return True
             # Accept any non-empty docstring as summary
             return len(docstring.strip()) > 0
+
+        # Look for examples section
         elif section.name.lower() in ["examples", "example"]:
-            # Look for examples section
             return bool(re.search(r'\?\?\?\+ example "Examples"', docstring, re.IGNORECASE))
 
-        return True  # Default to true for unknown free text sections
+        # Default to true for unknown free text sections
+        return True
 
     def _check_params_section(self, docstring: str, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> bool:
         """
@@ -955,136 +1017,198 @@ class DocstringChecker:
         if not parentheses_sections:
             return errors
 
-        # Check each line in the docstring
+        # Process each line in the docstring
         lines: list[str] = docstring.split("\n")
-        current_section = None
-        type_line_indent = None  # Track indentation of type definition lines
+        current_section: Optional[SectionConfig] = None
+        type_line_indent: Optional[int] = None
 
-        for i, line in enumerate(lines):
+        for line in lines:
             stripped_line: str = line.strip()
 
-            # Detect section headers
-            # Admonition sections
-            admonition_match: Optional[re.Match[str]] = re.match(
-                r"(?:\?\?\?[+]?|!!!)\s+\w+\s+\"([^\"]+)\"", stripped_line, re.IGNORECASE
-            )
-            if admonition_match:
-                section_name: str = admonition_match.group(1).lower()
-                current_section: Optional[SectionConfig] = next(
-                    (s for s in parentheses_sections if s.name.lower() == section_name), None
+            # Check for any section header (to properly transition out of current section)
+            section_detected: bool = self._detect_any_section_header(stripped_line, line)
+            if section_detected:
+                # Check if it's a parentheses-required section
+                new_section: Optional[SectionConfig] = self._detect_section_header(
+                    stripped_line, line, parentheses_sections
                 )
-                type_line_indent = None  # Reset for new section
+                current_section = new_section  # None if not parentheses-required
+                type_line_indent = None
                 continue
 
-            # Non-admonition sections - only match actual section headers, not indented content
-            # Section headers should be at the start of the line (no leading whitespace)
-            if not line.startswith((" ", "\t")):  # Not indented
-                simple_section_match: Optional[re.Match[str]] = re.match(r"^(\w+):?$", stripped_line)
-                if simple_section_match:
-                    section_name: str = simple_section_match.group(1).lower()
-                    # Only consider it a section if it matches our known sections
-                    potential_section: Optional[SectionConfig] = next(
-                        (s for s in self.sections_config if s.name.lower() == section_name), None
-                    )
-                    if potential_section:
-                        # This is a real section header
-                        current_section = next(
-                            (s for s in parentheses_sections if s.name.lower() == section_name), None
-                        )
-                        type_line_indent = None  # Reset for new section
-                        continue
-                    # If it doesn't match a known section, fall through to content processing
-
-            # Check content lines if we're in a parentheses-required section
-            if current_section and stripped_line and not stripped_line.startswith(("!", "?", "#")):
-                # Look for parameter/type definitions
-                if ":" in stripped_line:
-                    # Calculate current line indentation
-                    current_indent = len(line) - len(line.lstrip())
-
-                    # Skip description lines that start with common description words
-                    description_prefixes = [
-                        "default:",
-                        "note:",
-                        "example:",
-                        "see:",
-                        "warning:",
-                        "info:",
-                        "tip:",
-                        "returns:",
-                    ]
-                    is_description_line = any(
-                        stripped_line.lower().startswith(prefix) for prefix in description_prefixes
-                    )
-
-                    # Skip lines that are clearly descriptions (containing "Default:", etc.)
-                    if (
-                        is_description_line
-                        or "Default:" in stripped_line
-                        or "Output format:" in stripped_line
-                        or "Show examples:" in stripped_line
-                    ):
-                        continue
-
-                    # For list_type sections, we need special handling
-                    if current_section.type == "list_type":
-                        # Check if this line has parentheses at the beginning
-                        if re.search(r"^\s*\([^)]+\):", stripped_line):
-                            # This is a valid type definition line, remember its indentation
-                            type_line_indent = current_indent
-                            continue
-                        else:
-                            # If no type definition has been found yet, allow lines with colons as possible descriptions
-                            if type_line_indent is None:
-                                continue
-                            # Check if this is a description line (more indented than type line)
-                            if current_indent > type_line_indent:
-                                # This is a description line, skip validation
-                                continue
-                            else:
-                                # This should be a type definition but doesn't have proper format
-                                errors.append(
-                                    f"Section '{current_section.name}' (type: '{current_section.type}') requires "
-                                    f"parenthesized types, see: '{stripped_line}'"
-                                )
-                    # For list_name_and_type sections, check format like "name (type):" or "(type):"
-                    elif current_section.type == "list_name_and_type":
-                        # Check if this line has parentheses and looks like a parameter definition
-                        if re.search(r"\([^)]+\):", stripped_line):
-                            # This is a valid parameter definition line, remember its indentation
-                            type_line_indent = current_indent
-                            continue
-                        else:
-                            # Check if this is likely a description line based on various criteria
-                            colon_part = stripped_line.split(":")[0].strip()
-
-                            # Skip if it contains phrases that indicate it's a description, not a parameter
-                            if any(
-                                word in colon_part.lower()
-                                for word in ["default", "output", "format", "show", "example"]
-                            ):
-                                continue
-
-                            # Skip if it starts with bullet points or list markers
-                            if stripped_line.strip().startswith(("-", "*", "•", "+")):
-                                continue
-
-                            # If we have found a parameter definition, check if this is a description line
-                            if type_line_indent is not None:
-                                # Skip if this is more indented than the parameter definition (description line)
-                                if current_indent > type_line_indent:
-                                    continue
-
-                            # Skip if the line before the colon contains multiple words (likely description)
-                            words_before_colon = colon_part.split()
-                            if len(words_before_colon) > 2:  # More than "param_name (type)"
-                                continue
-
-                            # Only flag lines that could reasonably be parameter definitions
-                            if ":" in stripped_line and not stripped_line.strip().startswith("#"):
-                                errors.append(
-                                    f"Section '{current_section.name}' (type: '{current_section.type}') requires "
-                                    f"parenthesized types, see: '{stripped_line}'"
-                                )
+            # Process content lines within parentheses-required sections
+            if current_section and self._is_content_line(stripped_line):
+                line_errors: list[str]
+                new_indent: Optional[int]
+                line_errors, new_indent = self._validate_parentheses_line(
+                    line, stripped_line, current_section, type_line_indent
+                )
+                errors.extend(line_errors)
+                if new_indent is not None:
+                    type_line_indent = new_indent
 
         return errors
+
+    def _detect_any_section_header(self, stripped_line: str, full_line: str) -> bool:
+        """Detect any section header (for section transitions)."""
+        # Admonition sections
+        admonition_match: Optional[re.Match[str]] = re.match(
+            r"(?:\?\?\?[+]?|!!!)\s+\w+\s+\"([^\"]+)\"", stripped_line, re.IGNORECASE
+        )
+        if admonition_match:
+            section_name: str = admonition_match.group(1).lower()
+            # Check if it's a known section
+            return any(s.name.lower() == section_name for s in self.sections_config)
+
+        # Non-admonition sections (must not be indented)
+        if not full_line.startswith((" ", "\t")):
+            simple_section_match: Optional[re.Match[str]] = re.match(r"^(\w+):?$", stripped_line)
+            if simple_section_match:
+                section_name: str = simple_section_match.group(1).lower()
+                # Check if it's a known section
+                return any(s.name.lower() == section_name for s in self.sections_config)
+
+        return False
+
+    def _detect_section_header(
+        self, stripped_line: str, full_line: str, parentheses_sections: list[SectionConfig]
+    ) -> Optional[SectionConfig]:
+        """Detect section headers and return matching section config."""
+        # Admonition sections
+        admonition_match: Optional[re.Match[str]] = re.match(
+            r"(?:\?\?\?[+]?|!!!)\s+\w+\s+\"([^\"]+)\"", stripped_line, re.IGNORECASE
+        )
+        if admonition_match:
+            section_name: str = admonition_match.group(1).lower()
+            return next((s for s in parentheses_sections if s.name.lower() == section_name), None)
+
+        # Non-admonition sections (must not be indented)
+        if not full_line.startswith((" ", "\t")):
+            simple_section_match: Optional[re.Match[str]] = re.match(r"^(\w+):?$", stripped_line)
+            if simple_section_match:
+                section_name: str = simple_section_match.group(1).lower()
+                # Check if it's a known section
+                potential_section: Optional[SectionConfig] = next(
+                    (s for s in self.sections_config if s.name.lower() == section_name), None
+                )
+                if potential_section:
+                    return next((s for s in parentheses_sections if s.name.lower() == section_name), None)
+
+        return None
+
+    def _is_content_line(self, stripped_line: str) -> bool:
+        """
+        Check if line is content that needs validation.
+        """
+        return bool(stripped_line) and not stripped_line.startswith(("!", "?", "#")) and ":" in stripped_line
+
+    def _is_description_line(self, stripped_line: str) -> bool:
+        """
+        Check if line is a description rather than a type definition.
+        """
+        description_prefixes: list[str] = [
+            "default:",
+            "note:",
+            "example:",
+            "see:",
+            "warning:",
+            "info:",
+            "tip:",
+            "returns:",
+        ]
+
+        return (
+            any(stripped_line.lower().startswith(prefix) for prefix in description_prefixes)
+            or "Default:" in stripped_line
+            or "Output format:" in stripped_line
+            or "Show examples:" in stripped_line
+            or "Example code:" in stripped_line
+            or stripped_line.strip().startswith(("-", "*", "•", "+"))
+            or stripped_line.startswith(">>>")  # Doctest examples
+        )
+
+    def _validate_parentheses_line(
+        self, full_line: str, stripped_line: str, current_section: SectionConfig, type_line_indent: Optional[int]
+    ) -> tuple[list[str], Optional[int]]:
+        """
+        Validate a single line for parentheses requirements.
+        """
+        errors: list[str] = []
+        new_indent: Optional[int] = None
+        current_indent: int = len(full_line) - len(full_line.lstrip())
+
+        # Skip description lines
+        if self._is_description_line(stripped_line):
+            return errors, type_line_indent
+
+        if current_section.type == "list_type":
+            errors, new_indent = self._validate_list_type_line(
+                stripped_line, current_indent, type_line_indent, current_section
+            )
+        elif current_section.type == "list_name_and_type":
+            errors, new_indent = self._validate_list_name_and_type_line(
+                stripped_line, current_indent, type_line_indent, current_section
+            )
+
+        return errors, new_indent if new_indent is not None else type_line_indent
+
+    def _validate_list_type_line(
+        self, stripped_line: str, current_indent: int, type_line_indent: Optional[int], current_section: SectionConfig
+    ) -> tuple[list[str], Optional[int]]:
+        """
+        Validate list_type section lines.
+        """
+        errors: list[str] = []
+
+        # Check for valid type definition format
+        if re.search(r"^\s*\([^)]+\):", stripped_line):
+            return errors, current_indent
+
+        # Handle lines without proper format
+        if type_line_indent is None or current_indent > type_line_indent:
+            # Allow as possible description
+            return errors, None
+
+        # This should be a type definition but lacks proper format
+        errors.append(
+            f"Section '{current_section.name}' (type: '{current_section.type}') requires "
+            f"parenthesized types, see: '{stripped_line}'"
+        )
+        return errors, None
+
+    def _validate_list_name_and_type_line(
+        self, stripped_line: str, current_indent: int, type_line_indent: Optional[int], current_section: SectionConfig
+    ) -> tuple[list[str], Optional[int]]:
+        """
+        Validate list_name_and_type section lines.
+        """
+        errors: list[str] = []
+
+        # Check for valid parameter definition format
+        if re.search(r"\([^)]+\):", stripped_line):
+            return errors, current_indent
+
+        # Check if this is likely a description line
+        colon_part: str = stripped_line.split(":")[0].strip()
+
+        # Skip description-like content
+        if any(word in colon_part.lower() for word in ["default", "output", "format", "show", "example"]):
+            return errors, None
+
+        # Skip if more indented than parameter definition (description line)
+        if type_line_indent is not None and current_indent > type_line_indent:
+            return errors, None
+
+        # Skip if too many words before colon (likely description)
+        words_before_colon: list[str] = colon_part.split()
+        if len(words_before_colon) > 2:
+            return errors, None
+
+        # Flag potential parameter definitions without proper format
+        if not stripped_line.strip().startswith("#"):
+            errors.append(
+                f"Section '{current_section.name}' (type: '{current_section.type}') requires "
+                f"parenthesized types, see: '{stripped_line}'"
+            )
+
+        return errors, None

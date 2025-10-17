@@ -661,7 +661,7 @@ class TestClass:
             assert (
                 result.exit_code == 0
             ), f"Expected exit code 0, got {result.exit_code}. Output: {clean(result.output)}"
-            assert "✓ All docstrings are valid!" in clean(result.output)
+            assert "✅ All docstrings are valid!" in clean(result.output)
 
     def test_31_check_command_exception_handling(self) -> None:
         """
@@ -1042,7 +1042,7 @@ class TestClass:
                 assert result.exit_code == 0
                 assert (
                     "0 error" in result.output
-                    or "✓ All docstrings are valid!" in result.output
+                    or "✅ All docstrings are valid!" in result.output
                     or "All docstrings are valid" in result.output
                 )
             finally:
