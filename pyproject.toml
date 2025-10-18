@@ -168,6 +168,13 @@ disable = [
     "W0718",  # broad-exception-caught
 ]
 
+[tool.complexipy]
+paths = "src/docstring_format_checker"
+max-complexity-allowed = 15
+quiet = false
+ignore-complexity = false
+sort = "asc"
+
 [tool.bump_version.replacements]
 files = [
     { file = "src/docstring_format_checker/__init__.py", pattern = "__version__ = \"{VERSION}\"" },

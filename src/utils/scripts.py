@@ -148,7 +148,7 @@ def check_complexity() -> None:
         """
     )
     print(notes)
-    run(f"complexipy --details=normal --sort=desc --ignore-complexity ./src/{DIRECTORY_NAME}")
+    run(f"complexipy ./src/{DIRECTORY_NAME}")
 
 
 def check() -> None:
