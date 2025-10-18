@@ -464,24 +464,66 @@ def _display_table_output(results: dict[str, list[DocstringError]]) -> None:
     console.print(table)
 
 
+def _create_error_header(error: DocstringError) -> str:
+    """
+    Create formatted header for a single error.
+
+    Params:
+        error (DocstringError):
+            The error to create a header for.
+
+    Returns:
+        str: Formatted header string with line number, item type, and name.
+    """
+    if error.line_number > 0:
+        return f"  [red]Line {error.line_number}[/red] - {error.item_type} '{error.item_name}':"
+    else:
+        return f"  {_red('Error')} - {error.item_type} '{error.item_name}':"
+
+
+def _split_error_messages(message: str) -> list[str]:
+    """
+    Split compound error message into individual messages.
+
+    Params:
+        message (str):
+            The error message to split.
+
+    Returns:
+        list[str]: List of individual error messages.
+    """
+    if "; " in message:
+        return [msg.strip() for msg in message.split("; ") if msg.strip()]
+    else:
+        return [message.strip()]
+
+
+def _format_error_output(error: DocstringError) -> list[str]:
+    """
+    Format single error for display output.
+
+    Params:
+        error (DocstringError):
+            The error to format.
+
+    Returns:
+        list[str]: List of formatted lines to print.
+    """
+    lines = [_create_error_header(error)]
+    individual_errors = _split_error_messages(error.message)
+    for individual_error in individual_errors:
+        lines.append(f"    - {individual_error}")
+    return lines
+
+
 def _display_list_output(results: dict[str, list[DocstringError]]) -> None:
     """Display results in list format."""
     for file_path, errors in results.items():
         console.print(f"{NEW_LINE}{_cyan(file_path)}")
         for error in errors:
-            # Print header with line number, item type and name
-            if error.line_number > 0:
-                console.print(f"  [red]Line {error.line_number}[/red] - {error.item_type} '{error.item_name}':")
-            else:
-                console.print(f"  {_red('Error')} - {error.item_type} '{error.item_name}':")
-
-            # Format and print error messages
-            if "; " in error.message:
-                individual_errors = [msg.strip() for msg in error.message.split("; ") if msg.strip()]
-                for individual_error in individual_errors:
-                    console.print(f"    - {individual_error}")
-            else:
-                console.print(f"    - {error.message.strip()}")
+            output_lines = _format_error_output(error)
+            for line in output_lines:
+                console.print(line)
 
 
 def _display_final_summary(error_stats: dict[str, int]) -> None:
