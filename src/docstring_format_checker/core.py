@@ -161,6 +161,81 @@ class DocstringChecker:
 
         return errors
 
+    def _should_exclude_file(self, relative_path: Path, exclude_patterns: list[str]) -> bool:
+        """
+        !!! note "Summary"
+            Check if a file should be excluded based on patterns.
+
+        Params:
+            relative_path (Path):
+                The relative path of the file to check.
+            exclude_patterns (list[str]):
+                List of glob patterns to check against.
+
+        Returns:
+            (bool):
+                True if the file matches any exclusion pattern.
+        """
+        for pattern in exclude_patterns:
+            if fnmatch.fnmatch(str(relative_path), pattern):
+                return True
+        return False
+
+    def _filter_python_files(
+        self,
+        python_files: list[Path],
+        directory_path: Path,
+        exclude_patterns: list[str],
+    ) -> list[Path]:
+        """
+        !!! note "Summary"
+            Filter Python files based on exclusion patterns.
+
+        Params:
+            python_files (list[Path]):
+                List of Python files to filter.
+            directory_path (Path):
+                The base directory path for relative path calculation.
+            exclude_patterns (list[str]):
+                List of glob patterns to exclude.
+
+        Returns:
+            (list[Path]):
+                Filtered list of Python files that don't match exclusion patterns.
+        """
+        filtered_files: list[Path] = []
+        for file_path in python_files:
+            relative_path: Path = file_path.relative_to(directory_path)
+            if not self._should_exclude_file(relative_path, exclude_patterns):
+                filtered_files.append(file_path)
+        return filtered_files
+
+    def _check_file_with_error_handling(self, file_path: Path) -> list[DocstringError]:
+        """
+        !!! note "Summary"
+            Check a single file and handle exceptions gracefully.
+
+        Params:
+            file_path (Path):
+                Path to the file to check.
+
+        Returns:
+            (list[DocstringError]):
+                List of DocstringError objects found in the file.
+        """
+        try:
+            return self.check_file(file_path)
+        except (FileNotFoundError, ValueError, SyntaxError) as e:
+            # Create a special error for file-level issues
+            error = DocstringError(
+                message=str(e),
+                file_path=str(file_path),
+                line_number=0,
+                item_name="",
+                item_type="file",
+            )
+            return [error]
+
     def check_directory(
         self,
         directory_path: Union[str, Path],
@@ -186,7 +261,6 @@ class DocstringChecker:
             (dict[str, list[DocstringError]]):
                 Dictionary mapping file paths to lists of DocstringError objects.
         """
-
         directory_path = Path(directory_path)
         if not directory_path.exists():
             raise FileNotFoundError(f"Directory not found: {directory_path}")
@@ -196,37 +270,16 @@ class DocstringChecker:
 
         python_files: list[Path] = list(directory_path.glob("**/*.py"))
 
-        # Filter out excluded patterns
+        # Filter out excluded patterns if provided
         if exclude_patterns:
-            filtered_files: list[Path] = []
-            for file_path in python_files:
-                relative_path: Path = file_path.relative_to(directory_path)
-                should_exclude = False
-                for pattern in exclude_patterns:
-                    if fnmatch.fnmatch(str(relative_path), pattern):
-                        should_exclude = True
-                        break
-                if not should_exclude:
-                    filtered_files.append(file_path)
-            python_files = filtered_files
+            python_files = self._filter_python_files(python_files, directory_path, exclude_patterns)
 
-        # Check each file
+        # Check each file and collect results
         results: dict[str, list[DocstringError]] = {}
         for file_path in python_files:
-            try:
-                errors: list[DocstringError] = self.check_file(file_path)
-                if errors:  # Only include files with errors
-                    results[str(file_path)] = errors
-            except (FileNotFoundError, ValueError, SyntaxError) as e:
-                # Create a special error for file-level issues
-                error = DocstringError(
-                    message=str(e),
-                    file_path=str(file_path),
-                    line_number=0,
-                    item_name="",
-                    item_type="file",
-                )
-                results[str(file_path)] = [error]
+            errors: list[DocstringError] = self._check_file_with_error_handling(file_path)
+            if errors:  # Only include files with errors
+                results[str(file_path)] = errors
 
         return results
 
@@ -351,6 +404,106 @@ class DocstringChecker:
 
         return items
 
+    def _is_section_applicable_to_item(
+        self,
+        section: SectionConfig,
+        item: FunctionAndClassDetails,
+    ) -> bool:
+        """
+        !!! note "Summary"
+            Check if a section configuration applies to the given item type.
+
+        Params:
+            section (SectionConfig):
+                The section configuration to check.
+            item (FunctionAndClassDetails):
+                The function or class to check against.
+
+        Returns:
+            (bool):
+                True if the section applies to this item type.
+        """
+
+        is_function: bool = isinstance(item.node, (ast.FunctionDef, ast.AsyncFunctionDef))
+
+        # Free text sections apply only to functions and methods, not classes
+        if section.type == "free_text":
+            return is_function
+
+        # List name and type sections have specific rules
+        if section.type == "list_name_and_type":
+            section_name_lower: str = section.name.lower()
+
+            # Params only apply to functions/methods
+            if section_name_lower == "params" and is_function:
+                return True
+
+            # Returns only apply to functions/methods
+            if section_name_lower in ["returns", "return"] and is_function:
+                return True
+
+            return False
+
+        # These sections apply to functions/methods that might have them
+        if section.type in ["list_type", "list_name"]:
+            return is_function
+
+        return False
+
+    def _get_applicable_required_sections(self, item: FunctionAndClassDetails) -> list[SectionConfig]:
+        """
+        !!! note "Summary"
+            Get all required sections that apply to the given item.
+
+        Params:
+            item (FunctionAndClassDetails):
+                The function or class to check.
+
+        Returns:
+            (list[SectionConfig]):
+                List of section configurations that are required and apply to this item.
+        """
+
+        # Filter required sections based on item type
+        applicable_sections: list[SectionConfig] = []
+        for section in self.sections_config:
+            if section.required and self._is_section_applicable_to_item(section, item):
+                applicable_sections.append(section)
+        return applicable_sections
+
+    def _handle_missing_docstring(
+        self,
+        item: FunctionAndClassDetails,
+        file_path: str,
+        requires_docstring: bool,
+    ) -> None:
+        """
+        !!! note "Summary"
+            Handle the case where a docstring is missing.
+
+        Params:
+            item (FunctionAndClassDetails):
+                The function or class without a docstring.
+            file_path (str):
+                The path to the file containing the item.
+            requires_docstring (bool):
+                Whether a docstring is required for this item.
+
+        Raises:
+            DocstringError: If docstring is required but missing.
+        """
+
+        # Raise error if docstring is required
+        if requires_docstring and self.config.global_config.require_docstrings:
+            message: str = f"Missing docstring for {item.item_type}"
+            raise DocstringError(
+                message=message,
+                file_path=file_path,
+                line_number=item.lineno,
+                item_name=item.name,
+                item_type=item.item_type,
+            )
+
     def _check_single_docstring(self, item: FunctionAndClassDetails, file_path: str) -> None:
         """
         !!! note "Summary"
@@ -369,48 +522,13 @@ class DocstringChecker:
 
         docstring: Optional[str] = ast.get_docstring(item.node)
 
-        # Check if any required sections apply to this item type
-        requires_docstring = False
-        applicable_sections: list[SectionConfig] = []
+        # Determine which required sections apply to this item type
+        applicable_sections: list[SectionConfig] = self._get_applicable_required_sections(item)
+        requires_docstring: bool = len(applicable_sections) > 0
 
-        for section in self.sections_config:
-            if section.required:
-                # Check if this section applies to this item type
-                if section.type == "free_text":
-                    # Free text sections apply only to functions and methods, not classes
-                    if isinstance(item.node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                        requires_docstring = True
-                        applicable_sections.append(section)
-                elif section.type == "list_name_and_type":
-                    if section.name.lower() == "params" and isinstance(
-                        item.node, (ast.FunctionDef, ast.AsyncFunctionDef)
-                    ):
-                        # Params only apply to functions/methods
-                        requires_docstring = True
-                        applicable_sections.append(section)
-                    elif section.name.lower() in ["returns", "return"] and isinstance(
-                        item.node, (ast.FunctionDef, ast.AsyncFunctionDef)
-                    ):
-                        # Returns only apply to functions/methods
-                        requires_docstring = True
-                        applicable_sections.append(section)
-                elif section.type in ["list_type", "list_name"]:
-                    # These sections apply to functions/methods that might have them
-                    if isinstance(item.node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                        requires_docstring = True
-                        applicable_sections.append(section)
-
+        # Only require docstrings if the global flag is enabled
         if not docstring:
-            # Only require docstrings if the global flag is enabled
-            if requires_docstring and self.config.global_config.require_docstrings:
-                message: str = f"Missing docstring for {item.item_type}"
-                raise DocstringError(
-                    message=message,
-                    file_path=file_path,
-                    line_number=item.lineno,
-                    item_name=item.name,
-                    item_type=item.item_type,
-                )
+            self._handle_missing_docstring(item, file_path, requires_docstring)
             return  # No docstring required or docstring requirement disabled
 
         # Validate docstring sections if docstring exists
@@ -438,14 +556,15 @@ class DocstringChecker:
             (None):
                 Nothing is returned.
         """
+
         errors: list[str] = []
 
         # Validate required sections
-        required_section_errors = self._validate_all_required_sections(docstring, item)
+        required_section_errors: list[str] = self._validate_all_required_sections(docstring, item)
         errors.extend(required_section_errors)
 
         # Perform comprehensive validation checks
-        comprehensive_errors = self._perform_comprehensive_validation(docstring)
+        comprehensive_errors: list[str] = self._perform_comprehensive_validation(docstring)
         errors.extend(comprehensive_errors)
 
         # Report errors if found
@@ -460,20 +579,48 @@ class DocstringChecker:
             )
 
     def _validate_all_required_sections(self, docstring: str, item: FunctionAndClassDetails) -> list[str]:
-        """Validate all required sections are present and valid."""
-        errors: list[str] = []
+        """
+        !!! note "Summary"
+            Validate all required sections are present and valid.
 
+        Params:
+            docstring (str):
+                The docstring to validate.
+            item (FunctionAndClassDetails):
+                The function or class details.
+
+        Returns:
+            (list[str]):
+                List of validation error messages.
+        """
+
+        errors: list[str] = []
         for section in self.required_sections:
             section_error = self._validate_single_required_section(docstring, section, item)
             if section_error:
                 errors.append(section_error)
-
         return errors
 
     def _validate_single_required_section(
         self, docstring: str, section: SectionConfig, item: FunctionAndClassDetails
     ) -> Optional[str]:
-        """Validate a single required section based on its type."""
+        """
+        !!! note "Summary"
+            Validate a single required section based on its type.
+
+        Params:
+            docstring (str):
+                The docstring to validate.
+            section (SectionConfig):
+                The section configuration to validate against.
+            item (FunctionAndClassDetails):
+                The function or class details.
+
+        Returns:
+            (Optional[str]):
+                Error message if validation fails, None otherwise.
+        """
+
         if section.type == "free_text":
             return self._validate_free_text_section(docstring, section)
         elif section.type == "list_name_and_type":
@@ -482,11 +629,24 @@ class DocstringChecker:
             return self._validate_list_type_section(docstring, section)
         elif section.type == "list_name":
             return self._validate_list_name_section(docstring, section)
-
         return None
 
     def _validate_free_text_section(self, docstring: str, section: SectionConfig) -> Optional[str]:
-        """Validate free text sections."""
+        """
+        !!! note "Summary"
+            Validate free text sections.
+
+        Params:
+            docstring (str):
+                The docstring to validate.
+            section (SectionConfig):
+                The section configuration.
+
+        Returns:
+            (Optional[str]):
+                Error message if section is missing, None otherwise.
+        """
+
         if not self._check_free_text_section(docstring, section):
             return f"Missing required section: {section.name}"
         return None
@@ -494,8 +654,24 @@ class DocstringChecker:
     def _validate_list_name_and_type_section(
         self, docstring: str, section: SectionConfig, item: FunctionAndClassDetails
     ) -> Optional[str]:
-        """Validate list_name_and_type sections (params, returns)."""
-        section_name = section.name.lower()
+        """
+        !!! note "Summary"
+            Validate list_name_and_type sections (params, returns).
+
+        Params:
+            docstring (str):
+                The docstring to validate.
+            section (SectionConfig):
+                The section configuration.
+            item (FunctionAndClassDetails):
+                The function or class details.
+
+        Returns:
+            (Optional[str]):
+                Error message if section is invalid, None otherwise.
+        """
+
+        section_name: str = section.name.lower()
 
         if section_name == "params" and isinstance(item.node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             if not self._check_params_section(docstring, item.node):
@@ -507,8 +683,22 @@ class DocstringChecker:
         return None
 
     def _validate_list_type_section(self, docstring: str, section: SectionConfig) -> Optional[str]:
-        """Validate list_type sections (raises, yields)."""
-        section_name = section.name.lower()
+        """
+        !!! note "Summary"
+            Validate list_type sections (raises, yields).
+
+        Params:
+            docstring (str):
+                The docstring to validate.
+            section (SectionConfig):
+                The section configuration.
+
+        Returns:
+            (Optional[str]):
+                Error message if section is invalid, None otherwise.
+        """
+
+        section_name: str = section.name.lower()
 
         if section_name in ["raises", "raise"]:
             if not self._check_raises_section(docstring):
@@ -520,17 +710,42 @@ class DocstringChecker:
         return None
 
     def _validate_list_name_section(self, docstring: str, section: SectionConfig) -> Optional[str]:
-        """Validate list_name sections."""
+        """
+        !!! note "Summary"
+            Validate list_name sections.
+
+        Params:
+            docstring (str):
+                The docstring to validate.
+            section (SectionConfig):
+                The section configuration.
+
+        Returns:
+            (Optional[str]):
+                Error message if section is missing, None otherwise.
+        """
         if not self._check_simple_section(docstring, section.name):
             return f"Missing required section: {section.name}"
         return None
 
     def _perform_comprehensive_validation(self, docstring: str) -> list[str]:
-        """Perform comprehensive validation checks on docstring."""
+        """
+        !!! note "Summary"
+            Perform comprehensive validation checks on docstring.
+
+        Params:
+            docstring (str):
+                The docstring to validate.
+
+        Returns:
+            (list[str]):
+                List of validation error messages.
+        """
+
         errors: list[str] = []
 
         # Check section order
-        order_errors = self._check_section_order(docstring)
+        order_errors: list[str] = self._check_section_order(docstring)
         errors.extend(order_errors)
 
         # Check for mutual exclusivity (returns vs yields)
@@ -539,33 +754,45 @@ class DocstringChecker:
 
         # Check for undefined sections (only if not allowed)
         if not self.config.global_config.allow_undefined_sections:
-            undefined_errors = self._check_undefined_sections(docstring)
+            undefined_errors: list[str] = self._check_undefined_sections(docstring)
             errors.extend(undefined_errors)
 
         # Perform formatting validation
-        formatting_errors = self._perform_formatting_validation(docstring)
+        formatting_errors: list[str] = self._perform_formatting_validation(docstring)
         errors.extend(formatting_errors)
 
         return errors
 
     def _perform_formatting_validation(self, docstring: str) -> list[str]:
-        """Perform formatting validation checks."""
+        """
+        !!! note "Summary"
+            Perform formatting validation checks.
+
+        Params:
+            docstring (str):
+                The docstring to validate.
+
+        Returns:
+            (list[str]):
+                List of formatting error messages.
+        """
+
         errors: list[str] = []
 
         # Check admonition values
-        admonition_errors = self._check_admonition_values(docstring)
+        admonition_errors: list[str] = self._check_admonition_values(docstring)
         errors.extend(admonition_errors)
 
         # Check colon usage
-        colon_errors = self._check_colon_usage(docstring)
+        colon_errors: list[str] = self._check_colon_usage(docstring)
         errors.extend(colon_errors)
 
         # Check title case
-        title_case_errors = self._check_title_case_sections(docstring)
+        title_case_errors: list[str] = self._check_title_case_sections(docstring)
         errors.extend(title_case_errors)
 
         # Check parentheses
-        parentheses_errors = self._check_parentheses_validation(docstring)
+        parentheses_errors: list[str] = self._check_parentheses_validation(docstring)
         errors.extend(parentheses_errors)
 
         return errors
@@ -694,21 +921,15 @@ class DocstringChecker:
         has_yields = bool(re.search(r"Yields:", docstring))
         return has_returns and has_yields
 
-    def _check_section_order(self, docstring: str) -> list[str]:
+    def _build_section_patterns(self) -> list[tuple[str, str]]:
         """
         !!! note "Summary"
-            Check that sections appear in the correct order.
-
-        Params:
-            docstring (str):
-                The docstring to check.
+            Build regex patterns for detecting sections from configuration.
 
         Returns:
-            (list[str]):
-                A list of error messages, if any.
+            (list[tuple[str, str]]):
+                List of tuples containing (pattern, section_name).
         """
-
-        # Build expected order from configuration
         section_patterns: list[tuple[str, str]] = []
         for section in sorted(self.sections_config, key=lambda x: x.order):
             if (
@@ -730,7 +951,7 @@ class DocstringChecker:
             elif section.name.lower() in ["raises", "raise"]:
                 section_patterns.append((r"Raises:", "Raises"))
 
-        # Add some default patterns for common sections
+        # Add default patterns for common sections
         default_patterns: list[tuple[str, str]] = [
             (r'!!! note "Summary"', "Summary"),
             (r'!!! details "Details"', "Details"),
@@ -742,18 +963,42 @@ class DocstringChecker:
             (r'\?\?\? tip "See Also"', "See Also"),
         ]
 
-        all_patterns: list[tuple[str, str]] = section_patterns + default_patterns
+        return section_patterns + default_patterns
 
+    def _find_sections_with_positions(self, docstring: str, patterns: list[tuple[str, str]]) -> list[tuple[int, str]]:
+        """
+        !!! note "Summary"
+            Find all sections in docstring and their positions.
+
+        Params:
+            docstring (str):
+                The docstring to search.
+            patterns (list[tuple[str, str]]):
+                List of (pattern, section_name) tuples to search for.
+
+        Returns:
+            (list[tuple[int, str]]):
+                List of (position, section_name) tuples sorted by position.
+        """
         found_sections: list[tuple[int, str]] = []
-        for pattern, section_name in all_patterns:
+        for pattern, section_name in patterns:
             match: Optional[re.Match[str]] = re.search(pattern, docstring, re.IGNORECASE)
             if match:
                 found_sections.append((match.start(), section_name))
 
         # Sort by position in docstring
         found_sections.sort(key=lambda x: x[0])
+        return found_sections
 
-        # Build expected order
+    def _build_expected_section_order(self) -> list[str]:
+        """
+        !!! note "Summary"
+            Build the expected order of sections from configuration.
+
+        Returns:
+            (list[str]):
+                List of section names in expected order.
+        """
         expected_order: list[str] = [s.name.title() for s in sorted(self.sections_config, key=lambda x: x.order)]
         expected_order.extend(
             [
@@ -767,6 +1012,25 @@ class DocstringChecker:
                 "See Also",
             ]
         )
+        return expected_order
+
+    def _check_section_order(self, docstring: str) -> list[str]:
+        """
+        !!! note "Summary"
+            Check that sections appear in the correct order.
+
+        Params:
+            docstring (str):
+                The docstring to check.
+
+        Returns:
+            (list[str]):
+                A list of error messages, if any.
+        """
+        # Build patterns and find sections
+        patterns = self._build_section_patterns()
+        found_sections = self._find_sections_with_positions(docstring, patterns)
+        expected_order = self._build_expected_section_order()
 
         # Check order matches expected order
         errors: list[str] = []
@@ -818,25 +1082,60 @@ class DocstringChecker:
         pattern: str = rf"{re.escape(section_name)}:"
         return bool(re.search(pattern, docstring, re.IGNORECASE))
 
-    def _check_undefined_sections(self, docstring: str) -> list[str]:
+    def _normalize_section_name(self, section_name: str) -> str:
         """
         !!! note "Summary"
-            Check for sections in docstring that are not defined in configuration.
+            Normalize section name by removing colons and whitespace.
+
+        Params:
+            section_name (str):
+                The raw section name to normalize.
+
+        Returns:
+            (str):
+                The normalized section name.
+        """
+        return section_name.lower().strip().rstrip(":")
+
+    def _is_valid_section_name(self, section_name: str) -> bool:
+        """
+        !!! note "Summary"
+            Check if section name is valid.
+
+        !!! abstract "Details"
+            Filters out empty names, code block markers, and special characters.
+
+        Params:
+            section_name (str):
+                The section name to validate.
+
+        Returns:
+            (bool):
+                True if the section name is valid, False otherwise.
+        """
+        # Skip empty matches or common docstring content
+        if not section_name or section_name in ["", "py", "python", "sh", "shell"]:
+            return False
+
+        # Skip code blocks and inline code
+        if any(char in section_name for char in ["`", ".", "/", "\\"]):
+            return False
+
+        return True
+
+    def _extract_section_names_from_docstring(self, docstring: str) -> set[str]:
+        """
+        !!! note "Summary"
+            Extract all section names found in docstring.
 
         Params:
             docstring (str):
-                The docstring to check.
+                The docstring to extract section names from.
 
         Returns:
-            (list[str]):
-                A list of error messages for undefined sections.
+            (set[str]):
+                A set of normalized section names found in the docstring.
         """
-
-        errors: list[str] = []
-
-        # Get all configured section names (case-insensitive)
-        configured_sections: set[str] = {section.name.lower() for section in self.sections_config}
-
         # Common patterns for different section types
         section_patterns: list[tuple[str, str]] = [
             # Standard sections with colons (but not inside quotes)
@@ -850,20 +1149,33 @@ class DocstringChecker:
         for pattern, pattern_type in section_patterns:
             matches: Iterator[re.Match[str]] = re.finditer(pattern, docstring, re.IGNORECASE | re.MULTILINE)
             for match in matches:
-                section_name: str = match.group(1).lower().strip()
+                section_name: str = self._normalize_section_name(match.group(1))
 
-                # Remove colon if present (for colon pattern matches)
-                section_name = section_name.rstrip(":")
+                if self._is_valid_section_name(section_name):
+                    found_sections.add(section_name)
 
-                # Skip empty matches or common docstring content
-                if not section_name or section_name in ["", "py", "python", "sh", "shell"]:
-                    continue
+        return found_sections
 
-                # Skip code blocks and inline code
-                if any(char in section_name for char in ["`", ".", "/", "\\"]):
-                    continue
+    def _check_undefined_sections(self, docstring: str) -> list[str]:
+        """
+        !!! note "Summary"
+            Check for sections in docstring that are not defined in configuration.
 
-                found_sections.add(section_name)
+        Params:
+            docstring (str):
+                The docstring to check.
+
+        Returns:
+            (list[str]):
+                A list of error messages for undefined sections.
+        """
+        errors: list[str] = []
+
+        # Get all configured section names (case-insensitive)
+        configured_sections: set[str] = {section.name.lower() for section in self.sections_config}
+
+        # Extract all section names from docstring
+        found_sections: set[str] = self._extract_section_names_from_docstring(docstring)
 
         # Check which found sections are not configured
         for section_name in found_sections:
@@ -871,6 +1183,57 @@ class DocstringChecker:
                 errors.append(f"Section '{section_name}' found in docstring but not defined in configuration")
 
         return errors
+
+    def _build_admonition_mapping(self) -> dict[str, str]:
+        """
+        !!! note "Summary"
+            Build mapping of section names to expected admonitions.
+
+        Returns:
+            (dict[str, str]):
+                Dictionary mapping section name to admonition type.
+        """
+        section_admonitions: dict[str, str] = {}
+        for section in self.sections_config:
+            if section.type == "free_text" and isinstance(section.admonition, str) and section.admonition:
+                section_admonitions[section.name.lower()] = section.admonition.lower()
+        return section_admonitions
+
+    def _validate_single_admonition(self, match: re.Match[str], section_admonitions: dict[str, str]) -> Optional[str]:
+        """
+        !!! note "Summary"
+            Validate a single admonition match against configuration.
+
+        Params:
+            match (re.Match[str]):
+                The regex match for an admonition section.
+            section_admonitions (dict[str, str]):
+                Mapping of section names to expected admonitions.
+
+        Returns:
+            (Optional[str]):
+                Error message if validation fails, None otherwise.
+        """
+        actual_admonition: str = match.group(1).lower()
+        section_title: str = match.group(2).lower()
+
+        # Check if this section is configured with a specific admonition
+        if section_title in section_admonitions:
+            expected_admonition: str = section_admonitions[section_title]
+            if actual_admonition != expected_admonition:
+                return (
+                    f"Section '{section_title}' has incorrect admonition '{actual_admonition}', "
+                    f"expected '{expected_admonition}'"
+                )
+
+        # Check if section shouldn't have admonition but does
+        section_config: Optional[SectionConfig] = next(
+            (s for s in self.sections_config if s.name.lower() == section_title), None
+        )
+        if section_config and section_config.admonition is False:
+            return f"Section '{section_title}' is configured as non-admonition but found as admonition"
+
+        return None
 
     def _check_admonition_values(self, docstring: str) -> list[str]:
         """
@@ -885,38 +1248,136 @@ class DocstringChecker:
             (list[str]):
                 A list of error messages for mismatched admonitions.
         """
-
         errors: list[str] = []
 
-        # Create mapping of section names to expected admonitions
-        section_admonitions: dict[str, str] = {}
-        for section in self.sections_config:
-            if section.type == "free_text" and isinstance(section.admonition, str) and section.admonition:
-                section_admonitions[section.name.lower()] = section.admonition.lower()
+        # Build admonition mapping
+        section_admonitions = self._build_admonition_mapping()
 
         # Pattern to find all admonition sections
         admonition_pattern = r"(?:\?\?\?[+]?|!!!)\s+(\w+)\s+\"([^\"]+)\""
         matches: Iterator[re.Match[str]] = re.finditer(admonition_pattern, docstring, re.IGNORECASE)
 
+        # Validate each admonition
         for match in matches:
-            actual_admonition: str = match.group(1).lower()
-            section_title: str = match.group(2).lower()
+            error = self._validate_single_admonition(match, section_admonitions)
+            if error:
+                errors.append(error)
 
-            # Check if this section is configured with a specific admonition
-            if section_title in section_admonitions:
-                expected_admonition: str = section_admonitions[section_title]
-                if actual_admonition != expected_admonition:
-                    errors.append(
-                        f"Section '{section_title}' has incorrect admonition '{actual_admonition}', "
-                        f"expected '{expected_admonition}'"
-                    )
+        return errors
 
-            # Check if section shouldn't have admonition but does
-            section_config: Optional[SectionConfig] = next(
-                (s for s in self.sections_config if s.name.lower() == section_title), None
-            )
-            if section_config and section_config.admonition is False:
-                errors.append(f"Section '{section_title}' is configured as non-admonition but found as admonition")
+    def _validate_admonition_has_no_colon(self, match: re.Match[str]) -> Optional[str]:
+        """
+        !!! note "Summary"
+            Validate that a single admonition section does not have a colon.
+
+        Params:
+            match (re.Match[str]):
+                The regex match for an admonition section.
+
+        Returns:
+            (Optional[str]):
+                An error message if colon found, None otherwise.
+        """
+
+        section_title: str = match.group(1)
+        has_colon: bool = section_title.endswith(":")
+        section_title_clean: str = section_title.rstrip(":").lower()
+
+        # Find config for this section
+        section_config: Optional[SectionConfig] = next(
+            (s for s in self.sections_config if s.name.lower() == section_title_clean), None
+        )
+
+        if section_config and isinstance(section_config.admonition, str) and section_config.admonition:
+            if has_colon:
+                return (
+                    f"Section '{section_title_clean}' is an admonition, therefore it should not end with ':', "
+                    f"see: '{match.group(0)}'"
+                )
+
+        return None
+
+    def _check_admonition_colon_usage(self, docstring: str) -> list[str]:
+        """
+        !!! note "Summary"
+            Check that admonition sections don't end with colon.
+
+        Params:
+            docstring (str):
+                The docstring to check.
+
+        Returns:
+            (list[str]):
+                A list of error messages.
+        """
+
+        errors: list[str] = []
+        admonition_pattern = r"(?:\?\?\?[+]?|!!!)\s+\w+\s+\"([^\"]+)\""
+        matches: Iterator[re.Match[str]] = re.finditer(admonition_pattern, docstring, re.IGNORECASE)
+
+        for match in matches:
+            error: Optional[str] = self._validate_admonition_has_no_colon(match)
+            if error:
+                errors.append(error)
+
+        return errors
+
+    def _validate_non_admonition_has_colon(self, line: str, pattern: str) -> Optional[str]:
+        """
+        !!! note "Summary"
+            Validate that a single line has colon if it's a non-admonition section.
+
+        Params:
+            line (str):
+                The line to check.
+            pattern (str):
+                The regex pattern to match.
+
+        Returns:
+            (Optional[str]):
+                An error message if colon missing, None otherwise.
+        """
+
+        match: Optional[re.Match[str]] = re.match(pattern, line)
+        if not match:
+            return None
+
+        section_name: str = match.group(1).lower()
+        has_colon: bool = match.group(2) == ":"
+
+        # Find config for this section
+        section_config: Optional[SectionConfig] = next(
+            (s for s in self.sections_config if s.name.lower() == section_name), None
+        )
+
+        if section_config and section_config.admonition is False:
+            if not has_colon:
+                return f"Section '{section_name}' is non-admonition, therefore it must end with ':', " f"see: '{line}'"
+
+        return None
+
+    def _check_non_admonition_colon_usage(self, docstring: str) -> list[str]:
+        """
+        !!! note "Summary"
+            Check that non-admonition sections end with colon.
+
+        Params:
+            docstring (str):
+                The docstring to check.
+
+        Returns:
+            (list[str]):
+                A list of error messages.
+        """
+
+        errors: list[str] = []
+        non_admonition_pattern = r"^(\w+)(:?)$"
+
+        for line in docstring.split("\n"):
+            line: str = line.strip()
+            error: Optional[str] = self._validate_non_admonition_has_colon(line, non_admonition_pattern)
+            if error:
+                errors.append(error)
 
         return errors
 
@@ -924,47 +1385,23 @@ class DocstringChecker:
         """
         !!! note "Summary"
             Check that colons are used correctly for admonition vs non-admonition sections.
+
+        Params:
+            docstring (str):
+                The docstring to check.
+
+        Returns:
+            (list[str]):
+                A list of error messages.
         """
 
         errors: list[str] = []
 
         # Check admonition sections (should not end with colon)
-        admonition_pattern = r"(?:\?\?\?[+]?|!!!)\s+\w+\s+\"([^\"]+)\""
-        matches: Iterator[re.Match[str]] = re.finditer(admonition_pattern, docstring, re.IGNORECASE)
-
-        for match in matches:
-            section_title: str = match.group(1)
-            has_colon: bool = section_title.endswith(":")
-            section_title_clean: str = section_title.rstrip(":").lower()
-
-            # Find config for this section
-            section_config: Optional[SectionConfig] = next(
-                (s for s in self.sections_config if s.name.lower() == section_title_clean), None
-            )
-            if section_config and isinstance(section_config.admonition, str) and section_config.admonition:
-                if has_colon:
-                    errors.append(
-                        f"Section '{section_title_clean}' is an admonition, therefore it should not end with ':', "
-                        f"see: '{match.group(0)}'"
-                    )
+        errors.extend(self._check_admonition_colon_usage(docstring))
 
         # Check non-admonition sections (should end with colon)
-        non_admonition_pattern = r"^(\w+)(:?)$"
-        for line in docstring.split("\n"):
-            line: str = line.strip()
-            match: Optional[re.Match[str]] = re.match(non_admonition_pattern, line)
-            if match:
-                section_name: str = match.group(1).lower()
-                has_colon: bool = match.group(2) == ":"
-
-                # Find config for this section
-                section_config = next((s for s in self.sections_config if s.name.lower() == section_name), None)
-                if section_config and section_config.admonition is False:
-                    if not has_colon:
-                        errors.append(
-                            f"Section '{section_name}' is non-admonition, therefore it must end with ':', "
-                            f"see: '{line}'"
-                        )
+        errors.extend(self._check_non_admonition_colon_usage(docstring))
 
         return errors
 
@@ -1050,7 +1487,20 @@ class DocstringChecker:
         return errors
 
     def _detect_any_section_header(self, stripped_line: str, full_line: str) -> bool:
-        """Detect any section header (for section transitions)."""
+        """
+        !!! note "Summary"
+            Detect any section header (for section transitions).
+
+        Params:
+            stripped_line (str):
+                The stripped line content.
+            full_line (str):
+                The full line with indentation.
+
+        Returns:
+            (bool):
+                True if line is a section header, False otherwise.
+        """
         # Admonition sections
         admonition_match: Optional[re.Match[str]] = re.match(
             r"(?:\?\?\?[+]?|!!!)\s+\w+\s+\"([^\"]+)\"", stripped_line, re.IGNORECASE
@@ -1073,7 +1523,22 @@ class DocstringChecker:
     def _detect_section_header(
         self, stripped_line: str, full_line: str, parentheses_sections: list[SectionConfig]
     ) -> Optional[SectionConfig]:
-        """Detect section headers and return matching section config."""
+        """
+        !!! note "Summary"
+            Detect section headers and return matching section config.
+
+        Params:
+            stripped_line (str):
+                The stripped line content.
+            full_line (str):
+                The full line with indentation.
+            parentheses_sections (list[SectionConfig]):
+                List of sections requiring parentheses validation.
+
+        Returns:
+            (Optional[SectionConfig]):
+                Matching section config or None if not found.
+        """
         # Admonition sections
         admonition_match: Optional[re.Match[str]] = re.match(
             r"(?:\?\?\?[+]?|!!!)\s+\w+\s+\"([^\"]+)\"", stripped_line, re.IGNORECASE
@@ -1098,13 +1563,31 @@ class DocstringChecker:
 
     def _is_content_line(self, stripped_line: str) -> bool:
         """
-        Check if line is content that needs validation.
+        !!! note "Summary"
+            Check if line is content that needs validation.
+
+        Params:
+            stripped_line (str):
+                The stripped line content.
+
+        Returns:
+            (bool):
+                True if line is content requiring validation, False otherwise.
         """
         return bool(stripped_line) and not stripped_line.startswith(("!", "?", "#")) and ":" in stripped_line
 
     def _is_description_line(self, stripped_line: str) -> bool:
         """
-        Check if line is a description rather than a type definition.
+        !!! note "Summary"
+            Check if line is a description rather than a type definition.
+
+        Params:
+            stripped_line (str):
+                The stripped line content.
+
+        Returns:
+            (bool):
+                True if line is a description, False otherwise.
         """
         description_prefixes: list[str] = [
             "default:",
@@ -1131,7 +1614,22 @@ class DocstringChecker:
         self, full_line: str, stripped_line: str, current_section: SectionConfig, type_line_indent: Optional[int]
     ) -> tuple[list[str], Optional[int]]:
         """
-        Validate a single line for parentheses requirements.
+        !!! note "Summary"
+            Validate a single line for parentheses requirements.
+
+        Params:
+            full_line (str):
+                The full line with indentation.
+            stripped_line (str):
+                The stripped line content.
+            current_section (SectionConfig):
+                The current section being validated.
+            type_line_indent (Optional[int]):
+                The indentation level of type definitions.
+
+        Returns:
+            (tuple[list[str], Optional[int]]):
+                Tuple of error messages and updated type line indent.
         """
         errors: list[str] = []
         new_indent: Optional[int] = None
@@ -1156,7 +1654,22 @@ class DocstringChecker:
         self, stripped_line: str, current_indent: int, type_line_indent: Optional[int], current_section: SectionConfig
     ) -> tuple[list[str], Optional[int]]:
         """
-        Validate list_type section lines.
+        !!! note "Summary"
+            Validate list_type section lines.
+
+        Params:
+            stripped_line (str):
+                The stripped line content.
+            current_indent (int):
+                The current line's indentation level.
+            type_line_indent (Optional[int]):
+                The indentation level of type definitions.
+            current_section (SectionConfig):
+                The current section being validated.
+
+        Returns:
+            (tuple[list[str], Optional[int]]):
+                Tuple of error messages and updated type line indent.
         """
         errors: list[str] = []
 
@@ -1180,7 +1693,22 @@ class DocstringChecker:
         self, stripped_line: str, current_indent: int, type_line_indent: Optional[int], current_section: SectionConfig
     ) -> tuple[list[str], Optional[int]]:
         """
-        Validate list_name_and_type section lines.
+        !!! note "Summary"
+            Validate list_name_and_type section lines.
+
+        Params:
+            stripped_line (str):
+                The stripped line content.
+            current_indent (int):
+                The current line's indentation level.
+            type_line_indent (Optional[int]):
+                The indentation level of type definitions.
+            current_section (SectionConfig):
+                The current section being validated.
+
+        Returns:
+            (tuple[list[str], Optional[int]]):
+                Tuple of error messages and updated type line indent.
         """
         errors: list[str] = []
 

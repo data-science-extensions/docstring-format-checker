@@ -352,7 +352,22 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> Config:
 
 
 def _resolve_config_path(config_path: Optional[Union[str, Path]]) -> Optional[Path]:
-    """Resolve configuration file path."""
+    """
+    !!! note "Summary"
+        Resolve configuration file path.
+
+    Params:
+        config_path (Optional[Union[str, Path]]):
+            Optional path to configuration file.
+
+    Raises:
+        (FileNotFoundError):
+            If specified config file does not exist.
+
+    Returns:
+        (Optional[Path]):
+            Resolved Path object or None if no config found.
+    """
     if config_path is None:
         # Look for pyproject.toml in current directory
         pyproject_path: Path = Path.cwd().joinpath("pyproject.toml")
@@ -370,7 +385,22 @@ def _resolve_config_path(config_path: Optional[Union[str, Path]]) -> Optional[Pa
 
 
 def _parse_toml_file(config_path: Path) -> dict[str, Any]:
-    """Parse TOML configuration file."""
+    """
+    !!! note "Summary"
+        Parse TOML configuration file.
+
+    Params:
+        config_path (Path):
+            Path to TOML file to parse.
+
+    Raises:
+        (InvalidConfigError):
+            If TOML parsing fails.
+
+    Returns:
+        (dict[str, Any]):
+            Parsed TOML data as dictionary.
+    """
     try:
         with open(config_path, "rb") as f:
             return tomllib.load(f)
@@ -379,7 +409,18 @@ def _parse_toml_file(config_path: Path) -> dict[str, Any]:
 
 
 def _extract_tool_config(config_data: dict[str, Any]) -> Optional[dict[str, Any]]:
-    """Extract tool configuration from TOML data."""
+    """
+    !!! note "Summary"
+        Extract tool configuration from TOML data.
+
+    Params:
+        config_data (dict[str, Any]):
+            Parsed TOML data dictionary.
+
+    Returns:
+        (Optional[dict[str, Any]]):
+            Tool configuration dictionary or None if not found.
+    """
     if "tool" not in config_data:
         return None
 
@@ -393,7 +434,18 @@ def _extract_tool_config(config_data: dict[str, Any]) -> Optional[dict[str, Any]
 
 
 def _parse_global_config(tool_config: dict[str, Any]) -> GlobalConfig:
-    """Parse global configuration flags."""
+    """
+    !!! note "Summary"
+        Parse global configuration flags.
+
+    Params:
+        tool_config (dict[str, Any]):
+            Tool configuration dictionary.
+
+    Returns:
+        (GlobalConfig):
+            Parsed global configuration object.
+    """
     return GlobalConfig(
         allow_undefined_sections=tool_config.get("allow_undefined_sections", False),
         require_docstrings=tool_config.get("require_docstrings", True),
@@ -402,7 +454,18 @@ def _parse_global_config(tool_config: dict[str, Any]) -> GlobalConfig:
 
 
 def _parse_sections_config(tool_config: dict[str, Any]) -> list[SectionConfig]:
-    """Parse sections configuration."""
+    """
+    !!! note "Summary"
+        Parse sections configuration.
+
+    Params:
+        tool_config (dict[str, Any]):
+            Tool configuration dictionary.
+
+    Returns:
+        (list[SectionConfig]):
+            List of section configuration objects or defaults.
+    """
     if "sections" not in tool_config:
         return DEFAULT_SECTIONS
 
