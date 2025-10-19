@@ -489,10 +489,6 @@ class DocstringChecker:
             requires_docstring (bool):
                 Whether a docstring is required for this item.
 
-        Returns:
-            (None):
-                Nothing is returned.
-
         Raises:
             DocstringError: If docstring is required but missing.
         """
@@ -583,7 +579,20 @@ class DocstringChecker:
             )
 
     def _validate_all_required_sections(self, docstring: str, item: FunctionAndClassDetails) -> list[str]:
-        """Validate all required sections are present and valid."""
+        """
+        !!! note "Summary"
+            Validate all required sections are present and valid.
+
+        Params:
+            docstring (str):
+                The docstring to validate.
+            item (FunctionAndClassDetails):
+                The function or class details.
+
+        Returns:
+            (list[str]):
+                List of validation error messages.
+        """
 
         errors: list[str] = []
         for section in self.required_sections:
@@ -595,7 +604,22 @@ class DocstringChecker:
     def _validate_single_required_section(
         self, docstring: str, section: SectionConfig, item: FunctionAndClassDetails
     ) -> Optional[str]:
-        """Validate a single required section based on its type."""
+        """
+        !!! note "Summary"
+            Validate a single required section based on its type.
+
+        Params:
+            docstring (str):
+                The docstring to validate.
+            section (SectionConfig):
+                The section configuration to validate against.
+            item (FunctionAndClassDetails):
+                The function or class details.
+
+        Returns:
+            (Optional[str]):
+                Error message if validation fails, None otherwise.
+        """
 
         if section.type == "free_text":
             return self._validate_free_text_section(docstring, section)
@@ -608,7 +632,20 @@ class DocstringChecker:
         return None
 
     def _validate_free_text_section(self, docstring: str, section: SectionConfig) -> Optional[str]:
-        """Validate free text sections."""
+        """
+        !!! note "Summary"
+            Validate free text sections.
+
+        Params:
+            docstring (str):
+                The docstring to validate.
+            section (SectionConfig):
+                The section configuration.
+
+        Returns:
+            (Optional[str]):
+                Error message if section is missing, None otherwise.
+        """
 
         if not self._check_free_text_section(docstring, section):
             return f"Missing required section: {section.name}"
@@ -617,7 +654,22 @@ class DocstringChecker:
     def _validate_list_name_and_type_section(
         self, docstring: str, section: SectionConfig, item: FunctionAndClassDetails
     ) -> Optional[str]:
-        """Validate list_name_and_type sections (params, returns)."""
+        """
+        !!! note "Summary"
+            Validate list_name_and_type sections (params, returns).
+
+        Params:
+            docstring (str):
+                The docstring to validate.
+            section (SectionConfig):
+                The section configuration.
+            item (FunctionAndClassDetails):
+                The function or class details.
+
+        Returns:
+            (Optional[str]):
+                Error message if section is invalid, None otherwise.
+        """
 
         section_name: str = section.name.lower()
 
@@ -631,7 +683,20 @@ class DocstringChecker:
         return None
 
     def _validate_list_type_section(self, docstring: str, section: SectionConfig) -> Optional[str]:
-        """Validate list_type sections (raises, yields)."""
+        """
+        !!! note "Summary"
+            Validate list_type sections (raises, yields).
+
+        Params:
+            docstring (str):
+                The docstring to validate.
+            section (SectionConfig):
+                The section configuration.
+
+        Returns:
+            (Optional[str]):
+                Error message if section is invalid, None otherwise.
+        """
 
         section_name: str = section.name.lower()
 
@@ -645,13 +710,37 @@ class DocstringChecker:
         return None
 
     def _validate_list_name_section(self, docstring: str, section: SectionConfig) -> Optional[str]:
-        """Validate list_name sections."""
+        """
+        !!! note "Summary"
+            Validate list_name sections.
+
+        Params:
+            docstring (str):
+                The docstring to validate.
+            section (SectionConfig):
+                The section configuration.
+
+        Returns:
+            (Optional[str]):
+                Error message if section is missing, None otherwise.
+        """
         if not self._check_simple_section(docstring, section.name):
             return f"Missing required section: {section.name}"
         return None
 
     def _perform_comprehensive_validation(self, docstring: str) -> list[str]:
-        """Perform comprehensive validation checks on docstring."""
+        """
+        !!! note "Summary"
+            Perform comprehensive validation checks on docstring.
+
+        Params:
+            docstring (str):
+                The docstring to validate.
+
+        Returns:
+            (list[str]):
+                List of validation error messages.
+        """
 
         errors: list[str] = []
 
@@ -675,7 +764,18 @@ class DocstringChecker:
         return errors
 
     def _perform_formatting_validation(self, docstring: str) -> list[str]:
-        """Perform formatting validation checks."""
+        """
+        !!! note "Summary"
+            Perform formatting validation checks.
+
+        Params:
+            docstring (str):
+                The docstring to validate.
+
+        Returns:
+            (list[str]):
+                List of formatting error messages.
+        """
 
         errors: list[str] = []
 
@@ -1002,7 +1102,7 @@ class DocstringChecker:
         !!! note "Summary"
             Check if section name is valid.
 
-        !!! details "Details"
+        !!! abstract "Details"
             Filters out empty names, code block markers, and special characters.
 
         Params:
@@ -1387,7 +1487,20 @@ class DocstringChecker:
         return errors
 
     def _detect_any_section_header(self, stripped_line: str, full_line: str) -> bool:
-        """Detect any section header (for section transitions)."""
+        """
+        !!! note "Summary"
+            Detect any section header (for section transitions).
+
+        Params:
+            stripped_line (str):
+                The stripped line content.
+            full_line (str):
+                The full line with indentation.
+
+        Returns:
+            (bool):
+                True if line is a section header, False otherwise.
+        """
         # Admonition sections
         admonition_match: Optional[re.Match[str]] = re.match(
             r"(?:\?\?\?[+]?|!!!)\s+\w+\s+\"([^\"]+)\"", stripped_line, re.IGNORECASE
@@ -1410,7 +1523,22 @@ class DocstringChecker:
     def _detect_section_header(
         self, stripped_line: str, full_line: str, parentheses_sections: list[SectionConfig]
     ) -> Optional[SectionConfig]:
-        """Detect section headers and return matching section config."""
+        """
+        !!! note "Summary"
+            Detect section headers and return matching section config.
+
+        Params:
+            stripped_line (str):
+                The stripped line content.
+            full_line (str):
+                The full line with indentation.
+            parentheses_sections (list[SectionConfig]):
+                List of sections requiring parentheses validation.
+
+        Returns:
+            (Optional[SectionConfig]):
+                Matching section config or None if not found.
+        """
         # Admonition sections
         admonition_match: Optional[re.Match[str]] = re.match(
             r"(?:\?\?\?[+]?|!!!)\s+\w+\s+\"([^\"]+)\"", stripped_line, re.IGNORECASE
@@ -1435,13 +1563,31 @@ class DocstringChecker:
 
     def _is_content_line(self, stripped_line: str) -> bool:
         """
-        Check if line is content that needs validation.
+        !!! note "Summary"
+            Check if line is content that needs validation.
+
+        Params:
+            stripped_line (str):
+                The stripped line content.
+
+        Returns:
+            (bool):
+                True if line is content requiring validation, False otherwise.
         """
         return bool(stripped_line) and not stripped_line.startswith(("!", "?", "#")) and ":" in stripped_line
 
     def _is_description_line(self, stripped_line: str) -> bool:
         """
-        Check if line is a description rather than a type definition.
+        !!! note "Summary"
+            Check if line is a description rather than a type definition.
+
+        Params:
+            stripped_line (str):
+                The stripped line content.
+
+        Returns:
+            (bool):
+                True if line is a description, False otherwise.
         """
         description_prefixes: list[str] = [
             "default:",
@@ -1468,7 +1614,22 @@ class DocstringChecker:
         self, full_line: str, stripped_line: str, current_section: SectionConfig, type_line_indent: Optional[int]
     ) -> tuple[list[str], Optional[int]]:
         """
-        Validate a single line for parentheses requirements.
+        !!! note "Summary"
+            Validate a single line for parentheses requirements.
+
+        Params:
+            full_line (str):
+                The full line with indentation.
+            stripped_line (str):
+                The stripped line content.
+            current_section (SectionConfig):
+                The current section being validated.
+            type_line_indent (Optional[int]):
+                The indentation level of type definitions.
+
+        Returns:
+            (tuple[list[str], Optional[int]]):
+                Tuple of error messages and updated type line indent.
         """
         errors: list[str] = []
         new_indent: Optional[int] = None
@@ -1493,7 +1654,22 @@ class DocstringChecker:
         self, stripped_line: str, current_indent: int, type_line_indent: Optional[int], current_section: SectionConfig
     ) -> tuple[list[str], Optional[int]]:
         """
-        Validate list_type section lines.
+        !!! note "Summary"
+            Validate list_type section lines.
+
+        Params:
+            stripped_line (str):
+                The stripped line content.
+            current_indent (int):
+                The current line's indentation level.
+            type_line_indent (Optional[int]):
+                The indentation level of type definitions.
+            current_section (SectionConfig):
+                The current section being validated.
+
+        Returns:
+            (tuple[list[str], Optional[int]]):
+                Tuple of error messages and updated type line indent.
         """
         errors: list[str] = []
 
@@ -1517,7 +1693,22 @@ class DocstringChecker:
         self, stripped_line: str, current_indent: int, type_line_indent: Optional[int], current_section: SectionConfig
     ) -> tuple[list[str], Optional[int]]:
         """
-        Validate list_name_and_type section lines.
+        !!! note "Summary"
+            Validate list_name_and_type section lines.
+
+        Params:
+            stripped_line (str):
+                The stripped line content.
+            current_indent (int):
+                The current line's indentation level.
+            type_line_indent (Optional[int]):
+                The indentation level of type definitions.
+            current_section (SectionConfig):
+                The current section being validated.
+
+        Returns:
+            (tuple[list[str], Optional[int]]):
+                Tuple of error messages and updated type line indent.
         """
         errors: list[str] = []
 

@@ -185,7 +185,7 @@ files = [
 [tool.dfc]
 allow_undefined_sections = false
 require_docstrings = true
-check_private = false
+check_private = true
 sections = [
     { order=1, name="summary",  type="free_text",          required=true,  admonition="note",     prefix="!!!" },
     { order=2, name="details",  type="free_text",          required=false, admonition="abstract", prefix="???+" },
