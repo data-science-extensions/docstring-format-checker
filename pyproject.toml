@@ -170,9 +170,10 @@ disable = [
 
 [tool.complexipy]
 paths = "src/docstring_format_checker"
-max-complexity-allowed = 15
+max-complexity-allowed = 13
 quiet = false
 ignore-complexity = false
+details = "low"
 sort = "asc"
 
 [tool.bump_version.replacements]
