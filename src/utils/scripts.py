@@ -84,7 +84,7 @@ def lint() -> None:
     run_black()
     run_blacken_docs()
     run_isort()
-    # run_pycln()
+    run_pycln()
 
 
 ## --------------------------------------------------------------------------- #
@@ -157,7 +157,7 @@ def check() -> None:
     check_mypy()
     check_isort()
     check_codespell()
-    # check_pycln()  # <-- pycln is currently incompatible with python 3.14
+    check_pycln()
     check_pylint()
     check_complexity()
     check_docstrings()
