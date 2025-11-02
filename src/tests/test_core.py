@@ -180,7 +180,7 @@ class TestDocstringChecker(TestCase):
 
         python_content: str = dedent(
             '''
-            def detailed_function(param1, param2):
+            def detailed_function(param1: str, param2: int) -> bool:
                 """
                 !!! note "Summary"
                     This is a summary.
