@@ -9,6 +9,688 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v1.6.1"
+
+    ## **v1.6.1 - Refactor Validation Architecture and Fix Parser Bug**
+
+    <!-- md:tag v1.6.1 --><br>
+    <!-- md:date 2025-11-02 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v1.6.1](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.6.1) -->
+
+    ??? note "Release Notes"
+
+        ### Summary
+        
+        This release refactors the core docstring validation architecture to separate required section presence validation from section content validation, eliminate redundant code, and enhance error message formatting. The restructuring introduces a two-phase validation approach that first checks for required section presence, then validates content of all existing sections, eliminating false positives and improving maintainability. The release also fixes a critical parser bug where deeply indented lines containing capitalised words followed by colons (such as `Default:` lines in parameter descriptions) were incorrectly identified as section headers, causing the parser to prematurely exit the params section and fail to extract type information for subsequent parameters. Additionally, multi-line error formatting has been enhanced to properly indent continuation lines, significantly improving readability for complex validation failures such as parameter type mismatches. All changes maintain 100% test coverage and backwards compatibility, with 206/206 tests passing and no breaking changes to existing configurations or APIs.
+        
+        
+        ### Release Statistics
+        
+        | Attribute                 | Note                                          |
+        | ------------------------- | --------------------------------------------- |
+        | **Version:**              | `v1.6.1`                                      |
+        | **Python Support:**       | `3.9`, `3.10`, `3.11`, `3.12`, `3.13`, `3.14` |
+        | **Test Coverage:**        | 100% (906 statements, +9 from v1.6.0)         |
+        | **Pylint Score:**         | 10.00/10                                      |
+        | **Complexity:**           | All functions ≤13 threshold                   |
+        | **Functions:**            | 103 (+3 new, -4 removed, +1 renamed)          |
+        | **Tests Passing:**        | 206/206 (+7 new, -1 removed)                  |
+        | **Files Changed:**        | 5                                             |
+        | **Lines Added:**          | 534                                           |
+        | **Lines Removed:**        | 244                                           |
+        | **Commits:**              | 8                                             |
+        | **Pull Requests Merged:** | 1 (PR #22)                                    |
+        
+        
+        ### 🏗️ Validation Architecture Refactoring
+        
+        
+        #### Overview
+        
+        Restructure the docstring validation logic into two distinct phases that separate required section presence checking from section content validation. This refactoring eliminates false positives where content validation was attempted on non-existent sections, reduces code duplication by consolidating four redundant helper methods into a single unified implementation, and improves extensibility for future enhancements requiring optional section content validation.
+        
+        
+        #### Problem Statement
+        
+        **Coupled Validation Logic:**
+        
+        The previous validation architecture combined section presence checking with content validation in a single pass through required sections. This coupling created several critical issues:
+        
+        1. **False Positives**: Content validation attempted on sections that might not exist, generating confusing error messages
+        2. **Code Duplication**: Similar validation logic repeated across multiple helper methods (`_check_returns_section()`, `_check_raises_section()`, `_check_yields_section()`, `_check_simple_section()`)
+        3. **Unclear Responsibility**: Methods named "validate" sometimes only checked existence without validating content
+        4. **Maintenance Burden**: Changes to validation logic required updates across multiple similar methods
+        5. **Limited Flexibility**: Optional sections with content validation requirements couldn't be easily supported
+        
+        
+        **Example Issue:**
+        
+        When a required section was missing, validation would:
+        1. Check if section exists → No
+        2. Attempt to validate section content → Fails with unclear error
+        3. Report both "missing section" and "invalid content" errors
+        
+        This created confusing error messages and made debugging difficult for users.
+        
+        
+        #### Solution Architecture
+        
+        Implement a two-phase validation approach that cleanly separates concerns into distinct responsibilities:
+        
+        **Phase 1: Required Section Presence Validation**
+        - Use `_validate_all_required_sections()` to check only that required sections exist
+        - Generate clear "Missing required section: {name}" errors when sections absent
+        - Apply special handling for `params` section based on function parameters
+        
+        **Phase 2: Existing Section Content Validation**
+        - Use `_validate_all_existing_sections()` to validate content of all present sections
+        - Apply to both required and optional sections that exist in docstring
+        - Only validate sections that actually exist, avoiding false positive errors
+        
+        
+        #### Core Implementation
+        
+        Refactor the `_check_docstring()` method to implement the two-phase validation approach with clear separation of concerns.
+        
+        
+        **Files Modified:**
+        - `src/docstring_format_checker/core.py` (+253 lines, -251 lines)
+        
+        
+        ##### Method Restructure in `_check_docstring()`
+        
+        Replace the single-phase validation with distinct phases:
+        
+        ```python
+        # New approach (separated phases)
+        def _check_docstring(
+            self, docstring: str, item: FunctionAndClassDetails
+        ) -> Optional[DocstringError]:
+            errors: list[str] = []
+
+            # Phase 1: Validate required sections are present
+            required_section_errors: list[str] = self._validate_all_required_sections(
+                docstring, item
+            )
+            errors.extend(required_section_errors)
+
+            # Phase 2: Validate all existing sections (required or not)
+            existing_section_errors: list[str] = self._validate_all_existing_sections(
+                docstring, item
+            )
+            errors.extend(existing_section_errors)
+
+            # ... other validation
+        ```
+        
+        **Benefits:**
+        - Clear separation between presence and content validation
+        - Eliminates false positives from validating non-existent sections
+        - Enables optional section content validation
+        - Improves error message clarity and debugging
+        
+        
+        ##### New Method: `_is_params_section_required()`
+        
+        Extract params section requirement logic into dedicated method for improved code organisation and reusability:
+        
+        ```python
+        def _is_params_section_required(self, item: FunctionAndClassDetails) -> bool:
+            """
+            Check if params section is required for this item.
+            """
+
+            # For classes, params section not required (attributes handled differently)
+            if isinstance(item.node, ast.ClassDef):
+                return False
+
+            # For functions, only required if function has parameters (excluding self/cls)
+            params = [arg.arg for arg in item.node.args.args if arg.arg not in ("self", "cls")]
+            return len(params) > 0
+        ```
+        
+        **Benefits:**
+        - Centralise params requirement logic in one location
+        - Make params validation rules explicit and testable
+        - Reduce code duplication across validation methods
+        - Enable consistent params section handling throughout codebase
+        
+        
+        ##### Refactored Method: `_validate_all_required_sections()`
+        
+        Simplify to focus solely on presence validation, delegating content validation to phase 2:
+        
+        ```python
+        def _validate_all_required_sections(
+            self, docstring: str, item: FunctionAndClassDetails
+        ) -> list[str]:
+            """
+            Validate all required sections are present.
+            """
+
+            errors: list[str] = []
+            for section in self.required_sections:
+                # Special handling for params section
+                if section.name.lower() == "params":
+                    if not self._is_params_section_required(item):
+                        continue
+
+                # Only check if the section exists, don't validate content yet
+                if not self._section_exists(docstring, section):
+                    errors.append(f"Missing required section: {section.name}")
+            return errors
+        ```
+        
+        **Changes:**
+        - Remove content validation logic (moved to phase 2)
+        - Use new `_is_params_section_required()` helper method
+        - Return lowercase section names in error messages for consistency
+        - Simplified error message format
+        
+        
+        ##### New Method: `_validate_all_existing_sections()`
+        
+        Introduce new method to validate content of all existing sections, regardless of whether they are required:
+        
+        ```python
+        def _validate_all_existing_sections(
+            self, docstring: str, item: FunctionAndClassDetails
+        ) -> list[str]:
+            """
+            Validate content of all existing sections (required or not).
+            """
+
+            errors: list[str] = []
+            for section in self.config.sections:
+                # Only validate if the section actually exists in the docstring
+                if self._section_exists(docstring, section):
+                    section_error = self._validate_single_section_content(
+                        docstring, section, item
+                    )
+                    if section_error:
+                        errors.append(section_error)
+            return errors
+        ```
+        
+        **Benefits:**
+        - Apply content validation to optional sections that are present
+        - Avoid attempting validation on non-existent sections
+        - Process all sections consistently using same validation pipeline
+        - Enable future enhancement for optional section content requirements
+        
+        
+        ##### New Method: `_section_exists()`
+        
+        Consolidate section existence checking logic into single unified method, replacing four redundant helper methods:
+        
+        ```python
+        def _section_exists(self, docstring: str, section: SectionConfig) -> bool:
+            """
+            Check if a section exists in the docstring.
+            """
+
+            section_name: str = section.name.lower()
+
+            # For free text sections, use existing logic
+            if section.type == "free_text":
+                return self._check_free_text_section(docstring, section)
+
+            # Check for admonition style sections
+            if section.admonition and isinstance(section.admonition, str):
+                if section.prefix and isinstance(section.prefix, str):
+                    pattern: str = (
+                        rf"{re.escape(section.prefix)}\s+{re.escape(section.admonition)}"
+                    )
+                    if re.search(pattern, docstring, re.IGNORECASE):
+                        return True
+
+            # Check for standard sections with colons
+            pattern = rf"^[ \t]*{re.escape(section_name)}:[ \t]*$"
+            if re.search(pattern, docstring, re.IGNORECASE | re.MULTILINE):
+                return True
+
+            return False
+        ```
+        
+        **Replaces Four Methods:**
+        - `_check_returns_section()` (15 lines)
+        - `_check_raises_section()` (15 lines)
+        - `_check_yields_section()` (15 lines)
+        - `_check_simple_section()` (15 lines)
+        
+        **Benefits:**
+        - Single source of truth for section existence checking
+        - Support both standard and admonition-style sections
+        - Reduce code duplication from 4 methods to 1 (60 lines eliminated)
+        - Improve maintainability and testing
+        
+        
+        ##### Renamed Method: `_validate_single_section_content()`
+        
+        Rename `_validate_single_required_section()` to better reflect its purpose of validating content rather than checking presence:
+        
+        ```python
+        def _validate_single_section_content(
+            self, docstring: str, section: SectionConfig, item: FunctionAndClassDetails
+        ) -> Optional[str]:
+            """
+            Validate the content of a single section based on its type.
+            """
+
+            if section.type == "list_name_and_type":
+                return self._validate_list_name_and_type_section(docstring, section, item)
+
+            if section.type == "list_name":
+                return self._validate_list_name_section(docstring, section)
+
+            # For section.type in ("free_text", "list_type")
+            # these sections do not need content validation beyond existence
+            return None
+        ```
+        
+        **Changes:**
+        - Rename to clarify this validates content, not presence
+        - Simplify logic by removing redundant validation
+        - Add clear documentation about which section types need content validation
+        
+        
+        ##### Simplified Method: `_validate_list_name_and_type_section()`
+        
+        Streamline validation logic by removing redundant checks now handled in phase 1:
+        
+        ```python
+        def _validate_list_name_and_type_section(
+            self, docstring: str, section: SectionConfig, item: FunctionAndClassDetails
+        ) -> Optional[str]:
+            """
+            Validate list_name_and_type sections (params, returns).
+            """
+
+            section_name: str = section.name.lower()
+
+            if section_name == "params" and isinstance(
+                item.node, (ast.FunctionDef, ast.AsyncFunctionDef)
+            ):
+                # Check params section exists and is properly formatted
+                if not self._check_params_section(docstring, item.node):
+                    return "Missing or invalid Params section"
+
+                # If validate_param_types is enabled, validate type annotations match
+                if self.config.global_config.validate_param_types:
+                    type_error: Optional[str] = self._validate_param_types(docstring, item.node)
+                    if type_error:
+                        return type_error
+
+            # For returns/return sections, no additional validation beyond existence
+            return None
+        ```
+        
+        **Changes:**
+        - Remove redundant existence checks for returns/yields/raises sections
+        - Rely on phase 1 validation for existence checking
+        - Keep only essential params section content validation
+        - Add clarifying comments about validation approach
+        
+        
+        #### Consistency Improvements
+        
+        Fix inconsistent capitalisation in error messages by removing `.capitalize()` calls:
+        
+        ```python
+        # Old (inconsistent capitalisation)
+        errors.append(f"Missing required section: {section.name.capitalize()}")
+        # Result: "Missing required section: Params" (capitalised)
+
+        # New (consistent with section names)
+        errors.append(f"Missing required section: {section.name}")
+        # Result: "Missing required section: params" (as defined in config)
+        ```
+        
+        **Rationale:**
+        - Section names are defined in `pyproject.toml` with specific capitalisation
+        - User-configured section names should appear exactly as defined
+        - Prevents confusion when section name is "URLs" but error shows "Urls"
+        - Maintains consistency with section name references throughout validation
+        
+        
+        #### Code Reduction Summary
+        
+        **Methods Removed:**
+        - `_check_returns_section()` - 15 lines
+        - `_check_raises_section()` - 15 lines
+        - `_check_yields_section()` - 15 lines
+        - `_check_simple_section()` - 15 lines
+        
+        **Methods Added:**
+        - `_is_params_section_required()` - 17 lines
+        - `_validate_all_existing_sections()` - 12 lines
+        - `_section_exists()` - 20 lines
+        
+        **Net Result:**
+        - Removed: 60 lines of duplicated code
+        - Added: 49 lines of consolidated code
+        - Improvement: 11 lines net reduction with better organisation
+        
+        
+        ### 🐛 Parser Bug Fix: Section Header Detection
+        
+        
+        #### Overview
+        
+        Fix critical parser bug where deeply indented lines containing capitalised words followed by colons were incorrectly identified as section headers, causing the parser to prematurely exit the params section and fail to extract type information for subsequent parameters.
+        
+        
+        #### Problem Statement
+        
+        The docstring parser's section header detection regex (`^\s*[A-Z]\w+:`) was too broad, matching any line with any amount of whitespace followed by a capitalised word and colon. This caused false positives where deeply indented parameter descriptions containing `Default:` lines were incorrectly identified as new section headers.
+        
+        
+        **Example Failure:**
+        
+        ```python
+        def check_docstrings(
+            paths: list[str],
+            config: Optional[str] = None,
+            exclude: Optional[list[str]] = None,
+        ) -> None:
+            """
+            Params:
+                paths (list[str]):
+                    The path(s) to the file(s) to check.
+                config (Optional[str]):
+                    The path to the configuration file.
+                    Default: `None`.            # ❌ Incorrectly detected as section header!
+                exclude (Optional[list[str]]):  # ❌ Never extracted - parser stopped too early
+                    List of glob patterns to exclude from checking.
+                    Default: `None`.
+            """
+        ```
+        
+        **Consequences:**
+        - Parameter `exclude` type never extracted from docstring
+        - False error: "Parameter 'exclude' has type annotation but no type in docstring"
+        - Validation failures despite correct docstring formatting
+        - Developers unable to document default values without triggering parser failures
+        
+        
+        #### Solution Implementation
+        
+        Refine the section header detection regex to only match lines with minimal indentation (0-4 spaces), distinguishing actual section headers from deeply indented parameter descriptions.
+        
+        
+        **File Modified:**
+        - `src/docstring_format_checker/core.py`
+        
+        
+        **Change in `_extract_param_types_from_docstring()`:**
+        
+        ```python
+        # Old regex (matches any indentation level)
+        if in_params_section and re.match(r"^\s*[A-Z]\w+:", line):
+            break  # Stop processing params section
+
+        # New regex (only matches minimal indentation)
+        if in_params_section and re.match(r"^[ ]{0,4}[A-Z]\w+:", line):
+            break  # Stop processing params section
+        ```
+        
+        **Pattern Analysis:**
+        
+        ```
+        ^[ ]{0,4}      # Start of line followed by 0-4 spaces (not tabs)
+        [A-Z]          # Capital letter
+        \w+            # Word characters
+        :              # Colon
+        ```
+        
+        **Indentation Levels:**
+        - Section headers (`Params:`, `Returns:`): 0-4 spaces (matches pattern ✓)
+        - Parameter names: 4-8 spaces (doesn't match pattern ✗)
+        - Parameter descriptions: 8-12 spaces (doesn't match pattern ✗)
+        - Nested content (`Default:`): 12+ spaces (doesn't match pattern ✗)
+        
+        **Examples:**
+        
+        ```python
+        # Matches (0-4 spaces) - Actual section headers
+        "Params:"  # 0 spaces ✓
+        "  Returns:"  # 2 spaces ✓
+        "    Raises:"  # 4 spaces ✓
+
+        # Doesn't match (>4 spaces) - Parameter descriptions
+        "        Default: `None`."  # 8 spaces ✗
+        "            Default: `False`."  # 12 spaces ✗
+        "    param (type):"  # Parameter name ✗
+        ```
+        
+        
+        #### Fix Validation
+        
+        **Test Case:**
+        
+        ```python
+        def test_function(
+            config: Optional[str] = None,
+            exclude: Optional[list[str]] = None,
+        ) -> None:
+            """
+            Params:
+                config (Optional[str]):
+                    Description.
+                    Default: `None`.
+                exclude (Optional[list[str]]):
+                    Description.
+                    Default: `None`.
+            """
+        ```
+        
+        **Before Fix:**
+        - Parser extracts: `{'config': 'Optional[str]'}`
+        - Parser stops at: `Default: \`None\`.` (line 5)
+        - Missing: `exclude` parameter
+        - Error: "Parameter 'exclude' has type annotation 'Optional[list[str]]' in signature but no type in docstring"
+        
+        **After Fix:**
+        - Parser extracts: `{'config': 'Optional[str]', 'exclude': 'Optional[list[str]]'}`
+        - Parser continues through all parameters
+        - No errors: All parameters correctly extracted
+        - Validation: ✓ All parameter types match
+        
+        
+        #### Impact
+        
+        **Files Affected:**
+        - `src/docstring_format_checker/core.py` - Parser fix
+        - `src/docstring_format_checker/cli.py` - Can now include `Default:` lines safely
+        
+        **Benefits:**
+        - Eliminate false positive errors from `Default:` lines in parameter descriptions
+        - Allow developers to document default values without triggering parser failures
+        - Improve parser robustness against common docstring patterns
+        - Maintain support for standard documentation conventions
+        
+        
+        ### 🎨 CLI Error Formatting Enhancement
+        
+        
+        #### Overview
+        
+        Enhance the CLI error output formatter (`_format_error_output()`) to properly handle multi-line error messages, particularly for complex validation failures such as parameter type mismatches. The improved formatting ensures readability by applying appropriate indentation to continuation lines whilst maintaining the bullet-point structure for error lists.
+        
+        
+        #### Problem Statement
+        
+        **Unformatted Multi-line Errors:**
+        
+        When validation produced multi-line error messages (particularly for parameter type mismatches), the CLI output displayed continuation lines without proper indentation:
+        
+        ```
+        Line 604 - function 'check_docstrings':
+            - Parameter type mismatch: 'exclude':
+            - signature: 'Optional[list[str]]'
+            - docstring: 'Optional[list]'
+        ```
+        
+        This formatting:
+        - Broke visual hierarchy (continuation lines appeared as new errors)
+        - Made errors difficult to parse visually
+        - Confused readers about which information belonged together
+        - Reduced readability for complex validation failures
+        
+        
+        #### Solution Implementation
+        
+        Enhance `_format_error_output()` to detect multi-line errors and apply proper indentation to continuation lines.
+        
+        
+        **File Modified:**
+        - `src/docstring_format_checker/cli.py` (+13 lines)
+        
+        
+        **Implementation:**
+        
+        ```python
+        def _format_error_output(error: DocstringError) -> list[str]:
+            """
+            Format single error for display output.
+            """
+            lines: list[str] = [_create_error_header(error)]
+            individual_errors: list[str] = _split_error_messages(error.message)
+
+            for individual_error in individual_errors:
+                # Check if this error has multi-line content
+                if "\n" in individual_error:
+                    # Split by newlines and add proper indentation
+                    error_lines = individual_error.split("\n")
+                    lines.append(f"    - {error_lines[0]}")  # First line gets bullet
+                    for sub_line in error_lines[1:]:
+                        if sub_line.strip():  # Only add non-empty lines
+                            lines.append(f"    {sub_line}")  # Continuation lines indented
+                else:
+                    lines.append(f"    - {individual_error}")
+
+            return lines
+        ```
+        
+        
+        #### Formatting Examples
+        
+        **Single-line Error (unchanged):**
+        
+        ```
+        Line 10 - function 'validate_data':
+            - Missing required section: params
+        ```
+        
+        **Multi-line Error (improved):**
+        
+        ```
+        Line 604 - function 'check_docstrings':
+            - Parameter type mismatch:
+              - 'exclude':
+                  - signature: 'Optional[list[str]]'
+                  - docstring: 'Optional[list]'
+              - 'paths':
+                  - signature: 'list[str]'
+                  - docstring: 'list'
+        ```
+        
+        
+        #### Indentation Structure
+        
+        The enhanced formatter applies hierarchical indentation:
+        
+        ```
+        Line Number + Item Type + Item Name           (0 spaces - header)
+            - Error Message First Line                (4 spaces + bullet)
+                Continuation Line                     (8 spaces - nested content)
+                    Sub-item Detail                   (12 spaces - deeper nesting)
+        ```
+        
+        **Benefits:**
+        - Clear visual hierarchy for complex errors
+        - Maintains bullet-point structure for error lists
+        - Proper grouping of related error information
+        - Consistent indentation levels throughout output
+        
+        
+        #### Parameter Type Mismatch Formatting
+        
+        Enhanced formatting particularly benefits parameter type mismatch errors, which now display in a structured format:
+        
+        **Core.py Changes:**
+        
+        ```python
+        def _validate_param_types(
+            self, docstring: str, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]
+        ) -> Optional[str]:
+            """
+            Validate that parameter types in docstring match the signature.
+            """
+            # ... validation logic ...
+
+            if mismatches:
+                # Format each mismatch with parameter name on one line,
+                # signature and docstring indented below
+                mismatch_blocks: list[str] = []
+                for name, sig_type, doc_type in mismatches:
+                    param_block = f"""'{name}':\n    - signature: '{sig_type.replace("\'",'"')}'\n    - docstring: '{doc_type.replace("\'",'"')}' """
+                    mismatch_blocks.append(param_block)
+
+                # Join all parameter blocks with proper indentation
+                formatted_details: str = "\n  - ".join([""] + mismatch_blocks)
+
+                return f"Parameter type mismatch:{formatted_details}"
+        ```
+        
+        **CLI Output (formatted):**
+        
+        ```
+        Line 604 - function 'check_docstrings':
+            - Parameter type mismatch:
+              - 'exclude':
+                  - signature: 'Optional[list[str]]'
+                  - docstring: 'Optional[list]'
+        ```
+        
+        **Benefits:**
+        - Each parameter mismatch clearly separated
+        - Signature vs docstring types aligned for easy comparison
+        - Nested indentation shows hierarchical relationship
+        - Consistent formatting between list and table output modes
+        
+
+    ??? abstract "Updates"
+
+        * [`33b8f99`](https://github.com/data-science-extensions/docstring-format-checker/commit/33b8f994652924e4092b3b3bc159291ba1c2ca8e): Fix some formatting issues
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`90df2c9`](https://github.com/data-science-extensions/docstring-format-checker/commit/90df2c9829b3210e776f5f868d2f3d4076198cb6): Refine comment
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`a858923`](https://github.com/data-science-extensions/docstring-format-checker/commit/a8589237188a57bb8b6962ea614a6006a44eecae): Fix typo
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`0f6d913`](https://github.com/data-science-extensions/docstring-format-checker/commit/0f6d91317088ef9bbb7e07574ada5687e1e606d1): Fix section header detection in docstring parser<br>
+            - Restrict section header pattern to match only lines with minimal indentation (0-4 spaces) using `^[ ]{0,4}[A-Z]\w+:` instead of `^\s*[A-Z]\w+:`<br>
+            - Prevent false positives where deeply indented parameter descriptions containing capitalised words followed by colons are incorrectly identified as new section headers<br>
+            - Ensure the params section parser correctly continues processing all parameters until a genuine section boundary is encountered
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`a466fd8`](https://github.com/data-science-extensions/docstring-format-checker/commit/a466fd8e83469f79aa1427217095210d1ef4bcaf): Refactor params section validation logic and reduce code complexity<br>
+            - Extracts params section requirement check into dedicated `_is_params_section_required()` method to improve code organisation and reusability<br>
+            - Removes duplicate logic for determining whether params section is required based on function parameters and class types<br>
+            - Fixes inconsistent capitalisation in error messages by removing `.capitalize()` call, ensuring section names appear as defined (e.g., 'params' instead of 'Params')<br>
+            - Updates test assertion to match the corrected lowercase section name format
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`62b2bb5`](https://github.com/data-science-extensions/docstring-format-checker/commit/62b2bb5519ecfecc1aba6b5d7df735802a5f728a): Improve docstring validation logic and error formatting<br>
+            - Separate validation of required section presence from section content validation to avoid false positives<br>
+            - Introduce `_validate_all_existing_sections()` method to validate content of all existing sections regardless of whether they are required<br>
+            - Add `_section_exists()` helper method to check if a section is present in the docstring before validating its content<br>
+            - Rename `_validate_single_required_section()` to `_validate_single_section_content()` to better reflect its purpose of validating content rather than checking presence<br>
+            - Skip `Params` section requirement when functions have no parameters (excluding `self` and `cls`) or for class definitions<br>
+            - Enhance multi-line error message formatting in `_format_error_output()` to properly indent continuation lines for better readability<br>
+            - Restructure parameter type mismatch error messages to display each parameter on separate lines with signature and docstring types indented beneath<br>
+            - Remove content validation from `_validate_free_text_section()` since existence check is sufficient for free text sections
+            (by [chrimaho](https://github.com/chrimaho))
+
+
 !!! info "v1.6.0"
 
     ## **v1.6.0 - Introduce Parameter Type Validation**
