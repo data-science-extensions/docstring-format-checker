@@ -989,7 +989,8 @@ class DocstringChecker:
                 continue
 
             # Check if we've left the Params section (next section starts)
-            if in_params_section and re.match(r"^\s*[A-Z]\w+:", line):
+            # Section headers have minimal indentation (0-4 spaces), not deep indentation like param descriptions
+            if in_params_section and re.match(r"^[ ]{0,4}[A-Z]\w+:", line):
                 break
 
             # Extract parameter name and type
