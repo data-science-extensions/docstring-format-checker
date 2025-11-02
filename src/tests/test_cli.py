@@ -26,7 +26,12 @@ from typer.testing import CliRunner
 
 # ## Local First Party Imports ----
 from docstring_format_checker import __version__
-from docstring_format_checker.cli import _format_error_messages, app, entry_point
+from docstring_format_checker.cli import (
+    _format_error_messages,
+    _format_error_output,
+    app,
+    entry_point,
+)
 from docstring_format_checker.core import DocstringChecker
 from docstring_format_checker.utils.exceptions import DocstringError
 from tests.setup import clean
@@ -1475,10 +1480,50 @@ class TestClass:
 
             # In quiet mode with success, should show minimal output (might be empty or just warnings)
             # The important thing is that it doesn't show detailed errors
-            output = clean(result.output)
+            output: str = clean(result.output)
             # Should not contain detailed error information
             assert "Missing required section" not in output
 
         finally:
             Path(temp_file1_name).unlink(missing_ok=True)
             Path(temp_file2_name).unlink(missing_ok=True)
+
+    def test_58_format_error_output_single_line(self) -> None:
+        """
+        Test _format_error_output handles single-line errors correctly.
+        """
+
+        error = DocstringError(
+            file_path="test.py",
+            line_number=10,
+            item_name="test_function",
+            item_type="function",
+            message="This is a single line error",
+        )
+
+        lines: list[str] = _format_error_output(error)
+        # Should have header and single error line with bullet
+        assert len(lines) == 2
+        assert "test_function" in lines[0]
+        assert "    - This is a single line error" in lines[1]
+
+    def test_59_format_error_output_multiline(self) -> None:
+        """
+        Test _format_error_output handles multi-line errors correctly.
+        """
+
+        error = DocstringError(
+            file_path="test.py",
+            line_number=15,
+            item_name="test_function",
+            item_type="function",
+            message="First line of error\nSecond line of error\nThird line",
+        )
+
+        lines: list[str] = _format_error_output(error)
+        # Should have header and multi-line error with proper formatting
+        assert len(lines) == 4  # Header + 3 lines of error
+        assert "test_function" in lines[0]
+        assert "    - First line of error" in lines[1]
+        assert "    Second line of error" in lines[2]
+        assert "    Third line" in lines[3]
