@@ -114,6 +114,7 @@ class GlobalConfig:
     allow_undefined_sections: bool = False
     require_docstrings: bool = True
     check_private: bool = False
+    validate_param_types: bool = True
 
 
 ## --------------------------------------------------------------------------- #
@@ -450,6 +451,7 @@ def _parse_global_config(tool_config: dict[str, Any]) -> GlobalConfig:
         allow_undefined_sections=tool_config.get("allow_undefined_sections", False),
         require_docstrings=tool_config.get("require_docstrings", True),
         check_private=tool_config.get("check_private", False),
+        validate_param_types=tool_config.get("validate_param_types", True),
     )
 
 

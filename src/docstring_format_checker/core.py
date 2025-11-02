@@ -674,8 +674,16 @@ class DocstringChecker:
         section_name: str = section.name.lower()
 
         if section_name == "params" and isinstance(item.node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            # Check params section exists and is properly formatted
             if not self._check_params_section(docstring, item.node):
                 return "Missing or invalid Params section"
+
+            # If validate_param_types is enabled, validate type annotations match
+            if self.config.global_config.validate_param_types:
+                type_error: Optional[str] = self._validate_param_types(docstring, item.node)
+                if type_error:
+                    return type_error
+
         elif section_name in ["returns", "return"]:
             if not self._check_returns_section(docstring):
                 return "Missing or invalid Returns section"
@@ -870,6 +878,188 @@ class DocstringChecker:
                 return False
 
         return True
+
+    def _extract_param_types(self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> dict[str, str]:
+        """
+        !!! note "Summary"
+            Extract parameter names and their type annotations from function signature.
+
+        Params:
+            node (Union[ast.FunctionDef, ast.AsyncFunctionDef]):
+                The function AST node.
+
+        Returns:
+            (dict[str, str]):
+                Dictionary mapping parameter names to their type annotation strings.
+        """
+        param_types: dict[str, str] = {}
+
+        for arg in node.args.args:
+            # Skip 'self' and 'cls' parameters
+            if arg.arg in ("self", "cls"):
+                continue
+
+            # Extract type annotation if present
+            if arg.annotation:
+                type_str: str = ast.unparse(arg.annotation)
+                param_types[arg.arg] = type_str
+
+        return param_types
+
+    def _extract_param_types_from_docstring(self, docstring: str) -> dict[str, str]:
+        """
+        !!! note "Summary"
+            Extract parameter types from the Params section of docstring.
+
+        Params:
+            docstring (str):
+                The docstring to parse.
+
+        Returns:
+            (dict[str, str]):
+                Dictionary mapping parameter names to their documented types.
+        """
+        param_types: dict[str, str] = {}
+
+        # Find the Params section
+        if not re.search(r"Params:", docstring):
+            return param_types
+
+        # Pattern to match parameter documentation: name (type):
+        # Handles variations like:
+        # - name (str):
+        # - name (Optional[str]):
+        # - name (Union[str, int]):
+        # - name (list[str]):
+        pattern: str = r"^\s*(\w+)\s*\(([^)]+)\)\s*:"
+
+        lines: list[str] = docstring.split("\n")
+        in_params_section: bool = False
+
+        for line in lines:
+            # Check if we've entered the Params section
+            if "Params:" in line:
+                in_params_section = True
+                continue
+
+            # Check if we've left the Params section (next section starts)
+            if in_params_section and re.match(r"^\s*[A-Z]\w+:", line):
+                break
+
+            # Extract parameter name and type
+            if in_params_section:
+                match = re.match(pattern, line)
+                if match:
+                    param_name: str = match.group(1)
+                    param_type: str = match.group(2)
+                    param_types[param_name] = param_type
+
+        return param_types
+
+    def _normalize_type_string(self, type_str: str) -> str:
+        """
+        !!! note "Summary"
+            Normalize a type string for comparison.
+
+        Params:
+            type_str (str):
+                The type string to normalize.
+
+        Returns:
+            (str):
+                Normalized type string.
+        """
+        # Remove whitespace
+        normalized: str = re.sub(r"\s+", "", type_str)
+
+        # Make case-insensitive for basic types
+        # But preserve case for complex types to avoid breaking things like Optional
+        return normalized
+
+    def _compare_param_types(
+        self, signature_types: dict[str, str], docstring_types: dict[str, str]
+    ) -> list[tuple[str, str, str]]:
+        """
+        !!! note "Summary"
+            Compare parameter types from signature and docstring.
+
+        Params:
+            signature_types (dict[str, str]):
+                Parameter types from function signature.
+            docstring_types (dict[str, str]):
+                Parameter types from docstring.
+
+        Returns:
+            (list[tuple[str, str, str]]):
+                List of mismatches as (param_name, signature_type, docstring_type).
+        """
+        mismatches: list[tuple[str, str, str]] = []
+
+        for param_name, sig_type in signature_types.items():
+            # Check if parameter is documented in docstring
+            if param_name not in docstring_types:
+                # Parameter not documented - this is handled by other validation
+                continue
+
+            doc_type: str = docstring_types[param_name]
+
+            # Normalize both types for comparison
+            normalized_sig: str = self._normalize_type_string(sig_type)
+            normalized_doc: str = self._normalize_type_string(doc_type)
+
+            # Case-insensitive comparison
+            if normalized_sig.lower() != normalized_doc.lower():
+                mismatches.append((param_name, sig_type, doc_type))
+
+        return mismatches
+
+    def _validate_param_types(
+        self, docstring: str, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]
+    ) -> Optional[str]:
+        """
+        !!! note "Summary"
+            Validate that parameter types in docstring match the signature.
+
+        Params:
+            docstring (str):
+                The docstring to validate.
+            node (Union[ast.FunctionDef, ast.AsyncFunctionDef]):
+                The function node with type annotations.
+
+        Returns:
+            (Optional[str]):
+                Error message if validation fails, None otherwise.
+        """
+        # Extract types from both sources
+        signature_types: dict[str, str] = self._extract_param_types(node)
+        docstring_types: dict[str, str] = self._extract_param_types_from_docstring(docstring)
+
+        # Get all parameter names (excluding self/cls)
+        all_params: list[str] = [arg.arg for arg in node.args.args if arg.arg not in ("self", "cls")]
+
+        # Check for parameters documented with type in docstring but missing annotation in signature
+        for param_name in all_params:
+            if param_name in docstring_types and param_name not in signature_types:
+                return f"Parameter '{param_name}' has type in docstring but no type annotation in signature"
+
+        # Check for parameters with annotations but no type in docstring
+        for param_name, sig_type in signature_types.items():
+            if param_name not in docstring_types:
+                return (
+                    f"Parameter '{param_name}' has type annotation '{sig_type}' in signature but no type in docstring"
+                )
+
+        # Compare types
+        mismatches: list[tuple[str, str, str]] = self._compare_param_types(signature_types, docstring_types)
+
+        if mismatches:
+            mismatch_details: list[str] = [
+                f"'{name}': signature has '{sig_type}', docstring has '{doc_type}'"
+                for name, sig_type, doc_type in mismatches
+            ]
+            return f"Parameter type mismatch: {'; '.join(mismatch_details)}"
+
+        return None
 
     def _check_returns_section(self, docstring: str) -> bool:
         """
