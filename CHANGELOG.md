@@ -9,6 +9,28 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v1.5.1"
+
+    ## **v1.5.1 - Stricter Code Quality Standards**
+
+    <!-- md:tag v1.5.1 --><br>
+    <!-- md:date 2025-10-22 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v1.5.1](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.5.1) -->
+
+    ??? note "Release Notes"
+
+        ### Summary                This release strengthens code quality enforcement through stricter complexity thresholds and comprehensive import hygiene checks. Building upon the extensive refactoring work completed in [`v1.5.0`], this release reduces the maximum allowed cognitive complexity from 15 to 13, establishing proactive quality gates that prevent technical debt accumulation. The release also re-enables `pycln` checks in both linting and validation workflows, ensuring unused imports are automatically detected and removed throughout the development lifecycle. Additionally, complexity reporting verbosity has been optimised with the introduction of the `details = "low"` configuration option, reducing noise in CI/CD logs whilst maintaining actionable feedback. These enhancements maintain the codebase's excellent quality standards (100% test coverage, Pylint 10.00/10) whilst preventing regression of the refactoring achievements from [`v1.5.0`]. All changes are non-breaking and require no migration effort from users.                                ### Release Statistics                | Attribute                 | Note                                          |        | ------------------------- | --------------------------------------------- |        | **Version:**              | [`v1.5.1`]                                    |        | **Python Support:**       | `3.9`, `3.10`, `3.11`, `3.12`, `3.13`, `3.14` |        | **Test Coverage:**        | 100% (834 statements)                         |        | **Pylint Score:**         | 10.00/10                                      |        | **Complexity:**           | 309 (max threshold now 13, was 15)            |        | **Functions:**            | 98                                            |        | **Tests Passing:**        | 183/183                                       |        | **Files Changed:**        | 3                                             |        | **Lines Added:**          | 3,119                                         |        | **Lines Removed:**        | 185                                           |        | **Commits:**              | 4                                             |        | **Pull Requests Merged:** | 1 (PR #20)                                    |                        ### 🎯 Stricter Complexity Threshold                #### Overview                Reduce the maximum allowed cognitive complexity threshold from 15 to 13 in the `complexipy` configuration, establishing stricter quality standards that preserve the refactoring achievements from [`v1.5.0`] and prevent future complexity regression.                        #### Motivation                The comprehensive refactoring work completed in [`v1.5.0`] successfully eliminated all functions with complexity ≥15, reducing total cognitive complexity from 332 to 309 points (6.9% reduction). The current codebase distribution demonstrates excellent quality:                - **0 functions** with complexity ≥15 (all eliminated through refactoring)        - **1 function** with complexity 13 (`_extract_items` - justified Visitor Pattern implementation)        - **4 functions** with complexity 10-12 (all documented and justified)        - **93+ functions** with complexity ≤9 (excellent maintainability)                With all high-complexity functions eliminated, maintaining a threshold of 15 would allow gradual complexity creep back toward problematic levels. Reducing the threshold to 13 establishes a proactive quality gate that:                1. **Prevents Complexity Regression:** Catches functions approaching the 15+ range before they become maintenance burdens        2. **Maintains Current Quality Baseline:** All existing functions pass the 13 threshold, so no immediate refactoring required        3. **Encourages Best Practices:** Developers receive early warnings at complexity 13, prompting consideration of Extract Method and other refactoring patterns        4. **Aligns with Industry Standards:** Industry guidance suggests complexity 10-15 as "moderate" - setting threshold at 13 keeps code in the simpler half of this range                        #### Implementation Details                **Files Modified:**        - `pyproject.toml`                        **Configuration Changes:**        ```toml        [tool.complexipy]        paths = "src/docstring_format_checker"        -max-complexity-allowed = 15        +max-complexity-allowed = 13        quiet = false        ignore-complexity = false        sort = "asc"        ```                        #### Technical Benefits                **Proactive Quality Management:**        - Automated checks prevent introduction of complex code before it reaches the main branch        - Pull requests exceeding complexity 13 are blocked until refactored        - Continuous monitoring ensures quality standards maintained across all contributions                **Data-Driven Development:**        - Objective metrics enable data-driven decisions about refactoring priorities        - Quantitative complexity scores provide discussion anchors during code review        - Removes subjectivity from "this code feels complex" assessments                **Developer Guidance:**        - Clear complexity targets guide development practices and code structure        - Early warnings at complexity 13 encourage proactive simplification        - Establishes shared understanding of acceptable complexity levels across team                        #### Impact on Development Workflow                **CI/CD Pipeline:**        ```bash        # Automated complexity checks now enforce threshold of 13        # Functions with complexity >13 fail the build        ✗ Complexity check failed: function 'example()' has complexity 14 (max: 13)        ```                **Local Development:**        ```bash        # Run complexity check locally        uv run check-complexity                # Output shows functions approaching threshold        # Functions with complexity 10-13 appear with metrics        # Functions with complexity >13 trigger failures        ```                **Code Review:**        - Reviewers see objective complexity metrics in PR status checks        - Complexity scores visible before detailed review begins        - Enables focused discussion on specific functions exceeding thresholds                        ### 🧹 Import Hygiene Re-enablement                #### Overview                Re-enable `pycln` checks in both the `lint()` and `check()` functions, ensuring unused imports are automatically detected and removed throughout the development lifecycle. This re-enablement follows resolution of Python 3.14 compatibility issues that previously required temporary disabling.                        #### Background                The `pycln` tool was temporarily disabled in both linting and validation workflows due to compatibility issues with Python 3.14. Comments in the code indicated:                ```python        # check_pycln()  # <-- pycln is currently incompatible with python 3.14        ```                Recent dependency updates or compatibility fixes have resolved this issue, enabling safe re-enablement across all supported Python versions (3.9-3.14).                        #### Implementation Details                **Files Modified:**        - `src/utils/scripts.py`                        **Changes in `lint()` function:**        ```python        def lint() -> None:            run_black()            run_blacken_docs()            run_isort()        -   # run_pycln()        +   run_pycln()        ```                **Changes in `check()` function:**        ```python        def check() -> None:            check_black()            check_blacken_docs()            check_mypy()            check_isort()            check_codespell()        -   # check_pycln()  # <-- pycln is currently incompatible with python 3.14        +   check_pycln()            check_pylint()            check_complexity()            check_docstrings()            check_pytest()            check_mkdocs()            check_build()        ```                        #### What is `pycln`?                `pycln` is a formatter for finding and removing unused import statements in Python code. It performs static analysis to identify imports that are never referenced in the module, then safely removes them to improve code cleanliness and reduce cognitive load when reading import sections.                        #### Dual Integration Points                **1. Automated Cleanup via `lint()`:**        - Runs `run_pycln()` during code formatting workflow        - Automatically removes unused imports when developers run `uv run lint`        - Executes alongside `black` and `isort` for comprehensive code formatting        - Enables developers to clean up imports before committing changes                **2. Validation via `check()`:**        - Runs `check_pycln()` during comprehensive quality validation        - Verifies no unused imports exist in the codebase        - Fails CI/CD pipeline if unused imports detected        - Provides specific error messages identifying which imports to remove        - Ensures all code in main branch maintains import hygiene                        #### Technical Benefits                **Code Quality Improvements:**        - **Cleaner Import Sections:** Automatically remove unused import statements, reducing clutter        - **Reduced Cognitive Load:** Shorter import lists easier to understand and maintain        - **Dependency Hygiene:** Prevent accumulation of unnecessary import dependencies        - **Consistent Standards:** Enforce import cleanliness across entire codebase                **Developer Experience Enhancements:**        - **Automated Cleanup:** Developers don't manually track which imports are unused        - **Pre-commit Safety:** Running `lint()` cleans up imports before commits        - **CI/CD Validation:** Automated checks catch any missed unused imports        - **Clear Error Messages:** Specific feedback identifies exactly which imports to remove                **Maintainability Benefits:**        - **Reduced Noise:** Fewer imports means easier code navigation        - **Faster Comprehension:** Developers quickly identify actual dependencies        - **Simpler Refactoring:** Unused imports don't confuse refactoring efforts        - **Better IDE Performance:** Fewer imports reduce IDE analysis overhead                        #### Usage Examples                **Local Development Workflow:**        ```bash        # Run linting to automatically remove unused imports        uv run lint                # Runs black, blacken-docs, isort, and pycln        # Unused imports automatically removed from all files        ```                **Validation Workflow:**        ```bash        # Run comprehensive quality checks        uv run check                # Validates no unused imports exist        # Fails if any unused imports detected        ```                **What Gets Cleaned:**        ```python        # Before: Module with unused imports        import sys          # ← unused        import os           # ← unused        from typing import Dict, List, Optional  # ← Optional unused        from pathlib import Path                def process_file(path: str) -> Dict[str, List[str]]:            p = Path(path)            return {"file": [str(p)]}                # After: pycln cleanup        from typing import Dict, List        from pathlib import Path                def process_file(path: str) -> Dict[str, List[str]]:            p = Path(path)            return {"file": [str(p)]}        ```                        ### 📊 Complexity Reporting Optimisation                #### Overview                Add `details = "low"` configuration option to the `complexipy` tool configuration, optimising complexity report verbosity for improved signal-to-noise ratio in CI/CD logs whilst maintaining actionable feedback for developers.                        #### Implementation Details                **Files Modified:**        - `pyproject.toml`                        **Configuration Changes:**        ```toml        [tool.complexipy]        paths = "src/docstring_format_checker"        max-complexity-allowed = 13        quiet = false        ignore-complexity = false        +details = "low"        sort = "asc"        ```                        #### Configuration Option Details                **`details = "low"`:**        - Reduces verbosity of complexity analysis output        - Focuses reporting on essential complexity metrics        - Displays function names, complexity scores, and threshold violations        - Omits detailed breakdown of complexity contributors (conditionals, loops, etc.)        - Maintains actionable information whilst reducing log volume                        #### Benefits                **Improved CI/CD Logs:**        - **Reduced Noise:** Shorter complexity reports easier to scan in CI/CD output        - **Faster Diagnosis:** Essential information highlighted without detailed breakdowns        - **Better Signal-to-Noise Ratio:** Developers quickly identify functions exceeding thresholds        - **Maintained Actionability:** Still provides function names and complexity scores for refactoring                **Developer Productivity:**        - **Quicker Log Review:** Developers spend less time scrolling through verbose complexity output        - **Focused Feedback:** Attention directed to functions requiring refactoring        - **Efficient Troubleshooting:** Key metrics visible without information overload                **Workflow Integration:**        - **Local Development:** Developers can still run verbose analysis when needed using command-line flags        - **CI/CD Pipeline:** Automated checks provide concise, actionable feedback        - **Code Review:** Reviewers see essential complexity metrics without overwhelming detail                        #### Verbosity Levels                **Before (`details` not set - defaults to "normal"):**        ```        Function: _validate_docstring_sections        Complexity: 12          - If statements: 5          - Loops: 2          - Boolean operators: 3          - Nested functions: 0          ...detailed breakdown...        ```                **After (`details = "low"`):**        ```        Function: _validate_docstring_sections | Complexity: 12 | Status: ✓ Pass        ```                        ### 📝 CHANGELOG Comprehensive Update                #### Overview                Comprehensive update to `CHANGELOG.md` documenting the entire [`v1.5.0`] release with detailed sections covering all major improvements, refactoring efforts, and technical achievements.                        **Files Modified:**        - `CHANGELOG.md`                        **Changes:**        - Added 3,119 lines documenting [`v1.5.0`] release        - Removed 185 lines of placeholder or outdated content        - Structured sections covering:          - Complexity monitoring integration          - CLI error display refactoring          - Core module comprehensive refactoring          - Documentation improvements (37 docstrings added)          - CI/CD workflow enhancements          - Developer experience improvements          - Complete metrics and statistics tables          - Detailed commit history          - Migration guidance                        The comprehensive changelog ensures users and maintainers have complete visibility into the evolution of the package, understanding both what changed and why those changes improve the codebase.                        ### 🔍 Breaking Changes                **None.** This release maintains full backward compatibility with [`v1.5.0`]. All changes are internal quality enforcement mechanisms that do not affect:                - Public APIs or interfaces        - Command-line arguments or options        - Configuration file formats        - Runtime behaviour or output        - Package functionality or features                        ### 🎯 Migration Guide                #### Upgrading from v1.5.0                No migration required. Users can upgrade directly from [`v1.5.0`] to [`v1.5.1`] without any configuration changes or code modifications.                ```bash        # Upgrade with pip        pip install --upgrade docstring-format-checker                # Upgrade with uv        uv pip install --upgrade docstring-format-checker                # Verify version        python -c "import docstring_format_checker; print(docstring_format_checker.__version__)"        # Output: 1.5.1        ```                        #### Impact on Existing Projects                **For Package Users:**        - No action required        - All existing configurations continue working        - Docstring validation behaviour unchanged        - Command-line interfaces unchanged                **For Contributors/Maintainers:**        - New contributions must pass stricter complexity threshold (13 instead of 15)        - New contributions must have no unused imports (`pycln` checks enabled)        - Existing code already complies with new standards        - No immediate refactoring required                        ### 🚀 Installation and Upgrade                #### New Installation                ```bash        # Install with pip        pip install docstring-format-checker==1.5.1                # Install with uv        uv pip install docstring-format-checker==1.5.1                # Install from GitHub        pip install git+https://github.com/data-science-extensions/docstring-format-checker.git@v1.5.1        ```                        #### Upgrade from Previous Version                ```bash        # Upgrade with pip        pip install --upgrade docstring-format-checker                # Upgrade with uv        uv pip install --upgrade docstring-format-checker                # Verify upgrade successful        dfc --version        # Output: docstring-format-checker v1.5.1        ```                        ### 📊 Quality Metrics                #### Code Quality Standards                | Metric                       | Value    | Change from v1.5.0 |        | ---------------------------- | -------- | ------------------ |        | **Test Coverage**            | 100%     | No change ✓        |        | **Total Statements**         | 834      | No change          |        | **Tests Passing**            | 183/183  | No change ✓        |        | **Pylint Score**             | 10.00/10 | No change ✓        |        | **Total Complexity**         | 309      | No change          |        | **Max Complexity Threshold** | 13       | **-2 (was 15)** ⬇️  |        | **Functions ≥15 Complexity** | 0        | No change ✓        |        | **Functions ≤9 Complexity**  | 93+      | No change ✓        |                        #### Quality Gate Comparison                | Quality Gate               | v1.5.0 | v1.5.1 | Change     |        | -------------------------- | ------ | ------ | ---------- |        | **Complexity Threshold**   | 15     | 13     | Stricter ⬆️ |        | **`pycln` Checks**         | ❌ Off  | ✅ On   | Enabled ✅  |        | **Complexity Verbosity**   | Normal | Low    | Optimised  |        | **Test Coverage Required** | 100%   | 100%   | No change  |        | **Pylint Score Required**  | 10/10  | 10/10  | No change  |                        #### Validation Results                All quality checks pass with new stricter standards:                ```bash        $ uv run check                ✅ Black formatting: PASSED        ✅ Blacken-docs: PASSED          ✅ MyPy type checking: PASSED        ✅ isort import sorting: PASSED        ✅ codespell spelling: PASSED        ✅ pycln unused imports: PASSED (re-enabled)        ✅ Pylint static analysis: PASSED (10.00/10)        ✅ Complexity analysis: PASSED (max threshold 13)        ✅ Docstring validation: PASSED        ✅ Pytest test suite: PASSED (183/183 tests)        ✅ MkDocs documentation: PASSED        ✅ Package build: PASSED                All checks passed! ✓        ```                        ### 🛠️ Developer Experience                #### Strengthened Quality Assurance                **Proactive Prevention:**        - Stricter complexity threshold catches potential issues earlier        - Automated import cleaning eliminates manual tracking burden        - Optimised verbosity improves log readability and debugging efficiency                **Clear Feedback Loops:**        - Complexity violations provide specific function names and scores        - `pycln` errors identify exact import statements to remove        - CI/CD failures include actionable guidance for resolution                **Maintained Productivity:**        - Automated cleanup via `uv run lint` handles routine maintenance        - Validation via `uv run check` ensures quality before pushing        - No additional manual steps required in development workflow                        #### Quality Enforcement Workflow                ```bash        # 1. Develop feature        vim src/docstring_format_checker/new_module.py                # 2. Run automated cleanup        uv run lint        # → Formats code with black        # → Sorts imports with isort          # → Removes unused imports with pycln                # 3. Validate quality standards        uv run check        # → Validates complexity ≤13        # → Confirms no unused imports        # → Runs full test suite        # → All quality gates must pass                # 4. Commit clean, validated code        git add .        git commit -m "Add new feature"                # 5. CI/CD validates on push        # → Same checks run automatically        # → Pull request blocked if any check fails        # → Immediate feedback for corrections        ```                        ### 📚 Additional Resources                #### Documentation                - **Package Documentation:** [https://docstring-format-checker.readthedocs.io](https://docstring-format-checker.readthedocs.io)        - **GitHub Repository:** [https://github.com/data-science-extensions/docstring-format-checker](https://github.com/data-science-extensions/docstring-format-checker)        - **Issue Tracker:** [https://github.com/data-science-extensions/docstring-format-checker/issues](https://github.com/data-science-extensions/docstring-format-checker/issues)        - **Contributing Guide:** See `CONTRIBUTING.md` in repository        - **Changelog:** See `CHANGELOG.md` for complete version history                        #### Configuration Reference                **Recommended `pyproject.toml` Configuration:**                ```toml        [tool.docstring_format_checker]        exclude_patterns = ["test_*.py", "*_test.py"]                [tool.docstring_format_checker.sections.Summary]        required = true        format = "free_text"                [tool.complexipy]        paths = "src/your_package"        max-complexity-allowed = 13  # Stricter threshold        quiet = false        ignore-complexity = false        details = "low"  # Optimised verbosity        sort = "asc"        ```                        #### Running Quality Checks                ```bash        # Run all quality checks        uv run check                # Run specific checks        uv run check-black          # Code formatting        uv run check-mypy           # Type checking        uv run check-isort          # Import sorting        uv run check-pycln          # Unused imports (re-enabled)        uv run check-pylint         # Static analysis        uv run check-complexity     # Cognitive complexity (threshold 13)        uv run check-docstrings     # Docstring validation        uv run check-pytest         # Test suite                # Run automated cleanup        uv run lint                 # Formats code and removes unused imports        ```                        ### 🔗 Related Releases                #### Version History                **v1.5.1 (Current):**        - Stricter complexity threshold (15 → 13)        - Re-enabled `pycln` import cleaning        - Optimised complexity reporting verbosity                **v1.5.0 (Previous):**        - Complexity monitoring integration with `complexipy`        - Seven major refactoring efforts reducing complexity 6.9%        - 37 docstrings added across three modules        - 24 new focused helper methods created        - CI/CD workflow parallelism improvements                **v1.4.0:**        - Python 3.14 support added        - 100% test coverage achieved (783 statements)        - Pylint integration with comprehensive configuration        - Pre-commit hook integration                        ### 📝 Detailed Commit History                #### Commits Since v1.5.0                1. **b935a81** - Merge pull request #20 from data-science-extensions/updates           - Merged comprehensive quality standards enhancements           - Integrated stricter complexity thresholds           - Re-enabled import hygiene checks                2. **257cfa2** - Tweak the config for `complexipy`           - Reduced `max-complexity-allowed` from 15 to 13           - Added `details = "low"` for optimised reporting verbosity           - Enforces stricter complexity standards preventing regression                3. **36d50e1** - Add `pycln` checks back in           - Re-enabled `run_pycln()` in `lint()` function           - Re-enabled `check_pycln()` in `check()` function           - Removed Python 3.14 incompatibility comment           - Ensures automated unused import detection and removal                4. **0f856a3** - Fix formatting           - Minor formatting adjustments for code consistency                        ### 💪 Pull Requests                * Enhance Code Quality Standards: Stricter Complexity Thresholds and Re-Enable `pycln` checks by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/20                        ---                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.5.0...v1.5.1                        [`v1.5.0`]: https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.5.0        [`v1.5.1`]: https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.5.1        
+
+    ??? abstract "Updates"
+
+        * [`257cfa2`](https://github.com/data-science-extensions/docstring-format-checker/commit/257cfa2c73b555699515ba3eaa50340615686344): Tweak the config for `complexipy`
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`36d50e1`](https://github.com/data-science-extensions/docstring-format-checker/commit/36d50e1d3a68f96d8736e407c0b70f6356be485c): Add `pycln` checks back in
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`0f856a3`](https://github.com/data-science-extensions/docstring-format-checker/commit/0f856a34bcd78cce316881583f201677a309deeb): Fix formatting
+            (by [chrimaho](https://github.com/chrimaho))
+
+
 !!! info "v1.5.0"
 
     ## **v1.5.0 - Add Complexity Monitoring & Comprehensive Code Refactoring**
@@ -19,613 +41,7 @@
 
     ??? note "Release Notes"
 
-        ### Summary
-
-        This release represents a major advancement in code quality, maintainability, and tooling integration for the Docstring Format Checker package. The release introduces automated complexity monitoring through `complexipy` integration, enabling continuous tracking of code complexity metrics throughout development. Major refactoring efforts have reduced total cognitive complexity by 6.9% (from 332 to 309 points) whilst expanding the codebase with 24 new focused helper methods, all whilst maintaining 100% test coverage across 834 statements and a perfect Pylint score of 10.00/10. The refactoring work has eliminated all functions with complexity ≥15, extracting complex logic into single-responsibility helper methods that improve readability and maintainability. Enhanced CI/CD workflows now run with increased parallelism, reducing build times and improving developer productivity. Comprehensive documentation improvements include complete docstring coverage for all 37 previously undocumented helper methods, ensuring consistent documentation standards throughout the codebase. These improvements establish a robust foundation for future development whilst maintaining backward compatibility with existing implementations.
-
-
-        ### Release Statistics
-
-        | Attribute           | Note                                          |
-        | ------------------- | --------------------------------------------- |
-        | **Version:**        | `v1.5.0`                                      |
-        | **Python Support:** | `3.9`, `3.10`, `3.11`, `3.12`, `3.13`, `3.14` |
-        | **Test Coverage:**  | 100% (834 statements)                         |
-        | **Pylint Score:**   | 10.00/10                                      |
-        | **Complexity:**     | 309 (reduced from 332, -6.9%)                 |
-        | **Functions:**      | 98 (increased from 74, +24 helpers)           |
-        | **Tests Passing:**  | 183/183                                       |
-        | **Files Changed:**  | 7                                             |
-        | **Lines Added:**    | 992                                           |
-        | **Lines Removed:**  | 228                                           |
-        | **Commits:**        | 5                                             |
-
-
-        ### 📊 Complexity Monitoring Integration
-
-        #### Overview
-
-        This release integrates `complexipy` as an automated complexity monitoring tool, enabling continuous tracking of cognitive complexity metrics throughout the development lifecycle. The integration provides actionable insights into code complexity trends, helping maintainers identify refactoring opportunities and prevent complexity regression.
-
-
-        #### Implementation Details
-
-        The `complexipy` integration includes:
-
-        - **Configuration in `pyproject.toml`:** Added comprehensive `complexipy` configuration section with customised settings:
-          ```toml
-          [tool.complexipy]
-          paths = ["src/docstring_format_checker"]
-          exclude = ["__pycache__", "*.pyc"]
-          max-complexity-allowed = 15
-          quiet = false
-          sort = "asc"
-          ```
-
-        - **CI/CD Integration:** Automated complexity checks run in GitHub Actions workflows, validating complexity thresholds on every pull request and commit.
-
-        - **Local Development Workflow:** Developers can run complexity analysis locally using simplified commands:
-          ```bash
-          # Run complexity analysis
-          uv run complexipy src/docstring_format_checker
-
-          # Check compliance with thresholds
-          uv run check-complexity
-          ```
-
-        - **Complexity Reporting:** Generates detailed reports showing cognitive complexity for all functions, sorted by complexity score, enabling prioritised refactoring efforts.
-
-
-        #### Technical Benefits
-
-        - **Proactive Complexity Management:** Automated checks prevent introduction of overly complex code before it reaches the main branch, maintaining codebase quality standards.
-
-        - **Objective Refactoring Priorities:** Quantitative complexity metrics enable data-driven decisions about which functions require refactoring attention, eliminating subjective assessments.
-
-        - **Continuous Quality Monitoring:** Integration with CI/CD pipelines ensures complexity standards are maintained across all contributions, preventing technical debt accumulation.
-
-        - **Developer Visibility:** Real-time complexity feedback during development helps developers write cleaner, more maintainable code from the outset.
-
-
-        #### Complexity Achievements
-
-        The initial complexity analysis and subsequent refactoring efforts have achieved:
-
-        - **Total Complexity Reduction:** 332 → 309 points (6.9% reduction)
-        - **High-Complexity Elimination:** All functions with complexity ≥15 have been refactored
-        - **Function Distribution:** 98 total functions with 83+ functions having complexity ≤10
-        - **Maintainability Improvement:** Created 24 new focused helper methods with appropriate complexity levels
-
-
-        #### Usage Example
-
-        ```bash
-        # Run complexity analysis with details
-        uv run complexipy src/docstring_format_checker --verbose
-
-        # Check against maximum threshold
-        uv run complexipy src/docstring_format_checker --max-complexity 15
-
-        # Generate sorted report
-        uv run complexipy src/docstring_format_checker --sort desc
-        ```
-
-
-        ### 🎨 CLI Error Display Refactoring
-
-        #### Overview
-
-        The CLI module has undergone comprehensive refactoring to improve error display formatting, message handling, and user experience. The refactoring effort focused on extracting display logic into single-responsibility helper methods, enhancing code readability and maintainability.
-
-
-        #### Refactoring Achievements
-
-        The CLI refactoring includes extraction of 13 new helper methods:
-
-        **Display Formatting Methods:**
-        - `_count_errors_and_files()` - Calculates total error count and affected file count from error dictionary
-        - `_display_quiet_summary()` - Displays minimal summary output in quiet mode
-        - `_display_final_summary()` - Displays comprehensive summary with error and file counts
-
-        **Table Output Methods:**
-        - `_display_table_output()` - Orchestrates table display for all errors with file paths and line numbers
-
-        **List Output Methods:**
-        - `_display_list_output()` - Orchestrates list display for all errors (complexity reduced from 13 → 6)
-        - `_create_error_header()` - Formats error header with file path and line number (complexity: 1)
-        - `_split_error_messages()` - Splits compound error messages on semicolon delimiter (complexity: 1)
-        - `_format_error_output()` - Orchestrates formatting of single error entry (complexity: 1)
-
-        **Path Validation Methods:**
-        - `_validate_and_process_paths()` - Validates and processes input paths from command-line arguments
-        - `_process_all_paths()` - Processes all paths and collects validation errors
-
-        **Configuration Methods:**
-        - `_load_and_validate_config()` - Orchestrates configuration loading with explicit or auto-discovery
-        - `_load_explicit_config()` - Loads explicitly specified configuration file
-        - `_load_auto_discovered_config()` - Auto-discovers configuration from project structure
-
-
-        #### Technical Impact
-
-        The refactoring delivers:
-
-        - **Reduced Complexity:** `_display_list_output` reduced from complexity 13 → 6 (54% reduction)
-        - **Single Responsibility:** Each helper method has one clear purpose, improving code comprehension
-        - **Enhanced Testability:** Smaller, focused methods are easier to unit test with precise assertions
-        - **Improved Maintainability:** Changes to specific display logic can be made in isolation without affecting other functionality
-        - **Better Error Handling:** Separation of validation and processing logic enables more precise error recovery
-
-
-        #### Code Example
-
-        ```python
-        # Before: Complex list output function
-        def _display_list_output(self, errors):
-            for file_path, file_errors in sorted(errors.items()):
-                for error_info in file_errors:
-                    line_number = error_info.get("line", "N/A")
-                    messages = error_info.get("message", "").split("; ")
-                    for msg in messages:
-                        print(f"{file_path}:{line_number}: {msg}")
-
-
-        # After: Orchestration with helper methods
-        def _display_list_output(self, errors):
-            for file_path, file_errors in sorted(errors.items()):
-                for error_info in file_errors:
-                    formatted_output = self._format_error_output(file_path, error_info)
-                    print(formatted_output)
-
-
-        def _format_error_output(self, file_path, error_info):
-            header = self._create_error_header(file_path, error_info)
-            messages = self._split_error_messages(error_info.get("message", ""))
-            return f"{header}: {messages[0]}"
-        ```
-
-
-        ### 🔧 Core Module Refactoring
-
-        #### Overview
-
-        The core validation module has undergone extensive refactoring to reduce complexity, improve code organisation, and enhance maintainability. Seven major refactoring efforts have systematically extracted complex logic into focused helper methods, achieving a 6.9% reduction in total cognitive complexity.
-
-
-        #### Refactoring History
-
-        **First Refactoring - `_check_single_docstring`:**
-        - **Complexity Reduction:** 25 → 2 (92% reduction)
-        - **Methods Extracted:** 3 helper methods
-          - `_is_section_applicable_to_item` (complexity: 9) - Section applicability checking
-          - `_get_applicable_required_sections` (complexity: 4) - Required sections gathering
-          - `_handle_missing_docstring` (complexity: 2) - Missing docstring handling
-
-        **Second Refactoring - `check_directory`:**
-        - **Complexity Reduction:** 23 → 8 (65% reduction)
-        - **Methods Extracted:** 3 helper methods
-          - `_should_exclude_file` (complexity: 3) - Pattern matching for exclusions
-          - `_filter_python_files` (complexity: 4) - File filtering logic
-          - `_check_file_with_error_handling` (complexity: 1) - Error conversion
-
-        **Third Refactoring - `_check_colon_usage`:**
-        - **Complexity Reduction:** 19 → 0 (100% reduction - pure delegation)
-        - **Methods Extracted:** 4 helper methods
-          - `_validate_admonition_has_no_colon` (complexity: 4) - Single admonition validation
-          - `_check_admonition_colon_usage` (complexity: 3) - All admonitions check
-          - `_validate_non_admonition_has_colon` (complexity: 7) - Single non-admonition validation
-          - `_check_non_admonition_colon_usage` (complexity: 3) - All non-admonitions check
-
-        **Fourth Refactoring - `_check_undefined_sections`:**
-        - **Complexity Reduction:** 13 → 3 (77% reduction)
-        - **Methods Extracted:** 3 helper methods
-          - `_normalize_section_name` (complexity: 0) - String normalisation
-          - `_is_valid_section_name` (complexity: 3) - Validation with conditionals
-          - `_extract_section_names_from_docstring` (complexity: 6) - Extraction logic
-
-        **Fifth Refactoring - `_check_section_order`:**
-        - **Complexity Reduction:** 13 → 6 (54% reduction)
-        - **Methods Extracted:** 3 helper methods
-          - `_build_section_patterns` (complexity: 4) - Build regex patterns from config
-          - `_find_sections_with_positions` (complexity: 3) - Find and sort sections
-          - `_build_expected_section_order` (complexity: 0) - Build expected order list
-
-        **Sixth Refactoring - `_check_admonition_values`:**
-        - **Complexity Reduction:** 13 → 3 (77% reduction)
-        - **Methods Extracted:** 2 helper methods
-          - `_build_admonition_mapping` (complexity: 4) - Build section to admonition mapping
-          - `_validate_single_admonition` (complexity: 5) - Validate one admonition match
-
-        **Seventh Refactoring - `_display_list_output`:**
-        - **Complexity Reduction:** 13 → 6 (54% reduction)
-        - **Methods Extracted:** 3 helper methods (covered in CLI section above)
-
-
-        #### Refactoring Patterns Applied
-
-        **Extract Method Pattern:**
-        - Identified complex logic blocks within larger methods
-        - Extracted blocks into focused helper methods with single responsibility
-        - Named helper methods descriptively to indicate purpose and responsibility
-        - Maintained all existing tests without modification (pure refactoring)
-
-        **Separation of Concerns:**
-        - Split validation logic from data gathering logic
-        - Isolated pattern matching from pattern usage
-        - Separated iteration logic from single-item processing
-        - Distinguished checking (multiple items) from validating (single item)
-
-        **Naming Conventions:**
-        - `_validate_*` - Methods that validate single items and raise/return validation results
-        - `_check_*` - Methods that check multiple items and aggregate results
-        - `_build_*` - Methods that construct data structures or configurations
-        - `_extract_*` - Methods that extract information from larger structures
-        - `_is_*` - Methods that return boolean predicates
-
-
-        #### Technical Impact
-
-        The refactoring delivers:
-
-        - **Reduced Total Complexity:** 332 → 309 (6.9% reduction)
-        - **Eliminated High Complexity:** All functions with complexity ≥15 refactored to acceptable levels
-        - **Increased Function Count:** 74 → 98 functions (+24 helper methods)
-        - **Maintained Quality:** 100% test coverage (834 statements), Pylint 10.00/10, all 183 tests passing
-        - **Enhanced Readability:** Main functions now orchestrate helper methods with clear, linear structure
-        - **Improved Maintainability:** Single-responsibility methods are easier to modify, test, and understand
-
-
-        #### Code Example
-
-        ```python
-        # Before: Complex nested function (complexity 25)
-        def _check_single_docstring(self, item_type, item_name, docstring):
-            if not docstring:
-                if "Summary" in self.required_sections:
-                    self.errors.append(...)
-                return
-
-            for section_name, section_rules in self.required_sections.items():
-                if "applies_to" in section_rules:
-                    if item_type not in section_rules["applies_to"]:
-                        continue
-                # ... more complex logic ...
-
-
-        # After: Orchestration with helper methods (complexity 2)
-        def _check_single_docstring(self, item_type, item_name, docstring):
-            if not docstring:
-                self._handle_missing_docstring(item_type, item_name, ...)
-                return
-
-            applicable_sections = self._get_applicable_required_sections(item_type)
-            self._validate_all_required_sections(docstring, applicable_sections, ...)
-        ```
-
-
-        #### Complexity Distribution After Refactoring
-
-        | Complexity Range | Function Count | Status                   |
-        | ---------------- | -------------- | ------------------------ |
-        | 0-5              | 60+            | ✅ Excellent              |
-        | 6-9              | 23+            | ✅ Good                   |
-        | 10-12            | 4              | ⚠️ Acceptable (justified) |
-        | 13               | 1              | ⚠️ Monitor                |
-        | ≥15              | 0              | ✅ All Eliminated         |
-
-
-        ### 📝 Documentation Improvements
-
-        #### Overview
-
-        This release achieves comprehensive documentation coverage by adding complete docstrings for all 37 previously undocumented helper methods across the `cli.py`, `config.py`, and `core.py` modules. All docstrings follow the project's strict formatting standards, including Google-style format with admonition-based sections.
-
-
-        #### Docstring Coverage Achievements
-
-        **CLI Module Enhancements (`cli.py`):**
-        Fixed 13 function docstrings with complete coverage including:
-        - Summary sections with `!!! note "Summary"` admonition format
-        - Comprehensive `Parameters` sections with type annotations and descriptions
-        - `Returns` sections with parenthesised type format: `(str):` not `str:`
-        - `Raises` sections appearing before `Returns` sections (proper ordering)
-        - All helper methods properly documented
-
-        **Configuration Module Enhancements (`config.py`):**
-        Fixed 5 function docstrings with complete coverage including:
-        - Summary sections describing primary purpose
-        - Parameters documentation with type information
-        - Returns documentation with proper format
-        - Raises documentation for error conditions
-        - Section ordering following project standards
-
-        **Core Module Enhancements (`core.py`):**
-        Fixed 19 method docstrings with complete coverage including:
-        - Summary sections for all validation methods
-        - Parameters documentation for all inputs
-        - Returns documentation with parenthesised types
-        - Raises sections for exception conditions
-        - Proper ordering: Summary → Parameters → Raises → Returns
-        - Corrected admonition types: `!!! abstract` for implementation details
-
-
-        #### Documentation Standards Applied
-
-        **Format Requirements:**
-        - All summaries use `!!! note "Summary"` format for consistency
-        - Returns sections use parenthesised types: `(str):`, `(bool):`, `(dict):`, etc.
-        - Raises sections appear BEFORE Returns sections in all docstrings
-        - All parameters include type annotations and detailed descriptions
-        - Void functions include Raises sections but no Returns sections
-
-        **Quality Validation:**
-        - All docstrings validated with `run check-docstrings` command
-        - Zero validation errors after completion
-        - Consistent formatting across all modules
-        - Proper admonition usage throughout
-
-
-        #### Validation Results
-
-        ```bash
-        $ uv run check-docstrings
-        Checking docstrings in: src/docstring_format_checker
-
-        ✅ All docstrings are valid!
-
-        Summary:
-          Total files checked: 3
-          Total errors found: 0
-        ```
-
-
-        #### Example Docstring Format
-
-        ```python
-        def _validate_and_process_paths(self, paths: list[str]) -> list[str]:
-            """
-            !!! note "Summary"
-                Validates and processes input paths from command-line arguments.
-
-            !!! abstract "Parameters"
-                - **`paths`** (`list[str]`): List of file or directory paths to validate.
-
-            !!! failure "Raises"
-                - **`SystemExit`**: If any path does not exist or is invalid.
-
-            !!! success "Returns"
-                (`list[str]`): List of validated absolute paths.
-            """
-            validated_paths = []
-            for path in paths:
-                abs_path = Path(path).resolve()
-                if not abs_path.exists():
-                    print(f"Error: Path does not exist: {path}")
-                    sys.exit(1)
-                validated_paths.append(str(abs_path))
-            return validated_paths
-        ```
-
-
-        ### ⚡ CI/CD Workflow Enhancements
-
-        #### Overview
-
-        GitHub Actions CI and CD workflows have been optimised to improve build performance and developer productivity through increased parallelism and more efficient resource utilisation.
-
-
-        #### Workflow Improvements
-
-        **Continuous Integration (`ci.yml`):**
-        - Increased parallelism for test execution across Python versions
-        - Optimised job dependencies to reduce total workflow runtime
-        - Enhanced caching strategies for dependency installation
-        - All 183 tests continue passing across all supported Python versions
-
-        **Continuous Deployment (`cd.yml`):**
-        - Increased parallelism for deployment tasks
-        - Optimised build and release processes
-        - Enhanced caching for faster deployment cycles
-        - Maintained security and verification standards
-
-
-        #### Performance Impact
-
-        The workflow enhancements deliver:
-
-        - **Reduced Build Times:** Parallel execution reduces total CI runtime
-        - **Faster Feedback:** Developers receive test results more quickly
-        - **Improved Resource Utilisation:** Better use of available GitHub Actions runners
-        - **Enhanced Developer Experience:** Shorter wait times for CI/CD pipeline completion
-
-
-        #### Technical Implementation
-
-        ```yaml
-        # Example: Increased parallelism in CI workflow
-        strategy:
-          matrix:
-            python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
-          max-parallel: 6  # Increased from 3
-        ```
-
-
-        ### 🛠️ Developer Experience Improvements
-
-        #### Overview
-
-        This release includes several improvements to the developer experience, making it easier to maintain code quality and contribute to the project.
-
-
-        #### Simplified Complexity Checking
-
-        The `scripts.py` utility has been updated with a simplified complexity check command:
-
-        ```sh
-        # Before: Verbose command with many options
-        complexipy src/docstring_format_checker --max-complexity 15 --sort asc --verbose
-
-        # After: Simplified with configuration in pyproject.toml
-        complexipy src/docstring_format_checker
-        ```
-
-        Configuration moved to `pyproject.toml` eliminates need for command-line arguments, reducing cognitive load for developers.
-
-
-        #### Enhanced Testing Workflow
-
-        - Maintained 100% test coverage across all refactoring efforts
-        - All 183 tests passing without modification (pure refactoring)
-        - Coverage increased from 783 to 834 statements
-        - Perfect Pylint score (10.00/10) maintained throughout
-
-
-        #### Code Quality Standards
-
-        - Zero functions with complexity ≥15
-        - Consistent helper method complexity (0-9 range)
-        - Single-responsibility principle applied throughout
-        - Clear naming conventions for helper methods
-
-
-        ### 📈 Metrics and Statistics
-
-        #### Complexity Metrics
-
-        | Metric                        | Before | After | Change         |
-        | ----------------------------- | ------ | ----- | -------------- |
-        | **Total Complexity**          | 332    | 309   | -23 (-6.9%)    |
-        | **Function Count**            | 74     | 98    | +24 (+32.4%)   |
-        | **High Complexity (≥15)**     | 3      | 0     | -3 (-100%) ✅   |
-        | **Medium Complexity (10-14)** | 6      | 5     | -1 (-16.7%)    |
-        | **Low Complexity (≤9)**       | 65     | 93    | +28 (+43.1%) ✅ |
-
-
-        #### Test Coverage Metrics
-
-        | Metric                 | Value   |
-        | ---------------------- | ------- |
-        | **Total Statements**   | 834     |
-        | **Statements Covered** | 834     |
-        | **Coverage**           | 100%    |
-        | **Tests Passing**      | 183/183 |
-        | **Test Framework**     | pytest  |
-
-
-        #### Code Quality Metrics
-
-        | Metric            | Value  |
-        | ----------------- | ------ |
-        | **Pylint Score**  | 10.00  |
-        | **Maximum Score** | 10.00  |
-        | **Type Checking** | ✅ Pass |
-        | **Formatting**    | ✅ Pass |
-
-
-        #### Refactoring Impact
-
-        | Function                    | Before | After | Reduction |
-        | --------------------------- | ------ | ----- | --------- |
-        | `_check_single_docstring`   | 25     | 2     | 92%       |
-        | `check_directory`           | 23     | 8     | 65%       |
-        | `_check_colon_usage`        | 19     | 0     | 100%      |
-        | `_check_undefined_sections` | 13     | 3     | 77%       |
-        | `_check_section_order`      | 13     | 6     | 54%       |
-        | `_check_admonition_values`  | 13     | 3     | 77%       |
-        | `_display_list_output`      | 13     | 6     | 54%       |
-
-
-        ### 🔍 Breaking Changes
-
-        **None.** This release maintains full backward compatibility with v1.4.0. All existing configuration files, command-line interfaces, and API contracts remain unchanged.
-
-
-        ### 🎯 Migration Guide
-
-        No migration required. Users can upgrade directly from v1.4.0 to v1.5.0 without any configuration changes or code modifications.
-
-
-        ### 🚀 Installation and Upgrade
-
-        #### New Installation
-
-        ```bash
-        # Install with pip
-        pip install docstring-format-checker==1.5.0
-
-        # Install with uv
-        uv pip install docstring-format-checker==1.5.0
-        ```
-
-
-        #### Upgrade from Previous Version
-
-        ```bash
-        # Upgrade with pip
-        pip install --upgrade docstring-format-checker
-
-        # Upgrade with uv
-        uv pip install --upgrade docstring-format-checker
-        ```
-
-
-        ### 📚 Additional Resources
-
-        #### Documentation
-
-        - **Project Documentation:** [https://docstring-format-checker.readthedocs.io](https://docstring-format-checker.readthedocs.io)
-        - **Complexity Analysis Report:** See `complexity_analysis_report.md` for detailed refactoring history
-        - **Contributing Guide:** See `CONTRIBUTING.md` for contribution guidelines
-        - **Changelog:** See `CHANGELOG.md` for complete version history
-
-
-        #### Configuration Examples
-
-        **Basic `pyproject.toml` Configuration:**
-
-        ```toml
-        [tool.docstring_format_checker]
-        exclude_patterns = ["test_*.py", "*_test.py"]
-
-        [tool.docstring_format_checker.sections.Summary]
-        required = true
-        format = "free_text"
-
-        [tool.complexipy]
-        paths = ["src/your_package"]
-        max-complexity-allowed = 15
-        quiet = false
-        sort = "asc"
-        ```
-
-
-        #### Running Quality Checks
-
-        ```bash
-        # Run docstring validation
-        uv run check-docstrings
-
-        # Run complexity analysis
-        uv run complexipy src/your_package
-
-        # Run tests with coverage
-        uv run pytest --cov=src/your_package --cov-report=term-missing
-
-        # Run Pylint
-        pylint src/your_package
-        ```
-
-
-        ### 💪 Pull Requests
-
-        * Code Quality Enhancement: Refactoring Complex Functions to reduce Cognitive Load and Improve Maintainability by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/19
-
-
-        ---
-
-
-        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.4.0...v1.5.0
-
+        ### Summary                This release represents a major advancement in code quality, maintainability, and tooling integration for the Docstring Format Checker package. The release introduces automated complexity monitoring through `complexipy` integration, enabling continuous tracking of code complexity metrics throughout development. Major refactoring efforts have reduced total cognitive complexity by 6.9% (from 332 to 309 points) whilst expanding the codebase with 24 new focused helper methods, all whilst maintaining 100% test coverage across 834 statements and a perfect Pylint score of 10.00/10. The refactoring work has eliminated all functions with complexity ≥15, extracting complex logic into single-responsibility helper methods that improve readability and maintainability. Enhanced CI/CD workflows now run with increased parallelism, reducing build times and improving developer productivity. Comprehensive documentation improvements include complete docstring coverage for all 37 previously undocumented helper methods, ensuring consistent documentation standards throughout the codebase. These improvements establish a robust foundation for future development whilst maintaining backward compatibility with existing implementations.                        ### Release Statistics                | Attribute           | Note                                          |        | ------------------- | --------------------------------------------- |        | **Version:**        | `v1.5.0`                                      |        | **Python Support:** | `3.9`, `3.10`, `3.11`, `3.12`, `3.13`, `3.14` |        | **Test Coverage:**  | 100% (834 statements)                         |        | **Pylint Score:**   | 10.00/10                                      |        | **Complexity:**     | 309 (reduced from 332, -6.9%)                 |        | **Functions:**      | 98 (increased from 74, +24 helpers)           |        | **Tests Passing:**  | 183/183                                       |        | **Files Changed:**  | 7                                             |        | **Lines Added:**    | 992                                           |        | **Lines Removed:**  | 228                                           |        | **Commits:**        | 5                                             |                        ### 📊 Complexity Monitoring Integration                #### Overview                This release integrates `complexipy` as an automated complexity monitoring tool, enabling continuous tracking of cognitive complexity metrics throughout the development lifecycle. The integration provides actionable insights into code complexity trends, helping maintainers identify refactoring opportunities and prevent complexity regression.                        #### Implementation Details                The `complexipy` integration includes:                - **Configuration in `pyproject.toml`:** Added comprehensive `complexipy` configuration section with customised settings:          ```toml          [tool.complexipy]          paths = ["src/docstring_format_checker"]          exclude = ["__pycache__", "*.pyc"]          max-complexity-allowed = 15          quiet = false          sort = "asc"          ```                - **CI/CD Integration:** Automated complexity checks run in GitHub Actions workflows, validating complexity thresholds on every pull request and commit.                - **Local Development Workflow:** Developers can run complexity analysis locally using simplified commands:          ```bash          # Run complexity analysis          uv run complexipy src/docstring_format_checker                    # Check compliance with thresholds          uv run check-complexity          ```                - **Complexity Reporting:** Generates detailed reports showing cognitive complexity for all functions, sorted by complexity score, enabling prioritised refactoring efforts.                        #### Technical Benefits                - **Proactive Complexity Management:** Automated checks prevent introduction of overly complex code before it reaches the main branch, maintaining codebase quality standards.                - **Objective Refactoring Priorities:** Quantitative complexity metrics enable data-driven decisions about which functions require refactoring attention, eliminating subjective assessments.                - **Continuous Quality Monitoring:** Integration with CI/CD pipelines ensures complexity standards are maintained across all contributions, preventing technical debt accumulation.                - **Developer Visibility:** Real-time complexity feedback during development helps developers write cleaner, more maintainable code from the outset.                        #### Complexity Achievements                The initial complexity analysis and subsequent refactoring efforts have achieved:                - **Total Complexity Reduction:** 332 → 309 points (6.9% reduction)        - **High-Complexity Elimination:** All functions with complexity ≥15 have been refactored        - **Function Distribution:** 98 total functions with 83+ functions having complexity ≤10        - **Maintainability Improvement:** Created 24 new focused helper methods with appropriate complexity levels                        #### Usage Example                ```bash        # Run complexity analysis with details        uv run complexipy src/docstring_format_checker --verbose                # Check against maximum threshold        uv run complexipy src/docstring_format_checker --max-complexity 15                # Generate sorted report        uv run complexipy src/docstring_format_checker --sort desc        ```                        ### 🎨 CLI Error Display Refactoring                #### Overview                The CLI module has undergone comprehensive refactoring to improve error display formatting, message handling, and user experience. The refactoring effort focused on extracting display logic into single-responsibility helper methods, enhancing code readability and maintainability.                        #### Refactoring Achievements                The CLI refactoring includes extraction of 13 new helper methods:                **Display Formatting Methods:**        - `_count_errors_and_files()` - Calculates total error count and affected file count from error dictionary        - `_display_quiet_summary()` - Displays minimal summary output in quiet mode        - `_display_final_summary()` - Displays comprehensive summary with error and file counts                **Table Output Methods:**        - `_display_table_output()` - Orchestrates table display for all errors with file paths and line numbers                **List Output Methods:**        - `_display_list_output()` - Orchestrates list display for all errors (complexity reduced from 13 → 6)        - `_create_error_header()` - Formats error header with file path and line number (complexity: 1)        - `_split_error_messages()` - Splits compound error messages on semicolon delimiter (complexity: 1)        - `_format_error_output()` - Orchestrates formatting of single error entry (complexity: 1)                **Path Validation Methods:**        - `_validate_and_process_paths()` - Validates and processes input paths from command-line arguments        - `_process_all_paths()` - Processes all paths and collects validation errors                **Configuration Methods:**        - `_load_and_validate_config()` - Orchestrates configuration loading with explicit or auto-discovery        - `_load_explicit_config()` - Loads explicitly specified configuration file        - `_load_auto_discovered_config()` - Auto-discovers configuration from project structure                        #### Technical Impact                The refactoring delivers:                - **Reduced Complexity:** `_display_list_output` reduced from complexity 13 → 6 (54% reduction)        - **Single Responsibility:** Each helper method has one clear purpose, improving code comprehension        - **Enhanced Testability:** Smaller, focused methods are easier to unit test with precise assertions        - **Improved Maintainability:** Changes to specific display logic can be made in isolation without affecting other functionality        - **Better Error Handling:** Separation of validation and processing logic enables more precise error recovery                        #### Code Example                ```python        # Before: Complex list output function        def _display_list_output(self, errors):            for file_path, file_errors in sorted(errors.items()):                for error_info in file_errors:                    line_number = error_info.get("line", "N/A")                    messages = error_info.get("message", "").split("; ")                    for msg in messages:                        print(f"{file_path}:{line_number}: {msg}")                        # After: Orchestration with helper methods        def _display_list_output(self, errors):            for file_path, file_errors in sorted(errors.items()):                for error_info in file_errors:                    formatted_output = self._format_error_output(file_path, error_info)                    print(formatted_output)                        def _format_error_output(self, file_path, error_info):            header = self._create_error_header(file_path, error_info)            messages = self._split_error_messages(error_info.get("message", ""))            return f"{header}: {messages[0]}"        ```                        ### 🔧 Core Module Refactoring                #### Overview                The core validation module has undergone extensive refactoring to reduce complexity, improve code organisation, and enhance maintainability. Seven major refactoring efforts have systematically extracted complex logic into focused helper methods, achieving a 6.9% reduction in total cognitive complexity.                        #### Refactoring History                **First Refactoring - `_check_single_docstring`:**        - **Complexity Reduction:** 25 → 2 (92% reduction)        - **Methods Extracted:** 3 helper methods          - `_is_section_applicable_to_item` (complexity: 9) - Section applicability checking          - `_get_applicable_required_sections` (complexity: 4) - Required sections gathering          - `_handle_missing_docstring` (complexity: 2) - Missing docstring handling                **Second Refactoring - `check_directory`:**        - **Complexity Reduction:** 23 → 8 (65% reduction)        - **Methods Extracted:** 3 helper methods          - `_should_exclude_file` (complexity: 3) - Pattern matching for exclusions          - `_filter_python_files` (complexity: 4) - File filtering logic          - `_check_file_with_error_handling` (complexity: 1) - Error conversion                **Third Refactoring - `_check_colon_usage`:**        - **Complexity Reduction:** 19 → 0 (100% reduction - pure delegation)        - **Methods Extracted:** 4 helper methods          - `_validate_admonition_has_no_colon` (complexity: 4) - Single admonition validation          - `_check_admonition_colon_usage` (complexity: 3) - All admonitions check          - `_validate_non_admonition_has_colon` (complexity: 7) - Single non-admonition validation          - `_check_non_admonition_colon_usage` (complexity: 3) - All non-admonitions check                **Fourth Refactoring - `_check_undefined_sections`:**        - **Complexity Reduction:** 13 → 3 (77% reduction)        - **Methods Extracted:** 3 helper methods          - `_normalize_section_name` (complexity: 0) - String normalisation          - `_is_valid_section_name` (complexity: 3) - Validation with conditionals          - `_extract_section_names_from_docstring` (complexity: 6) - Extraction logic                **Fifth Refactoring - `_check_section_order`:**        - **Complexity Reduction:** 13 → 6 (54% reduction)        - **Methods Extracted:** 3 helper methods          - `_build_section_patterns` (complexity: 4) - Build regex patterns from config          - `_find_sections_with_positions` (complexity: 3) - Find and sort sections          - `_build_expected_section_order` (complexity: 0) - Build expected order list                **Sixth Refactoring - `_check_admonition_values`:**        - **Complexity Reduction:** 13 → 3 (77% reduction)        - **Methods Extracted:** 2 helper methods          - `_build_admonition_mapping` (complexity: 4) - Build section to admonition mapping          - `_validate_single_admonition` (complexity: 5) - Validate one admonition match                **Seventh Refactoring - `_display_list_output`:**        - **Complexity Reduction:** 13 → 6 (54% reduction)        - **Methods Extracted:** 3 helper methods (covered in CLI section above)                        #### Refactoring Patterns Applied                **Extract Method Pattern:**        - Identified complex logic blocks within larger methods        - Extracted blocks into focused helper methods with single responsibility        - Named helper methods descriptively to indicate purpose and responsibility        - Maintained all existing tests without modification (pure refactoring)                **Separation of Concerns:**        - Split validation logic from data gathering logic        - Isolated pattern matching from pattern usage        - Separated iteration logic from single-item processing        - Distinguished checking (multiple items) from validating (single item)                **Naming Conventions:**        - `_validate_*` - Methods that validate single items and raise/return validation results        - `_check_*` - Methods that check multiple items and aggregate results        - `_build_*` - Methods that construct data structures or configurations        - `_extract_*` - Methods that extract information from larger structures        - `_is_*` - Methods that return boolean predicates                        #### Technical Impact                The refactoring delivers:                - **Reduced Total Complexity:** 332 → 309 (6.9% reduction)        - **Eliminated High Complexity:** All functions with complexity ≥15 refactored to acceptable levels        - **Increased Function Count:** 74 → 98 functions (+24 helper methods)        - **Maintained Quality:** 100% test coverage (834 statements), Pylint 10.00/10, all 183 tests passing        - **Enhanced Readability:** Main functions now orchestrate helper methods with clear, linear structure        - **Improved Maintainability:** Single-responsibility methods are easier to modify, test, and understand                        #### Code Example                ```python        # Before: Complex nested function (complexity 25)        def _check_single_docstring(self, item_type, item_name, docstring):            if not docstring:                if "Summary" in self.required_sections:                    self.errors.append(...)                return                    for section_name, section_rules in self.required_sections.items():                if "applies_to" in section_rules:                    if item_type not in section_rules["applies_to"]:                        continue                # ... more complex logic ...                        # After: Orchestration with helper methods (complexity 2)        def _check_single_docstring(self, item_type, item_name, docstring):            if not docstring:                self._handle_missing_docstring(item_type, item_name, ...)                return                    applicable_sections = self._get_applicable_required_sections(item_type)            self._validate_all_required_sections(docstring, applicable_sections, ...)        ```                        #### Complexity Distribution After Refactoring                | Complexity Range | Function Count | Status                   |        | ---------------- | -------------- | ------------------------ |        | 0-5              | 60+            | ✅ Excellent              |        | 6-9              | 23+            | ✅ Good                   |        | 10-12            | 4              | ⚠️ Acceptable (justified) |        | 13               | 1              | ⚠️ Monitor                |        | ≥15              | 0              | ✅ All Eliminated         |                        ### 📝 Documentation Improvements                #### Overview                This release achieves comprehensive documentation coverage by adding complete docstrings for all 37 previously undocumented helper methods across the `cli.py`, `config.py`, and `core.py` modules. All docstrings follow the project's strict formatting standards, including Google-style format with admonition-based sections.                        #### Docstring Coverage Achievements                **CLI Module Enhancements (`cli.py`):**        Fixed 13 function docstrings with complete coverage including:        - Summary sections with `!!! note "Summary"` admonition format        - Comprehensive `Parameters` sections with type annotations and descriptions        - `Returns` sections with parenthesised type format: `(str):` not `str:`        - `Raises` sections appearing before `Returns` sections (proper ordering)        - All helper methods properly documented                **Configuration Module Enhancements (`config.py`):**        Fixed 5 function docstrings with complete coverage including:        - Summary sections describing primary purpose        - Parameters documentation with type information        - Returns documentation with proper format        - Raises documentation for error conditions        - Section ordering following project standards                **Core Module Enhancements (`core.py`):**        Fixed 19 method docstrings with complete coverage including:        - Summary sections for all validation methods        - Parameters documentation for all inputs        - Returns documentation with parenthesised types        - Raises sections for exception conditions        - Proper ordering: Summary → Parameters → Raises → Returns        - Corrected admonition types: `!!! abstract` for implementation details                        #### Documentation Standards Applied                **Format Requirements:**        - All summaries use `!!! note "Summary"` format for consistency        - Returns sections use parenthesised types: `(str):`, `(bool):`, `(dict):`, etc.        - Raises sections appear BEFORE Returns sections in all docstrings        - All parameters include type annotations and detailed descriptions        - Void functions include Raises sections but no Returns sections                **Quality Validation:**        - All docstrings validated with `run check-docstrings` command        - Zero validation errors after completion        - Consistent formatting across all modules        - Proper admonition usage throughout                        #### Validation Results                ```bash        $ uv run check-docstrings        Checking docstrings in: src/docstring_format_checker                ✅ All docstrings are valid!                Summary:          Total files checked: 3          Total errors found: 0        ```                        #### Example Docstring Format                ```python        def _validate_and_process_paths(self, paths: list[str]) -> list[str]:            """            !!! note "Summary"                Validates and processes input paths from command-line arguments.                    !!! abstract "Parameters"                - **`paths`** (`list[str]`): List of file or directory paths to validate.                    !!! failure "Raises"                - **`SystemExit`**: If any path does not exist or is invalid.                    !!! success "Returns"                (`list[str]`): List of validated absolute paths.            """            validated_paths = []            for path in paths:                abs_path = Path(path).resolve()                if not abs_path.exists():                    print(f"Error: Path does not exist: {path}")                    sys.exit(1)                validated_paths.append(str(abs_path))            return validated_paths        ```                        ### ⚡ CI/CD Workflow Enhancements                #### Overview                GitHub Actions CI and CD workflows have been optimised to improve build performance and developer productivity through increased parallelism and more efficient resource utilisation.                        #### Workflow Improvements                **Continuous Integration (`ci.yml`):**        - Increased parallelism for test execution across Python versions        - Optimised job dependencies to reduce total workflow runtime        - Enhanced caching strategies for dependency installation        - All 183 tests continue passing across all supported Python versions                **Continuous Deployment (`cd.yml`):**        - Increased parallelism for deployment tasks        - Optimised build and release processes        - Enhanced caching for faster deployment cycles        - Maintained security and verification standards                        #### Performance Impact                The workflow enhancements deliver:                - **Reduced Build Times:** Parallel execution reduces total CI runtime        - **Faster Feedback:** Developers receive test results more quickly        - **Improved Resource Utilisation:** Better use of available GitHub Actions runners        - **Enhanced Developer Experience:** Shorter wait times for CI/CD pipeline completion                        #### Technical Implementation                ```yaml        # Example: Increased parallelism in CI workflow        strategy:          matrix:            python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']          max-parallel: 6  # Increased from 3        ```                        ### 🛠️ Developer Experience Improvements                #### Overview                This release includes several improvements to the developer experience, making it easier to maintain code quality and contribute to the project.                        #### Simplified Complexity Checking                The `scripts.py` utility has been updated with a simplified complexity check command:                ```sh        # Before: Verbose command with many options        complexipy src/docstring_format_checker --max-complexity 15 --sort asc --verbose                # After: Simplified with configuration in pyproject.toml        complexipy src/docstring_format_checker        ```                Configuration moved to `pyproject.toml` eliminates need for command-line arguments, reducing cognitive load for developers.                        #### Enhanced Testing Workflow                - Maintained 100% test coverage across all refactoring efforts        - All 183 tests passing without modification (pure refactoring)        - Coverage increased from 783 to 834 statements        - Perfect Pylint score (10.00/10) maintained throughout                        #### Code Quality Standards                - Zero functions with complexity ≥15        - Consistent helper method complexity (0-9 range)        - Single-responsibility principle applied throughout        - Clear naming conventions for helper methods                        ### 📈 Metrics and Statistics                #### Complexity Metrics                | Metric                        | Before | After | Change         |        | ----------------------------- | ------ | ----- | -------------- |        | **Total Complexity**          | 332    | 309   | -23 (-6.9%)    |        | **Function Count**            | 74     | 98    | +24 (+32.4%)   |        | **High Complexity (≥15)**     | 3      | 0     | -3 (-100%) ✅   |        | **Medium Complexity (10-14)** | 6      | 5     | -1 (-16.7%)    |        | **Low Complexity (≤9)**       | 65     | 93    | +28 (+43.1%) ✅ |                        #### Test Coverage Metrics                | Metric                 | Value   |        | ---------------------- | ------- |        | **Total Statements**   | 834     |        | **Statements Covered** | 834     |        | **Coverage**           | 100%    |        | **Tests Passing**      | 183/183 |        | **Test Framework**     | pytest  |                        #### Code Quality Metrics                | Metric            | Value  |        | ----------------- | ------ |        | **Pylint Score**  | 10.00  |        | **Maximum Score** | 10.00  |        | **Type Checking** | ✅ Pass |        | **Formatting**    | ✅ Pass |                        #### Refactoring Impact                | Function                    | Before | After | Reduction |        | --------------------------- | ------ | ----- | --------- |        | `_check_single_docstring`   | 25     | 2     | 92%       |        | `check_directory`           | 23     | 8     | 65%       |        | `_check_colon_usage`        | 19     | 0     | 100%      |        | `_check_undefined_sections` | 13     | 3     | 77%       |        | `_check_section_order`      | 13     | 6     | 54%       |        | `_check_admonition_values`  | 13     | 3     | 77%       |        | `_display_list_output`      | 13     | 6     | 54%       |                        ### 🔍 Breaking Changes                **None.** This release maintains full backward compatibility with v1.4.0. All existing configuration files, command-line interfaces, and API contracts remain unchanged.                        ### 🎯 Migration Guide                No migration required. Users can upgrade directly from v1.4.0 to v1.5.0 without any configuration changes or code modifications.                        ### 🚀 Installation and Upgrade                #### New Installation                ```bash        # Install with pip        pip install docstring-format-checker==1.5.0                # Install with uv        uv pip install docstring-format-checker==1.5.0        ```                        #### Upgrade from Previous Version                ```bash        # Upgrade with pip        pip install --upgrade docstring-format-checker                # Upgrade with uv        uv pip install --upgrade docstring-format-checker        ```                        ### 📚 Additional Resources                #### Documentation                - **Project Documentation:** [https://docstring-format-checker.readthedocs.io](https://docstring-format-checker.readthedocs.io)        - **Complexity Analysis Report:** See `complexity_analysis_report.md` for detailed refactoring history        - **Contributing Guide:** See `CONTRIBUTING.md` for contribution guidelines        - **Changelog:** See `CHANGELOG.md` for complete version history                        #### Configuration Examples                **Basic `pyproject.toml` Configuration:**                ```toml        [tool.docstring_format_checker]        exclude_patterns = ["test_*.py", "*_test.py"]                [tool.docstring_format_checker.sections.Summary]        required = true        format = "free_text"                [tool.complexipy]        paths = ["src/your_package"]        max-complexity-allowed = 15        quiet = false        sort = "asc"        ```                        #### Running Quality Checks                ```bash        # Run docstring validation        uv run check-docstrings                # Run complexity analysis        uv run complexipy src/your_package                # Run tests with coverage        uv run pytest --cov=src/your_package --cov-report=term-missing                # Run Pylint        pylint src/your_package        ```                        ### 💪 Pull Requests                * Code Quality Enhancement: Refactoring Complex Functions to reduce Cognitive Load and Improve Maintainability by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/19                        ---                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.4.0...v1.5.0        
 
     ??? abstract "Updates"
 
@@ -654,515 +70,7 @@
 
     ??? note "Release Notes"
 
-        ### Summary
-
-        This release represents a significant evolution of the Docstring Format Checker package, delivering comprehensive improvements across multiple dimensions of code quality, compatibility, and maintainability. The release introduces official Python 3.14 support, achieving complete cross-version compatibility from Python 3.11 through 3.14. Major enhancements include a complete code refactoring achieving 100% test coverage (783 statements), standardisation of type annotations throughout the codebase, and integration of advanced code quality tools including `pylint` and `complexipy` for static analysis and complexity monitoring. The release also delivers seamless pre-commit hook integration, enabling automated docstring validation in development workflows. Critical Windows encoding issues have been resolved, ensuring consistent behaviour across all operating systems. These improvements establish a robust foundation for future development whilst maintaining backward compatibility with existing implementations.
-
-
-        ### Release Statistics
-
-        | Attribute           | Note                                          |
-        | ------------------- | --------------------------------------------- |
-        | **Version:**        | `v1.4.0`                                      |
-        | **Python Support:** | `3.9`, `3.10`, `3.11`, `3.12`, `3.13`, `3.14` |
-        | **Test Coverage:**  | 100% (783 statements)                         |
-        | **Files Changed:**  | 14                                            |
-        | **Lines Added:**    | 2,918                                         |
-        | **Lines Removed:**  | 403                                           |
-        | **Commits:**        | 17                                            |
-
-
-        ### 🐍 Python 3.14 Support
-
-        #### Overview
-
-        This release adds official support for Python 3.14, the latest Python version released in October 2024. The package now provides full compatibility across Python 3.11, 3.12, 3.13, and 3.14, ensuring users can leverage the latest Python features whilst maintaining support for earlier versions.
-
-
-        #### Implementation Details
-
-        The Python 3.14 support implementation includes:
-
-        - Updated GitHub Actions CI/CD workflows with Python 3.14 test matrix
-        - Verified compatibility with Python 3.14 standard library changes
-        - Validated all existing functionality against Python 3.14 runtime
-        - Updated package metadata in `pyproject.toml` to declare Python 3.14 support
-        - Comprehensive test execution across all supported Python versions
-
-
-        #### Technical Benefits
-
-        - **Cross-Version Compatibility:** The package maintains consistent behaviour across Python 3.11-3.14, allowing teams to upgrade Python versions without modifying their docstring validation configuration.
-        - **Future-Proof Development:** Early adoption of Python 3.14 ensures the package remains compatible with the latest language features and standard library improvements.
-        - **Continuous Integration:** Automated testing against all supported Python versions guarantees compatibility and prevents regression issues during development.
-
-
-        #### Usage Example
-
-        ```bash
-        # Install with Python 3.14
-        python3.14 -m pip install docstring-format-checker
-
-        # Run with Python 3.14
-        python3.14 -m docstring_format_checker --check path/to/code
-        ```
-
-
-        ### 🔧 Code Refactoring and Architecture Improvements
-
-        #### Overview
-
-        The codebase has undergone comprehensive refactoring to improve maintainability, readability, and extensibility. This refactoring effort focused on modularising functionality, eliminating code duplication, standardising coding patterns, and enhancing error handling throughout the package.
-
-
-        #### Refactoring Achievements
-
-        - **Modularisation:** Core functionality has been reorganised into logical modules with clear separation of concerns. The `cli.py`, `config.py`, and `core.py` modules now follow single-responsibility principles, making the codebase easier to navigate and maintain.
-        - **Code Deduplication:** Identified and eliminated duplicate code patterns, consolidating common logic into reusable functions. This reduces maintenance burden and ensures consistent behaviour across the package.
-        - **Enhanced Error Handling:** Improved exception handling with custom exception classes in the `utils/exceptions.py` module. This provides more informative error messages and enables precise error recovery strategies.
-        - **Documentation Improvements:** Enhanced inline documentation and docstrings throughout the codebase, improving code comprehension for contributors and maintainers.
-
-
-        #### Technical Impact
-
-        The refactoring delivers:
-
-        - Reduced cyclomatic complexity in core functions
-        - Improved code navigation and IDE support
-        - Enhanced debugging capabilities through clearer stack traces
-        - Better alignment with Python best practices and PEP standards
-
-
-        ### 🧪 100% Test Coverage Achievement
-
-        #### Overview
-
-        This release achieves complete test coverage with 100% code coverage across 783 statements in the core package. This milestone represents a comprehensive test suite that validates all code paths, edge cases, and error conditions throughout the package.
-
-
-        #### Testing Infrastructure
-
-        **Coverage Statistics:**
-
-        - Total Statements: 783
-        - Statements Covered: 783
-        - Coverage Percentage: 100%
-        - Test Framework: `pytest`
-        - Coverage Tool: `coverage.py` v7.11.0
-
-
-        #### Test Suite Expansion
-
-        The test suite has been significantly expanded with new test modules:
-
-        - **`test_config.py` Enhancements:** Added 133 lines of comprehensive configuration testing, validating:
-          - Configuration file parsing and validation
-          - Default configuration handling
-          - Configuration override mechanisms
-          - Invalid configuration error handling
-          - Configuration merge strategies
-        - **`test_core.py` Enhancements:** Added 337 lines of core functionality testing, covering:
-          - Docstring extraction and parsing
-          - Format validation logic
-          - Multi-style docstring support (Google, NumPy, Sphinx)
-          - Error detection and reporting
-          - Edge cases and boundary conditions
-        - **`test_cli.py` Updates:** Enhanced CLI testing to validate:
-          - Command-line argument parsing
-          - Exit code handling
-          - Output formatting
-          - Error message presentation
-
-
-        #### Quality Assurance Benefits
-
-        - **Regression Prevention:** Complete test coverage ensures that code changes cannot inadvertently break existing functionality without detection.
-        - **Confidence in Refactoring:** Developers can confidently refactor code knowing that the comprehensive test suite will catch any behavioural changes.
-        - **Documentation Through Tests:** The test suite serves as executable documentation, demonstrating expected behaviour for all package features.
-        - **Continuous Quality Monitoring:** Automated test execution in CI/CD pipelines maintains quality standards across all contributions.
-
-
-        #### Running the Test Suite
-
-        ```bash
-        # Run full test suite with coverage
-        uv run pytest --config-file=pyproject.toml --cov-report=term-missing
-
-        # Run tests for specific module
-        uv run pytest src/tests/test_core.py
-
-        # Generate HTML coverage report
-        uv run pytest --config-file=pyproject.toml --cov-report=html
-        ```
-
-
-        ### 📋 Pylint Integration and Code Quality Standards
-
-        #### Overview
-
-        This release integrates `pylint` as a static analysis tool, establishing comprehensive code quality standards and automated linting checks. The `pylint` configuration enforces consistent coding style, detects potential bugs, and identifies code smells throughout the codebase.
-
-
-        #### Pylint Configuration
-
-        A comprehensive `pylint` configuration has been added to `pyproject.toml`, including:
-
-        - **Enabled Checks:**
-          - Code style consistency (PEP 8 compliance)
-          - Unused import detection
-          - Variable naming conventions
-          - Function complexity limits
-          - Documentation completeness
-          - Potential bug patterns
-
-        - **Disabled Checks:**
-          - Selectively disabled checks that conflict with project-specific requirements or generate false positives in the codebase.
-
-        - **Custom Settings:**
-          - Tailored scoring thresholds and error severity levels to match project quality standards.
-
-
-        #### Code Quality Improvements
-
-        The `pylint` integration has driven improvements in:
-
-        - **Naming Conventions:** Standardised variable, function, and class naming according to Python conventions.
-        - **Import Organisation:** Cleaned up import statements, removing unused imports and organising imports logically.
-        - **Code Complexity:** Refactored complex functions to reduce cyclomatic complexity and improve maintainability.
-        - **Documentation Standards:** Ensured all public functions, classes, and modules have appropriate docstrings.
-
-
-        #### Usage in Development Workflow
-
-        ```bash
-        # Run pylint on entire codebase
-        pylint src/docstring_format_checker
-
-        # Run pylint with custom configuration
-        pylint --rcfile=pyproject.toml src/docstring_format_checker
-
-        # Check specific file
-        pylint src/docstring_format_checker/core.py
-
-        # Generate detailed report
-        pylint --output-format=text src/docstring_format_checker > pylint-report.txt
-        ```
-
-
-        #### Integration with CI/CD
-
-        The `pylint` checks are integrated into the CI/CD pipeline, automatically validating code quality on every pull request and commit. This ensures that code quality standards are maintained consistently across all contributions.
-
-
-        ### 🔗 Pre-Commit Hook Integration
-
-        #### Overview
-
-        This release introduces seamless integration with pre-commit hooks through a new `.pre-commit-hooks.yaml` configuration file. This enables automatic docstring validation before commits, preventing invalid docstrings from entering the codebase.
-
-
-        #### Pre-Commit Configuration
-
-        The `.pre-commit-hooks.yaml` file defines a hook for the Docstring Format Checker:
-
-        ```yaml
-        - id: docstring-format-checker
-          name: Docstring Format Checker
-          description: Validate Python docstring formats
-          entry: docstring-format-checker
-          language: python
-          types: [python]
-        ```
-
-
-        #### Integration Steps
-
-        Add the Docstring Format Checker to your `.pre-commit-config.yaml`:
-
-        ```yaml
-        repos:
-          - repo: https://github.com/data-science-extensions/docstring-format-checker
-            rev: v1.4.0
-            hooks:
-              - id: docstring-format-checker
-                args: ['--config-file=.dfc.yaml']
-        ```
-
-
-        #### Workflow Integration
-
-        - **Automated Validation:** Pre-commit hooks automatically run before each commit, validating docstrings in changed files.
-        - **Early Error Detection:** Catches docstring format issues before code review, reducing feedback cycles and maintaining code quality standards.
-        - **Customisable Configuration:** Supports passing configuration arguments to the hook, enabling project-specific docstring validation rules.
-        - **Fast Execution:** Only checks files staged for commit, ensuring quick feedback without slowing down development workflow.
-
-
-        #### Development Workflow Example
-
-        ```bash
-        # Install pre-commit hooks
-        pre-commit install
-
-        # Manually run hooks on all files
-        pre-commit run --all-files
-
-        # Run hooks on specific files
-        pre-commit run --files src/docstring_format_checker/core.py
-
-        # Update hooks to latest versions
-        pre-commit autoupdate
-        ```
-
-
-        ### ⚙️ Configuration and Workflow Enhancements
-
-        #### Overview
-
-        This release delivers multiple configuration and workflow improvements, including enhanced DFC configuration capabilities, CHANGELOG formatting updates, changelog generation refactoring, and integration of workflow automation tools.
-
-
-        #### DFC Configuration Updates
-
-        Enhanced the Docstring Format Checker configuration system with:
-
-        - **Improved Validation:** More robust configuration file parsing with better error messages for invalid configurations.
-        - **Default Value Handling:** Refined default configuration values to provide sensible defaults whilst maintaining flexibility.
-        - **Configuration Merging:** Enhanced logic for merging project-specific configurations with package defaults.
-
-
-        #### CHANGELOG Formatting
-
-        Updated `CHANGELOG.md` formatting to improve readability and maintainability:
-
-        - **Consistent Structure:** Standardised changelog entry format across all versions, making it easier to track changes over time.
-        - **Emoji Section Headers:** Added emoji-prefixed H3 headers for visual scanning of changelog sections.
-        - **Enhanced Descriptions:** Improved change descriptions with more context and technical details.
-
-
-        #### Changelog Generation Refactoring
-
-        Refactored the changelog generation utility (`src/utils/changelog.py`) to improve:
-
-        - **Automation Capabilities:** Enhanced scripts to automatically generate changelog entries from commit messages and pull request descriptions.
-        - **Template Consistency:** Standardised changelog entry templates to ensure consistent formatting across releases.
-        - **Git Integration:** Improved integration with git commands to extract commit information and generate accurate changelog content.
-
-
-        #### Workflow Script Updates
-
-        Updated workflow scripts in `src/utils/scripts.py` to include:
-
-        - **DFC Integration:** Added Docstring Format Checker to automated checking scripts, ensuring docstring validation is part of the standard workflow.
-        - **Enhanced Error Handling:** Improved error reporting in workflow scripts to provide clearer feedback when checks fail.
-
-
-        #### Usage Example
-
-        ```bash
-        # Run automated workflow checks (includes DFC)
-        python src/utils/scripts.py check
-
-        # Generate changelog entries for new release
-        python src/utils/changelog.py generate --version v1.4.0
-        ```
-
-
-        ### 📊 Complexity Monitoring with Complexipy
-
-        #### Overview
-
-        This release integrates `complexipy`, a modern Python complexity analysis tool, to monitor and maintain code complexity standards. This integration provides automated complexity metrics and helps prevent the introduction of overly complex code that is difficult to maintain.
-
-
-        #### Complexipy Integration
-
-        - **Automated Analysis:** Complexipy runs as part of the CI/CD pipeline, analysing code complexity on every commit and pull request.
-        - **Complexity Metrics:** Tracks cyclomatic complexity, cognitive complexity, and other maintainability metrics across the codebase.
-        - **Threshold Enforcement:** Configurable complexity thresholds prevent merging code that exceeds acceptable complexity limits.
-
-
-        #### Complexity Standards
-
-        The project enforces the following complexity standards:
-
-        - **Function Complexity:** Maximum cyclomatic complexity of 10 for individual functions, encouraging simple, focused functions.
-        - **Class Complexity:** Maximum average complexity of 8 across all methods in a class.
-        - **Module Complexity:** Overall module complexity limits to maintain manageable file sizes.
-
-
-        #### Benefits of Complexity Monitoring
-
-        - **Maintainability:** Lower complexity code is easier to understand, modify, and extend, reducing long-term maintenance costs.
-        - **Bug Prevention:** Complex code correlates with higher bug rates. Complexity limits reduce the likelihood of introducing bugs.
-        - **Code Review Efficiency:** Reviewers can focus on logic and design rather than untangling complex code structures.
-        - **Refactoring Signals:** Complexity metrics identify code that would benefit from refactoring before it becomes a maintenance burden.
-
-
-        #### Usage in Development
-
-        ```bash
-        # Analyse complexity of entire codebase
-        complexipy src/docstring_format_checker
-
-        # Check specific file
-        complexipy src/docstring_format_checker/core.py
-
-        # Generate complexity report
-        complexipy --output=json src/docstring_format_checker > complexity-report.json
-        ```
-
-
-        ### 🖥️ Windows Encoding Compatibility
-
-        #### Overview
-
-        This release resolves critical Windows encoding issues that caused test failures on Windows operating systems. The Windows platform uses `cp1252` (Western European) encoding by default, which lacks support for Unicode characters including emojis and extended ASCII art used by `pyfiglet`. These encoding mismatches caused both output encoding errors and input decoding errors during test execution.
-
-
-        #### Root Cause Analysis
-
-        - **Windows Default Encoding:** Windows uses `cp1252` encoding by default for console I/O operations, limiting character support to Western European characters.
-        - **Unicode Requirements:** The package uses Unicode characters including:
-          - Checkmark emoji (✅, U+2705) in success messages
-          - ASCII art from `pyfiglet` containing extended character sets
-        - **Subprocess Encoding:** Python's `subprocess.run()` with `text=True` inherits the system default encoding, causing encoding/decoding failures on Windows.
-
-
-        #### Solution Implementation
-
-        The encoding issues have been resolved by adding the `PYTHONIOENCODING` environment variable to CI/CD workflows:
-
-        **`.github/workflows/ci.yml` Update:**
-
-        ```yaml
-        env:
-          PYTHONIOENCODING: utf-8
-        ```
-
-        **`.github/workflows/cd.yml` Update:**
-
-        ```yaml
-        env:
-          PYTHONIOENCODING: utf-8
-        ```
-
-
-        #### How `PYTHONIOENCODING` Resolves Both Issues
-
-        - **Environment Variable Inheritance:** `PYTHONIOENCODING=utf-8` is inherited by all Python processes and subprocesses, ensuring consistent UTF-8 encoding throughout the execution chain.
-        - **Output Encoding Fix:** Forces Python to encode all output (including emoji characters) as UTF-8, preventing `UnicodeEncodeError` when writing to stdout/stderr.
-        - **Input Decoding Fix:** Forces Python to decode all input (including `pyfiglet` ASCII art) as UTF-8, preventing `UnicodeDecodeError` when reading from subprocess stdout.
-        - **Cross-Platform Consistency:** Ensures identical encoding behaviour across Windows, Linux, and macOS, eliminating platform-specific bugs.
-
-
-        #### Error Examples Resolved
-
-        **Before Fix - Output Encoding Error:**
-
-        ```
-        UnicodeEncodeError: 'charmap' codec can't encode character '\u2705'
-        in position 42: character maps to <undefined>
-        ```
-
-        **Before Fix - Input Decoding Error:**
-
-        ```
-        UnicodeDecodeError: 'charmap' codec can't decode byte 0x90
-        in position 156: character maps to <undefined>
-        ```
-
-        **After Fix:**
-
-        Both errors resolved - all tests pass on Windows with consistent UTF-8 encoding.
-
-
-        #### Technical Benefits
-
-        - **Cross-Platform Compatibility:** Ensures consistent behaviour across all operating systems, eliminating Windows-specific test failures.
-        - **Unicode Support:** Full Unicode character support enables use of emojis, international characters, and extended ASCII art in output.
-        - **Developer Experience:** Windows developers can run tests locally without encountering encoding-related failures.
-        - **CI/CD Reliability:** Windows CI/CD pipelines now execute reliably without encoding-related test failures.
-
-
-        #### Testing and Validation
-
-        The encoding fixes have been validated through:
-
-        - **Windows CI Pipeline:** All tests pass on Windows Server with Python 3.11-3.14.
-        - **Emoji Output Testing:** Success messages with checkmark emoji display correctly on Windows.
-        - **Pyfiglet Integration:** ASCII art generation and rendering work correctly on Windows.
-        - **Subprocess Testing:** Subprocess execution with `text=True` handles UTF-8 encoding/decoding correctly.
-
-
-        ### 🔄 Additional Improvements
-
-        #### Merge Strategy
-
-        All 17 commits have been merged via pull request #18, maintaining a clean git history and ensuring all changes passed CI/CD validation before integration.
-
-
-        #### Coverage Tool Update
-
-        Updated `coverage.py` from v7.10.6 to v7.11.0, benefiting from:
-
-        - Performance improvements in coverage analysis
-        - Enhanced HTML report generation
-        - Bug fixes in coverage measurement accuracy
-
-
-        #### Documentation Updates
-
-        - **CHANGELOG.md Expansion:** Added 1,853 lines documenting all changes since v1.3.0 with comprehensive release notes.
-        - **Code Documentation:** Enhanced inline documentation and docstrings throughout refactored code.
-        - **Contributing Guidelines:** Updated `CONTRIBUTING.md` with new development workflow requirements including pre-commit hooks and quality tools.
-
-
-        ### 📦 Installation and Upgrade
-
-        #### Installing v1.4.0
-
-        ```bash
-        # Install from PyPI
-        pip install docstring-format-checker==1.4.0
-
-        # Install with uv (recommended)
-        uv pip install docstring-format-checker==1.4.0
-
-        # Install from source
-        git clone https://github.com/data-science-extensions/docstring-format-checker.git
-        cd docstring-format-checker
-        git checkout v1.4.0
-        uv pip install -e .
-        ```
-
-
-        #### Upgrading from v1.3.0
-
-        ```bash
-        # Upgrade with pip
-        pip install --upgrade docstring-format-checker
-
-        # Upgrade with uv
-        uv pip install --upgrade docstring-format-checker
-        ```
-
-
-        #### Compatibility Notes
-
-        - **Breaking Changes:** None. Version 1.4.0 maintains full backward compatibility with v1.3.0 configuration files and usage patterns.
-        - **Configuration Migration:** No configuration changes required when upgrading from v1.3.0.
-        - **Python Version Requirements:** Python 3.11 or higher required (unchanged from v1.3.0).
-
-
-        ### 💪 Pull Requests
-
-        - Comprehensive Code Quality Enhancement: Python 3.14 Support, Refactoring, and 100% Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/18
-
-
-        ---
-
-        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.3.0...v1.4.0
-
+        ### Summary                This release represents a significant evolution of the Docstring Format Checker package, delivering comprehensive improvements across multiple dimensions of code quality, compatibility, and maintainability. The release introduces official Python 3.14 support, achieving complete cross-version compatibility from Python 3.11 through 3.14. Major enhancements include a complete code refactoring achieving 100% test coverage (783 statements), standardisation of type annotations throughout the codebase, and integration of advanced code quality tools including `pylint` and `complexipy` for static analysis and complexity monitoring. The release also delivers seamless pre-commit hook integration, enabling automated docstring validation in development workflows. Critical Windows encoding issues have been resolved, ensuring consistent behaviour across all operating systems. These improvements establish a robust foundation for future development whilst maintaining backward compatibility with existing implementations.                        ### Release Statistics                | Attribute           | Note                                          |        | ------------------- | --------------------------------------------- |        | **Version:**        | `v1.4.0`                                      |        | **Python Support:** | `3.9`, `3.10`, `3.11`, `3.12`, `3.13`, `3.14` |        | **Test Coverage:**  | 100% (783 statements)                         |        | **Files Changed:**  | 14                                            |        | **Lines Added:**    | 2,918                                         |        | **Lines Removed:**  | 403                                           |        | **Commits:**        | 17                                            |                        ### 🐍 Python 3.14 Support                #### Overview                This release adds official support for Python 3.14, the latest Python version released in October 2024. The package now provides full compatibility across Python 3.11, 3.12, 3.13, and 3.14, ensuring users can leverage the latest Python features whilst maintaining support for earlier versions.                        #### Implementation Details                The Python 3.14 support implementation includes:                - Updated GitHub Actions CI/CD workflows with Python 3.14 test matrix        - Verified compatibility with Python 3.14 standard library changes        - Validated all existing functionality against Python 3.14 runtime        - Updated package metadata in `pyproject.toml` to declare Python 3.14 support        - Comprehensive test execution across all supported Python versions                        #### Technical Benefits                - **Cross-Version Compatibility:** The package maintains consistent behaviour across Python 3.11-3.14, allowing teams to upgrade Python versions without modifying their docstring validation configuration.        - **Future-Proof Development:** Early adoption of Python 3.14 ensures the package remains compatible with the latest language features and standard library improvements.        - **Continuous Integration:** Automated testing against all supported Python versions guarantees compatibility and prevents regression issues during development.                        #### Usage Example                ```bash        # Install with Python 3.14        python3.14 -m pip install docstring-format-checker                # Run with Python 3.14        python3.14 -m docstring_format_checker --check path/to/code        ```                        ### 🔧 Code Refactoring and Architecture Improvements                #### Overview                The codebase has undergone comprehensive refactoring to improve maintainability, readability, and extensibility. This refactoring effort focused on modularising functionality, eliminating code duplication, standardising coding patterns, and enhancing error handling throughout the package.                        #### Refactoring Achievements                - **Modularisation:** Core functionality has been reorganised into logical modules with clear separation of concerns. The `cli.py`, `config.py`, and `core.py` modules now follow single-responsibility principles, making the codebase easier to navigate and maintain.        - **Code Deduplication:** Identified and eliminated duplicate code patterns, consolidating common logic into reusable functions. This reduces maintenance burden and ensures consistent behaviour across the package.        - **Enhanced Error Handling:** Improved exception handling with custom exception classes in the `utils/exceptions.py` module. This provides more informative error messages and enables precise error recovery strategies.        - **Documentation Improvements:** Enhanced inline documentation and docstrings throughout the codebase, improving code comprehension for contributors and maintainers.                        #### Technical Impact                The refactoring delivers:                - Reduced cyclomatic complexity in core functions        - Improved code navigation and IDE support        - Enhanced debugging capabilities through clearer stack traces        - Better alignment with Python best practices and PEP standards                        ### 🧪 100% Test Coverage Achievement                #### Overview                This release achieves complete test coverage with 100% code coverage across 783 statements in the core package. This milestone represents a comprehensive test suite that validates all code paths, edge cases, and error conditions throughout the package.                        #### Testing Infrastructure                **Coverage Statistics:**                - Total Statements: 783        - Statements Covered: 783        - Coverage Percentage: 100%        - Test Framework: `pytest`        - Coverage Tool: `coverage.py` v7.11.0                        #### Test Suite Expansion                The test suite has been significantly expanded with new test modules:                - **`test_config.py` Enhancements:** Added 133 lines of comprehensive configuration testing, validating:          - Configuration file parsing and validation          - Default configuration handling          - Configuration override mechanisms          - Invalid configuration error handling          - Configuration merge strategies        - **`test_core.py` Enhancements:** Added 337 lines of core functionality testing, covering:          - Docstring extraction and parsing          - Format validation logic          - Multi-style docstring support (Google, NumPy, Sphinx)          - Error detection and reporting          - Edge cases and boundary conditions        - **`test_cli.py` Updates:** Enhanced CLI testing to validate:          - Command-line argument parsing          - Exit code handling          - Output formatting          - Error message presentation                        #### Quality Assurance Benefits                - **Regression Prevention:** Complete test coverage ensures that code changes cannot inadvertently break existing functionality without detection.        - **Confidence in Refactoring:** Developers can confidently refactor code knowing that the comprehensive test suite will catch any behavioural changes.        - **Documentation Through Tests:** The test suite serves as executable documentation, demonstrating expected behaviour for all package features.        - **Continuous Quality Monitoring:** Automated test execution in CI/CD pipelines maintains quality standards across all contributions.                        #### Running the Test Suite                ```bash        # Run full test suite with coverage        uv run pytest --config-file=pyproject.toml --cov-report=term-missing                # Run tests for specific module        uv run pytest src/tests/test_core.py                # Generate HTML coverage report        uv run pytest --config-file=pyproject.toml --cov-report=html        ```                        ### 📋 Pylint Integration and Code Quality Standards                #### Overview                This release integrates `pylint` as a static analysis tool, establishing comprehensive code quality standards and automated linting checks. The `pylint` configuration enforces consistent coding style, detects potential bugs, and identifies code smells throughout the codebase.                        #### Pylint Configuration                A comprehensive `pylint` configuration has been added to `pyproject.toml`, including:                - **Enabled Checks:**          - Code style consistency (PEP 8 compliance)          - Unused import detection          - Variable naming conventions          - Function complexity limits          - Documentation completeness          - Potential bug patterns                - **Disabled Checks:**          - Selectively disabled checks that conflict with project-specific requirements or generate false positives in the codebase.                - **Custom Settings:**          - Tailored scoring thresholds and error severity levels to match project quality standards.                        #### Code Quality Improvements                The `pylint` integration has driven improvements in:                - **Naming Conventions:** Standardised variable, function, and class naming according to Python conventions.        - **Import Organisation:** Cleaned up import statements, removing unused imports and organising imports logically.        - **Code Complexity:** Refactored complex functions to reduce cyclomatic complexity and improve maintainability.        - **Documentation Standards:** Ensured all public functions, classes, and modules have appropriate docstrings.                        #### Usage in Development Workflow                ```bash        # Run pylint on entire codebase        pylint src/docstring_format_checker                # Run pylint with custom configuration        pylint --rcfile=pyproject.toml src/docstring_format_checker                # Check specific file        pylint src/docstring_format_checker/core.py                # Generate detailed report        pylint --output-format=text src/docstring_format_checker > pylint-report.txt        ```                        #### Integration with CI/CD                The `pylint` checks are integrated into the CI/CD pipeline, automatically validating code quality on every pull request and commit. This ensures that code quality standards are maintained consistently across all contributions.                        ### 🔗 Pre-Commit Hook Integration                #### Overview                This release introduces seamless integration with pre-commit hooks through a new `.pre-commit-hooks.yaml` configuration file. This enables automatic docstring validation before commits, preventing invalid docstrings from entering the codebase.                        #### Pre-Commit Configuration                The `.pre-commit-hooks.yaml` file defines a hook for the Docstring Format Checker:                ```yaml        - id: docstring-format-checker          name: Docstring Format Checker          description: Validate Python docstring formats          entry: docstring-format-checker          language: python          types: [python]        ```                        #### Integration Steps                Add the Docstring Format Checker to your `.pre-commit-config.yaml`:                ```yaml        repos:          - repo: https://github.com/data-science-extensions/docstring-format-checker            rev: v1.4.0            hooks:              - id: docstring-format-checker                args: ['--config-file=.dfc.yaml']        ```                        #### Workflow Integration                - **Automated Validation:** Pre-commit hooks automatically run before each commit, validating docstrings in changed files.        - **Early Error Detection:** Catches docstring format issues before code review, reducing feedback cycles and maintaining code quality standards.        - **Customisable Configuration:** Supports passing configuration arguments to the hook, enabling project-specific docstring validation rules.        - **Fast Execution:** Only checks files staged for commit, ensuring quick feedback without slowing down development workflow.                        #### Development Workflow Example                ```bash        # Install pre-commit hooks        pre-commit install                # Manually run hooks on all files        pre-commit run --all-files                # Run hooks on specific files        pre-commit run --files src/docstring_format_checker/core.py                # Update hooks to latest versions        pre-commit autoupdate        ```                        ### ⚙️ Configuration and Workflow Enhancements                #### Overview                This release delivers multiple configuration and workflow improvements, including enhanced DFC configuration capabilities, CHANGELOG formatting updates, changelog generation refactoring, and integration of workflow automation tools.                        #### DFC Configuration Updates                Enhanced the Docstring Format Checker configuration system with:                - **Improved Validation:** More robust configuration file parsing with better error messages for invalid configurations.        - **Default Value Handling:** Refined default configuration values to provide sensible defaults whilst maintaining flexibility.        - **Configuration Merging:** Enhanced logic for merging project-specific configurations with package defaults.                        #### CHANGELOG Formatting                Updated `CHANGELOG.md` formatting to improve readability and maintainability:                - **Consistent Structure:** Standardised changelog entry format across all versions, making it easier to track changes over time.        - **Emoji Section Headers:** Added emoji-prefixed H3 headers for visual scanning of changelog sections.        - **Enhanced Descriptions:** Improved change descriptions with more context and technical details.                        #### Changelog Generation Refactoring                Refactored the changelog generation utility (`src/utils/changelog.py`) to improve:                - **Automation Capabilities:** Enhanced scripts to automatically generate changelog entries from commit messages and pull request descriptions.        - **Template Consistency:** Standardised changelog entry templates to ensure consistent formatting across releases.        - **Git Integration:** Improved integration with git commands to extract commit information and generate accurate changelog content.                        #### Workflow Script Updates                Updated workflow scripts in `src/utils/scripts.py` to include:                - **DFC Integration:** Added Docstring Format Checker to automated checking scripts, ensuring docstring validation is part of the standard workflow.        - **Enhanced Error Handling:** Improved error reporting in workflow scripts to provide clearer feedback when checks fail.                        #### Usage Example                ```bash        # Run automated workflow checks (includes DFC)        python src/utils/scripts.py check                # Generate changelog entries for new release        python src/utils/changelog.py generate --version v1.4.0        ```                        ### 📊 Complexity Monitoring with Complexipy                #### Overview                This release integrates `complexipy`, a modern Python complexity analysis tool, to monitor and maintain code complexity standards. This integration provides automated complexity metrics and helps prevent the introduction of overly complex code that is difficult to maintain.                        #### Complexipy Integration                - **Automated Analysis:** Complexipy runs as part of the CI/CD pipeline, analysing code complexity on every commit and pull request.        - **Complexity Metrics:** Tracks cyclomatic complexity, cognitive complexity, and other maintainability metrics across the codebase.        - **Threshold Enforcement:** Configurable complexity thresholds prevent merging code that exceeds acceptable complexity limits.                        #### Complexity Standards                The project enforces the following complexity standards:                - **Function Complexity:** Maximum cyclomatic complexity of 10 for individual functions, encouraging simple, focused functions.        - **Class Complexity:** Maximum average complexity of 8 across all methods in a class.        - **Module Complexity:** Overall module complexity limits to maintain manageable file sizes.                        #### Benefits of Complexity Monitoring                - **Maintainability:** Lower complexity code is easier to understand, modify, and extend, reducing long-term maintenance costs.        - **Bug Prevention:** Complex code correlates with higher bug rates. Complexity limits reduce the likelihood of introducing bugs.        - **Code Review Efficiency:** Reviewers can focus on logic and design rather than untangling complex code structures.        - **Refactoring Signals:** Complexity metrics identify code that would benefit from refactoring before it becomes a maintenance burden.                        #### Usage in Development                ```bash        # Analyse complexity of entire codebase        complexipy src/docstring_format_checker                # Check specific file        complexipy src/docstring_format_checker/core.py                # Generate complexity report        complexipy --output=json src/docstring_format_checker > complexity-report.json        ```                        ### 🖥️ Windows Encoding Compatibility                #### Overview                This release resolves critical Windows encoding issues that caused test failures on Windows operating systems. The Windows platform uses `cp1252` (Western European) encoding by default, which lacks support for Unicode characters including emojis and extended ASCII art used by `pyfiglet`. These encoding mismatches caused both output encoding errors and input decoding errors during test execution.                        #### Root Cause Analysis                - **Windows Default Encoding:** Windows uses `cp1252` encoding by default for console I/O operations, limiting character support to Western European characters.        - **Unicode Requirements:** The package uses Unicode characters including:          - Checkmark emoji (✅, U+2705) in success messages          - ASCII art from `pyfiglet` containing extended character sets        - **Subprocess Encoding:** Python's `subprocess.run()` with `text=True` inherits the system default encoding, causing encoding/decoding failures on Windows.                        #### Solution Implementation                The encoding issues have been resolved by adding the `PYTHONIOENCODING` environment variable to CI/CD workflows:                **`.github/workflows/ci.yml` Update:**                ```yaml        env:          PYTHONIOENCODING: utf-8        ```                **`.github/workflows/cd.yml` Update:**                ```yaml        env:          PYTHONIOENCODING: utf-8        ```                        #### How `PYTHONIOENCODING` Resolves Both Issues                - **Environment Variable Inheritance:** `PYTHONIOENCODING=utf-8` is inherited by all Python processes and subprocesses, ensuring consistent UTF-8 encoding throughout the execution chain.        - **Output Encoding Fix:** Forces Python to encode all output (including emoji characters) as UTF-8, preventing `UnicodeEncodeError` when writing to stdout/stderr.        - **Input Decoding Fix:** Forces Python to decode all input (including `pyfiglet` ASCII art) as UTF-8, preventing `UnicodeDecodeError` when reading from subprocess stdout.        - **Cross-Platform Consistency:** Ensures identical encoding behaviour across Windows, Linux, and macOS, eliminating platform-specific bugs.                        #### Error Examples Resolved                **Before Fix - Output Encoding Error:**                ```        UnicodeEncodeError: 'charmap' codec can't encode character '\u2705'         in position 42: character maps to <undefined>        ```                **Before Fix - Input Decoding Error:**                ```        UnicodeDecodeError: 'charmap' codec can't decode byte 0x90         in position 156: character maps to <undefined>        ```                **After Fix:**                Both errors resolved - all tests pass on Windows with consistent UTF-8 encoding.                        #### Technical Benefits                - **Cross-Platform Compatibility:** Ensures consistent behaviour across all operating systems, eliminating Windows-specific test failures.        - **Unicode Support:** Full Unicode character support enables use of emojis, international characters, and extended ASCII art in output.        - **Developer Experience:** Windows developers can run tests locally without encountering encoding-related failures.        - **CI/CD Reliability:** Windows CI/CD pipelines now execute reliably without encoding-related test failures.                        #### Testing and Validation                The encoding fixes have been validated through:                - **Windows CI Pipeline:** All tests pass on Windows Server with Python 3.11-3.14.        - **Emoji Output Testing:** Success messages with checkmark emoji display correctly on Windows.        - **Pyfiglet Integration:** ASCII art generation and rendering work correctly on Windows.        - **Subprocess Testing:** Subprocess execution with `text=True` handles UTF-8 encoding/decoding correctly.                        ### 🔄 Additional Improvements                #### Merge Strategy                All 17 commits have been merged via pull request #18, maintaining a clean git history and ensuring all changes passed CI/CD validation before integration.                        #### Coverage Tool Update                Updated `coverage.py` from v7.10.6 to v7.11.0, benefiting from:                - Performance improvements in coverage analysis        - Enhanced HTML report generation        - Bug fixes in coverage measurement accuracy                        #### Documentation Updates                - **CHANGELOG.md Expansion:** Added 1,853 lines documenting all changes since v1.3.0 with comprehensive release notes.        - **Code Documentation:** Enhanced inline documentation and docstrings throughout refactored code.        - **Contributing Guidelines:** Updated `CONTRIBUTING.md` with new development workflow requirements including pre-commit hooks and quality tools.                        ### 📦 Installation and Upgrade                #### Installing v1.4.0                ```bash        # Install from PyPI        pip install docstring-format-checker==1.4.0                # Install with uv (recommended)        uv pip install docstring-format-checker==1.4.0                # Install from source        git clone https://github.com/data-science-extensions/docstring-format-checker.git        cd docstring-format-checker        git checkout v1.4.0        uv pip install -e .        ```                        #### Upgrading from v1.3.0                ```bash        # Upgrade with pip        pip install --upgrade docstring-format-checker                # Upgrade with uv        uv pip install --upgrade docstring-format-checker        ```                        #### Compatibility Notes                - **Breaking Changes:** None. Version 1.4.0 maintains full backward compatibility with v1.3.0 configuration files and usage patterns.        - **Configuration Migration:** No configuration changes required when upgrading from v1.3.0.        - **Python Version Requirements:** Python 3.11 or higher required (unchanged from v1.3.0).                        ### 💪 Pull Requests                - Comprehensive Code Quality Enhancement: Python 3.14 Support, Refactoring, and 100% Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/18                        ---                **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.3.0...v1.4.0        
 
     ??? abstract "Updates"
 
@@ -1230,337 +138,7 @@
 
     ??? note "Release Notes"
 
-        ### 🎯 Summary
-
-        Introduce comprehensive development workflow enhancements that establish automated quality assurance and superior documentation generation capabilities. This release delivers significant improvements to the development pipeline through pre-commit hook integration, CI/CD workflow optimisation, and enhanced changelog generation with advanced type safety and formatting improvements.
-
-        Transform the development experience by implementing automated docstring validation through standardised pre-commit hooks whilst streamlining deployment processes and providing enhanced documentation generation. These enhancements establish robust quality gates that ensure consistent code standards across the codebase whilst improving developer productivity through automation and simplified tooling.
-
-        **Key Enhancement Areas:**
-
-        - **Pre-commit Integration**: Automated docstring validation through standardised pre-commit hooks for consistent code quality enforcement
-        - **CI/CD Optimisation**: Streamlined deployment workflows through UV package manager dependency removal and simplified tooling
-        - **Enhanced Documentation**: Superior changelog generation with stricter typing, improved formatting, and cleaner output presentation
-        - **Type Safety Enhancement**: Advanced `Literal` type hints for better IDE support and comprehensive static analysis capabilities
-        - **Quality Automation**: Integration of automated docstring format checking into standard development workflows
-
-
-        ### 📈 Release Statistics
-
-
-        #### 🔢 Code Changes Summary
-
-        - **Files Modified**: 4 core files with targeted workflow and documentation enhancements
-        - **Lines Added**: 1,500+ new lines including comprehensive changelog improvements and configuration updates
-        - **Workflow Simplification**: 11 lines removed from CI/CD workflow reducing external dependencies
-        - **Pre-commit Integration**: 6 new configuration lines enabling automated quality validation
-        - **Type Safety**: 5+ enhanced type annotations with `Literal` types for superior IDE support
-
-
-        #### 📊 Development Experience Enhancement
-
-        - **Automated Quality Gates**: Pre-commit hooks providing immediate feedback on docstring formatting standards
-        - **Simplified Dependencies**: Reduced CI/CD complexity through standard Python tooling adoption
-        - **Enhanced Documentation**: Superior changelog formatting with improved readability and professional presentation
-        - **Type Checking**: Advanced static analysis support through comprehensive type hints and IDE integration
-
-
-        ### 🛠️ Pre-commit Hook Integration
-
-
-        #### 📋 Automated Quality Assurance Implementation
-
-        Establish comprehensive pre-commit integration supporting automated docstring validation:
-
-        - **Hook Configuration**: Introduce `.pre-commit-hooks.yaml` configuration enabling seamless integration with development workflows
-        - **Python File Targeting**: Configure regex pattern `\.(py)$` ensuring comprehensive coverage of all Python source code files
-        - **Entry Point Integration**: Utilise `docstring-format-checker` command for consistent execution across development environments
-        - **Quality Gate Enforcement**: Prevent commits violating docstring formatting standards through automated pre-commit validation
-
-        **Pre-commit Configuration:**
-
-        ```yaml
-        # .pre-commit-hooks.yaml - Automated docstring validation
-        - id: docstring-format-checker
-          name: docstring-format-checker
-          description: A CLI tool to check and format Python docstrings to adhere to specified style guidelines.
-          entry: docstring-format-checker
-          language: python
-          files: '\.(py)$'
-        ```
-
-
-        #### 🔄 Development Workflow Enhancement
-
-        Enable seamless integration with established development practices:
-
-        - **IDE Compatibility**: Support integration with popular development environments utilising pre-commit hooks for automated quality checking
-        - **Git Integration**: Automatic execution during commit operations preventing commits that violate established docstring formatting standards
-        - **CI/CD Compatibility**: Compatible with continuous integration systems executing pre-commit hooks as automated testing pipeline components
-        - **Developer Experience**: Provide immediate feedback on formatting violations before code reaches repository for enhanced productivity
-
-
-        ### ⚙️ CI/CD Workflow Optimisation
-
-
-        #### 🚀 Deployment Pipeline Simplification
-
-        Streamline continuous deployment workflow through dependency reduction and tooling standardisation:
-
-        - **UV Dependency Removal**: Eliminate `astral-sh/setup-uv@v6` action reducing external tool dependencies and potential deployment failure points
-        - **Standard Python Setup**: Utilise established `actions/setup-python@v5` for reliable, well-supported Python environment configuration
-        - **Simplified Installation**: Replace UV-specific commands with standard `pip install` for enhanced compatibility and reduced complexity
-        - **Maintained Functionality**: Preserve essential installation flags whilst simplifying overall deployment workflow execution
-
-        **Workflow Transformation:**
-
-        ```yaml
-        # Before: UV-based installation with multiple setup dependencies
-        - name: Set up UV
-          uses: astral-sh/setup-uv@v6
-        - name: Verify Python Version
-          run: |
-            uv --version
-            python --version
-        - name: Install Package
-          run: uv pip install --no-cache --verbose "${{ env.PACKAGE_NAME }}==${{ env.VERSION }}"
-
-        # After: Simplified standard pip installation
-        - name: Set up Python
-          uses: actions/setup-python@v5
-          with:
-            python-version: ${{ matrix.python-version }}
-        - name: Install Package
-          run: pip install --no-cache --verbose --no-python-version-warning "${{ env.PACKAGE_NAME }}==${{ env.VERSION }}"
-        ```
-
-
-        #### 🔧 Installation Process Enhancement
-
-        Improve deployment reliability and cross-platform compatibility:
-
-        - **Standard Tooling**: Utilise standard `pip` installation for consistent behaviour across operating systems and deployment environments
-        - **Warning Suppression**: Add `--no-python-version-warning` flag preventing unnecessary warning messages during installation processes
-        - **Verbose Logging**: Maintain `--verbose` flag ensuring comprehensive installation logging for debugging and monitoring capabilities
-        - **Cache Management**: Preserve `--no-cache` flag ensuring fresh package installations and avoiding potential caching-related deployment issues
-
-
-        ### 📚 Enhanced Documentation Generation
-
-
-        #### 🔤 Type Safety and IDE Support Enhancement
-
-        Implement comprehensive type hints for improved development experience and static analysis:
-
-        - **Literal Type Annotations**: Replace generic `str` types with `Literal` annotations for constants (`OUTPUT_FILENAME`, `NEW_LINE`, `BLANK_LINE`, `LINE_BREAK`, `TAB`) enhancing type safety
-        - **Import Enhancement**: Add `Literal` import from `typing` module supporting advanced type hinting and static analysis capabilities
-        - **Static Analysis**: Improve IDE support with enhanced type information enabling better code navigation, autocompletion, and refactoring
-        - **Type Checking**: Add strategic `type: ignore` comments for repository access ensuring compatibility with type checkers whilst maintaining functionality
-
-        **Type Safety Implementation:**
-
-        ```python
-        # Enhanced type safety with Literal annotations
-        from typing import Literal, Optional
-
-        OUTPUT_FILENAME: Literal["CHANGELOG.md"] = "CHANGELOG.md"
-        NEW_LINE: Literal["\n"] = "\n"
-        BLANK_LINE: Literal["\n\n"] = "\n\n"
-        LINE_BREAK: Literal["<br>"] = "<br>"
-        TAB: Literal["    "] = "    "
-        ```
-
-
-        #### 📝 Commit Message Processing Enhancement
-
-        Improve changelog formatting through enhanced commit message processing and filtering:
-
-        - **Co-authored Line Filtering**: Remove "Co-authored-by" lines from commit messages focusing on primary commit content for improved readability
-        - **Empty Line Handling**: Filter out blank lines and whitespace-only content ensuring cleaner changelog presentation and professional formatting
-        - **Message Structure**: Restructure commit entry format with enhanced layout including short SHA and improved author attribution formatting
-        - **Output Quality**: Generate superior changelog output with consistent formatting, professional presentation, and enhanced navigation capabilities
-
-        **Processing Logic Enhancement:**
-
-        ```python
-        # Enhanced commit message processing with comprehensive filtering
-        commit_message_list: list[str] = []
-        for line in commit.commit.message.split(NEW_LINE):
-            line_stripped: str = line.strip()
-            # Filter out blank lines and "Co-authored-by" lines for cleaner output
-            if line_stripped and not line_stripped.lower().startswith("co-authored-by:"):
-                commit_message_list.append(line_stripped)
-        ```
-
-
-        #### 🏗️ Release Information Enhancement
-
-        Correct GitHub API property access and improve changelog structure consistency:
-
-        - **Property Access Fix**: Change from `release.title` to `release.name` ensuring correct GitHub API property access and accurate release information
-        - **Title Formatting**: Establish proper release title formatting in generated changelog documentation for structural consistency
-        - **Metadata Accuracy**: Provide accurate release metadata including correct title, date, and link information enhancing documentation quality
-        - **Structure Consistency**: Maintain uniform changelog structure across all release entries improving readability and professional presentation
-
-
-        ### 🎯 Development Experience Enhancement
-
-
-        #### 🛡️ Quality Assurance Automation
-
-        Establish comprehensive automated quality gates for consistent code standards:
-
-        - **Pre-commit Validation**: Automatic docstring format checking preventing formatting violations from entering repository codebase
-        - **Consistent Standards**: Enforce uniform docstring formatting standards across entire codebase through automated validation and immediate feedback
-        - **Developer Feedback**: Provide instant feedback on formatting violations during development workflow enabling rapid issue resolution
-        - **CI/CD Integration**: Support seamless integration with continuous integration systems ensuring comprehensive quality assurance coverage
-
-
-        #### 🔧 Workflow Streamlining
-
-        Simplify development and deployment processes through standardisation and automation:
-
-        - **Reduced Dependencies**: Minimise external tool dependencies in CI/CD workflows improving reliability and reducing potential deployment failure points
-        - **Faster Execution**: Streamline workflow execution through unnecessary step elimination and simplified setup procedures
-        - **Improved Reliability**: Utilise standard, well-established tools and practices ensuring better long-term maintainability and cross-platform compatibility
-        - **Enhanced Debugging**: Maintain comprehensive logging capabilities whilst simplifying overall workflow structure for superior troubleshooting
-
-
-        #### 📖 Documentation Quality Enhancement
-
-        Improve documentation generation capabilities and presentation quality:
-
-        - **Enhanced Type Safety**: Provide superior IDE support and static analysis capabilities through comprehensive type hints and advanced annotations
-        - **Cleaner Output**: Generate professional changelog formatting with improved readability, consistent structure, and enhanced presentation quality
-        - **Accurate Metadata**: Ensure correct release information and commit details in generated documentation preventing information inconsistencies
-        - **Consistent Formatting**: Maintain uniform documentation structure and formatting across all generated content ensuring professional presentation
-
-
-        ### 🔍 Technical Implementation Details
-
-
-        #### 📐 Architecture Enhancement
-
-        Implementation maintains comprehensive separation of concerns whilst introducing enhanced capabilities:
-
-        - **Quality Integration Layer**: Pre-commit configuration providing seamless development workflow integration with automated validation
-        - **CI/CD Optimisation Layer**: Simplified deployment pipeline with reduced dependencies and improved reliability through standard tooling
-        - **Documentation Generation Layer**: Enhanced changelog generation with superior formatting, type safety, and professional presentation
-        - **Type Safety Layer**: Comprehensive type hints improving IDE support, static analysis capabilities, and development experience
-
-
-        #### 🧪 Quality Assurance Enhancement
-
-        Comprehensive improvements ensuring reliability, maintainability, and professional development practices:
-
-        - **Automated Testing**: Pre-commit hooks providing automatic validation of docstring formatting standards and immediate developer feedback
-        - **Type Checking**: Enhanced type hints supporting superior static analysis and error detection capabilities during development
-        - **Workflow Reliability**: Simplified CI/CD workflows reducing potential failure points and improving deployment success rates through standardisation
-        - **Documentation Quality**: Improved changelog generation providing superior documentation presentation, accuracy, and professional formatting
-
-
-        #### 📚 Integration and Compatibility Enhancement
-
-        Enhanced compatibility and integration capabilities across development environments:
-
-        - **IDE Support**: Comprehensive type hints providing superior IDE integration with autocompletion, error detection, and enhanced development experience
-        - **CI/CD Compatibility**: Simplified workflows supporting enhanced integration with various CI/CD platforms and deployment configurations
-        - **Development Tool Integration**: Pre-commit hooks integrating seamlessly with popular development tools and editor configurations
-        - **Cross-Platform Support**: Standard tooling ensuring consistent behaviour across different operating systems and deployment environments
-
-
-        ### 📈 Benefits and Impact
-
-
-        #### 🚀 Developer Productivity Enhancement
-
-        Deliver significant productivity improvements through automation and streamlined workflows:
-
-        - **Automated Quality Gates**: Reduce manual code review overhead through automated docstring validation and formatting enforcement
-        - **Seamless Integration**: Provide transparent integration with existing development tools without disrupting established development practices
-        - **Immediate Feedback**: Enable rapid identification and resolution of formatting violations during development rather than post-commit review
-        - **Consistent Standards**: Ensure uniform code quality across all contributors and development environments through comprehensive automation
-
-
-        #### 💡 Workflow Reliability Improvement
-
-        Enhance deployment and documentation generation reliability through standardisation:
-
-        - **Simplified Dependencies**: Reduce potential CI/CD failure points through dependency simplification and adoption of standard tooling practices
-        - **Improved Compatibility**: Utilise established tools and practices ensuring superior cross-platform compatibility and long-term maintainability
-        - **Enhanced Documentation**: Provide superior changelog generation with accurate metadata, improved formatting, and professional presentation
-        - **Type Safety**: Improve code maintainability and IDE support through comprehensive type hints and advanced static analysis capabilities
-
-
-        #### 🔧 Maintenance and Sustainability Enhancement
-
-        Establish sustainable development practices supporting long-term project success:
-
-        - **Standard Tooling**: Utilise established, well-maintained tools ensuring superior long-term support and community compatibility
-        - **Automated Quality**: Reduce manual maintenance overhead through automated quality assurance and comprehensive formatting enforcement
-        - **Enhanced Debugging**: Provide superior debugging capabilities through improved logging and simplified workflow structure
-        - **Future-Proof Architecture**: Establish flexible, maintainable architecture supporting future enhancements and continuous improvement
-
-
-        ### 📋 Usage Examples and Integration Patterns
-
-        Enhanced development workflow supporting comprehensive quality assurance and automation:
-
-        ```bash
-        # Pre-commit hook integration (automatic validation)
-        git commit -m "Add new feature"  # Automatically validates docstring formatting
-
-        # Manual docstring validation
-        docstring-format-checker src/  # Validates all Python files in src directory
-
-        # Simplified CI/CD workflow execution
-        pip install --no-cache --verbose --no-python-version-warning docstring-format-checker
-        ```
-
-        Enhanced changelog generation with superior formatting and type safety:
-
-        ```bash
-        # Generate changelog with improved formatting and type safety
-        export GITHUB_TOKEN="${GITHUB_TOKEN}"
-        export REPOSITORY_NAME="data-science-extensions/docstring-format-checker"
-        uv run ./src/utils/changelog.py
-        ```
-
-        Pre-commit hook configuration for development teams:
-
-        ```yaml
-        # .pre-commit-config.yaml (team configuration)
-        repos:
-          - repo: https://github.com/data-science-extensions/docstring-format-checker
-            rev: v1.3.0
-            hooks:
-              - id: docstring-format-checker
-        ```
-
-
-        ### 🔄 Migration and Compatibility
-
-        Seamless upgrade path ensuring compatibility and enhanced functionality:
-
-        - **Zero Breaking Changes**: All existing functionality remains completely unchanged ensuring smooth upgrade experience
-        - **Enhanced Capabilities**: New features provide additional functionality without affecting existing workflows or user experience
-        - **Backward Compatibility**: Complete preservation of existing CLI behaviour, configuration options, and integration patterns
-        - **Progressive Enhancement**: Users can adopt new features gradually without migration requirements or workflow disruption
-
-
-        ### 💪 Pull Requests
-
-        * Enhance Development Workflow with Pre-commit Integration and Improved Documentation Generation by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/17
-
-
-        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.2.0...v1.3.0
-
-        ---
-
-        **Pre-commit Integration**: Automated docstring validation through `.pre-commit-hooks.yaml` configuration
-        **CI/CD Simplification**: Streamlined deployment workflows with reduced dependencies and standard tooling
-        **Enhanced Documentation**: Superior changelog generation with type safety and professional formatting
-        **Quality Automation**: Comprehensive automated quality gates ensuring consistent development standards
+        ### 🎯 Summary                Introduce comprehensive development workflow enhancements that establish automated quality assurance and superior documentation generation capabilities. This release delivers significant improvements to the development pipeline through pre-commit hook integration, CI/CD workflow optimisation, and enhanced changelog generation with advanced type safety and formatting improvements.                Transform the development experience by implementing automated docstring validation through standardised pre-commit hooks whilst streamlining deployment processes and providing enhanced documentation generation. These enhancements establish robust quality gates that ensure consistent code standards across the codebase whilst improving developer productivity through automation and simplified tooling.                **Key Enhancement Areas:**                - **Pre-commit Integration**: Automated docstring validation through standardised pre-commit hooks for consistent code quality enforcement        - **CI/CD Optimisation**: Streamlined deployment workflows through UV package manager dependency removal and simplified tooling        - **Enhanced Documentation**: Superior changelog generation with stricter typing, improved formatting, and cleaner output presentation        - **Type Safety Enhancement**: Advanced `Literal` type hints for better IDE support and comprehensive static analysis capabilities        - **Quality Automation**: Integration of automated docstring format checking into standard development workflows                        ### 📈 Release Statistics                        #### 🔢 Code Changes Summary                - **Files Modified**: 4 core files with targeted workflow and documentation enhancements        - **Lines Added**: 1,500+ new lines including comprehensive changelog improvements and configuration updates        - **Workflow Simplification**: 11 lines removed from CI/CD workflow reducing external dependencies        - **Pre-commit Integration**: 6 new configuration lines enabling automated quality validation        - **Type Safety**: 5+ enhanced type annotations with `Literal` types for superior IDE support                        #### 📊 Development Experience Enhancement                - **Automated Quality Gates**: Pre-commit hooks providing immediate feedback on docstring formatting standards        - **Simplified Dependencies**: Reduced CI/CD complexity through standard Python tooling adoption        - **Enhanced Documentation**: Superior changelog formatting with improved readability and professional presentation        - **Type Checking**: Advanced static analysis support through comprehensive type hints and IDE integration                        ### 🛠️ Pre-commit Hook Integration                        #### 📋 Automated Quality Assurance Implementation                Establish comprehensive pre-commit integration supporting automated docstring validation:                - **Hook Configuration**: Introduce `.pre-commit-hooks.yaml` configuration enabling seamless integration with development workflows        - **Python File Targeting**: Configure regex pattern `\.(py)$` ensuring comprehensive coverage of all Python source code files        - **Entry Point Integration**: Utilise `docstring-format-checker` command for consistent execution across development environments        - **Quality Gate Enforcement**: Prevent commits violating docstring formatting standards through automated pre-commit validation                **Pre-commit Configuration:**                ```yaml        # .pre-commit-hooks.yaml - Automated docstring validation        - id: docstring-format-checker          name: docstring-format-checker            description: A CLI tool to check and format Python docstrings to adhere to specified style guidelines.          entry: docstring-format-checker          language: python          files: '\.(py)$'        ```                        #### 🔄 Development Workflow Enhancement                Enable seamless integration with established development practices:                - **IDE Compatibility**: Support integration with popular development environments utilising pre-commit hooks for automated quality checking        - **Git Integration**: Automatic execution during commit operations preventing commits that violate established docstring formatting standards        - **CI/CD Compatibility**: Compatible with continuous integration systems executing pre-commit hooks as automated testing pipeline components        - **Developer Experience**: Provide immediate feedback on formatting violations before code reaches repository for enhanced productivity                        ### ⚙️ CI/CD Workflow Optimisation                        #### 🚀 Deployment Pipeline Simplification                Streamline continuous deployment workflow through dependency reduction and tooling standardisation:                - **UV Dependency Removal**: Eliminate `astral-sh/setup-uv@v6` action reducing external tool dependencies and potential deployment failure points        - **Standard Python Setup**: Utilise established `actions/setup-python@v5` for reliable, well-supported Python environment configuration        - **Simplified Installation**: Replace UV-specific commands with standard `pip install` for enhanced compatibility and reduced complexity        - **Maintained Functionality**: Preserve essential installation flags whilst simplifying overall deployment workflow execution                **Workflow Transformation:**                ```yaml        # Before: UV-based installation with multiple setup dependencies        - name: Set up UV          uses: astral-sh/setup-uv@v6        - name: Verify Python Version            run: |            uv --version            python --version        - name: Install Package          run: uv pip install --no-cache --verbose "${{ env.PACKAGE_NAME }}==${{ env.VERSION }}"                # After: Simplified standard pip installation        - name: Set up Python          uses: actions/setup-python@v5          with:            python-version: ${{ matrix.python-version }}        - name: Install Package          run: pip install --no-cache --verbose --no-python-version-warning "${{ env.PACKAGE_NAME }}==${{ env.VERSION }}"        ```                        #### 🔧 Installation Process Enhancement                Improve deployment reliability and cross-platform compatibility:                - **Standard Tooling**: Utilise standard `pip` installation for consistent behaviour across operating systems and deployment environments        - **Warning Suppression**: Add `--no-python-version-warning` flag preventing unnecessary warning messages during installation processes        - **Verbose Logging**: Maintain `--verbose` flag ensuring comprehensive installation logging for debugging and monitoring capabilities        - **Cache Management**: Preserve `--no-cache` flag ensuring fresh package installations and avoiding potential caching-related deployment issues                        ### 📚 Enhanced Documentation Generation                        #### 🔤 Type Safety and IDE Support Enhancement                Implement comprehensive type hints for improved development experience and static analysis:                - **Literal Type Annotations**: Replace generic `str` types with `Literal` annotations for constants (`OUTPUT_FILENAME`, `NEW_LINE`, `BLANK_LINE`, `LINE_BREAK`, `TAB`) enhancing type safety        - **Import Enhancement**: Add `Literal` import from `typing` module supporting advanced type hinting and static analysis capabilities        - **Static Analysis**: Improve IDE support with enhanced type information enabling better code navigation, autocompletion, and refactoring        - **Type Checking**: Add strategic `type: ignore` comments for repository access ensuring compatibility with type checkers whilst maintaining functionality                **Type Safety Implementation:**                ```python        # Enhanced type safety with Literal annotations        from typing import Literal, Optional                OUTPUT_FILENAME: Literal["CHANGELOG.md"] = "CHANGELOG.md"        NEW_LINE: Literal["\n"] = "\n"          BLANK_LINE: Literal["\n\n"] = "\n\n"        LINE_BREAK: Literal["<br>"] = "<br>"        TAB: Literal["    "] = "    "        ```                        #### 📝 Commit Message Processing Enhancement                Improve changelog formatting through enhanced commit message processing and filtering:                - **Co-authored Line Filtering**: Remove "Co-authored-by" lines from commit messages focusing on primary commit content for improved readability        - **Empty Line Handling**: Filter out blank lines and whitespace-only content ensuring cleaner changelog presentation and professional formatting        - **Message Structure**: Restructure commit entry format with enhanced layout including short SHA and improved author attribution formatting        - **Output Quality**: Generate superior changelog output with consistent formatting, professional presentation, and enhanced navigation capabilities                **Processing Logic Enhancement:**                ```python        # Enhanced commit message processing with comprehensive filtering        commit_message_list: list[str] = []        for line in commit.commit.message.split(NEW_LINE):            line_stripped: str = line.strip()            # Filter out blank lines and "Co-authored-by" lines for cleaner output            if line_stripped and not line_stripped.lower().startswith("co-authored-by:"):                commit_message_list.append(line_stripped)        ```                        #### 🏗️ Release Information Enhancement                Correct GitHub API property access and improve changelog structure consistency:                - **Property Access Fix**: Change from `release.title` to `release.name` ensuring correct GitHub API property access and accurate release information        - **Title Formatting**: Establish proper release title formatting in generated changelog documentation for structural consistency        - **Metadata Accuracy**: Provide accurate release metadata including correct title, date, and link information enhancing documentation quality        - **Structure Consistency**: Maintain uniform changelog structure across all release entries improving readability and professional presentation                        ### 🎯 Development Experience Enhancement                        #### 🛡️ Quality Assurance Automation                Establish comprehensive automated quality gates for consistent code standards:                - **Pre-commit Validation**: Automatic docstring format checking preventing formatting violations from entering repository codebase        - **Consistent Standards**: Enforce uniform docstring formatting standards across entire codebase through automated validation and immediate feedback        - **Developer Feedback**: Provide instant feedback on formatting violations during development workflow enabling rapid issue resolution        - **CI/CD Integration**: Support seamless integration with continuous integration systems ensuring comprehensive quality assurance coverage                        #### 🔧 Workflow Streamlining                Simplify development and deployment processes through standardisation and automation:                - **Reduced Dependencies**: Minimise external tool dependencies in CI/CD workflows improving reliability and reducing potential deployment failure points        - **Faster Execution**: Streamline workflow execution through unnecessary step elimination and simplified setup procedures        - **Improved Reliability**: Utilise standard, well-established tools and practices ensuring better long-term maintainability and cross-platform compatibility        - **Enhanced Debugging**: Maintain comprehensive logging capabilities whilst simplifying overall workflow structure for superior troubleshooting                        #### 📖 Documentation Quality Enhancement                Improve documentation generation capabilities and presentation quality:                - **Enhanced Type Safety**: Provide superior IDE support and static analysis capabilities through comprehensive type hints and advanced annotations        - **Cleaner Output**: Generate professional changelog formatting with improved readability, consistent structure, and enhanced presentation quality        - **Accurate Metadata**: Ensure correct release information and commit details in generated documentation preventing information inconsistencies        - **Consistent Formatting**: Maintain uniform documentation structure and formatting across all generated content ensuring professional presentation                        ### 🔍 Technical Implementation Details                        #### 📐 Architecture Enhancement                Implementation maintains comprehensive separation of concerns whilst introducing enhanced capabilities:                - **Quality Integration Layer**: Pre-commit configuration providing seamless development workflow integration with automated validation        - **CI/CD Optimisation Layer**: Simplified deployment pipeline with reduced dependencies and improved reliability through standard tooling        - **Documentation Generation Layer**: Enhanced changelog generation with superior formatting, type safety, and professional presentation        - **Type Safety Layer**: Comprehensive type hints improving IDE support, static analysis capabilities, and development experience                        #### 🧪 Quality Assurance Enhancement                Comprehensive improvements ensuring reliability, maintainability, and professional development practices:                - **Automated Testing**: Pre-commit hooks providing automatic validation of docstring formatting standards and immediate developer feedback        - **Type Checking**: Enhanced type hints supporting superior static analysis and error detection capabilities during development        - **Workflow Reliability**: Simplified CI/CD workflows reducing potential failure points and improving deployment success rates through standardisation        - **Documentation Quality**: Improved changelog generation providing superior documentation presentation, accuracy, and professional formatting                        #### 📚 Integration and Compatibility Enhancement                Enhanced compatibility and integration capabilities across development environments:                - **IDE Support**: Comprehensive type hints providing superior IDE integration with autocompletion, error detection, and enhanced development experience        - **CI/CD Compatibility**: Simplified workflows supporting enhanced integration with various CI/CD platforms and deployment configurations        - **Development Tool Integration**: Pre-commit hooks integrating seamlessly with popular development tools and editor configurations        - **Cross-Platform Support**: Standard tooling ensuring consistent behaviour across different operating systems and deployment environments                        ### 📈 Benefits and Impact                        #### 🚀 Developer Productivity Enhancement                Deliver significant productivity improvements through automation and streamlined workflows:                - **Automated Quality Gates**: Reduce manual code review overhead through automated docstring validation and formatting enforcement        - **Seamless Integration**: Provide transparent integration with existing development tools without disrupting established development practices        - **Immediate Feedback**: Enable rapid identification and resolution of formatting violations during development rather than post-commit review        - **Consistent Standards**: Ensure uniform code quality across all contributors and development environments through comprehensive automation                        #### 💡 Workflow Reliability Improvement                Enhance deployment and documentation generation reliability through standardisation:                - **Simplified Dependencies**: Reduce potential CI/CD failure points through dependency simplification and adoption of standard tooling practices        - **Improved Compatibility**: Utilise established tools and practices ensuring superior cross-platform compatibility and long-term maintainability        - **Enhanced Documentation**: Provide superior changelog generation with accurate metadata, improved formatting, and professional presentation        - **Type Safety**: Improve code maintainability and IDE support through comprehensive type hints and advanced static analysis capabilities                        #### 🔧 Maintenance and Sustainability Enhancement                Establish sustainable development practices supporting long-term project success:                - **Standard Tooling**: Utilise established, well-maintained tools ensuring superior long-term support and community compatibility        - **Automated Quality**: Reduce manual maintenance overhead through automated quality assurance and comprehensive formatting enforcement        - **Enhanced Debugging**: Provide superior debugging capabilities through improved logging and simplified workflow structure        - **Future-Proof Architecture**: Establish flexible, maintainable architecture supporting future enhancements and continuous improvement                        ### 📋 Usage Examples and Integration Patterns                Enhanced development workflow supporting comprehensive quality assurance and automation:                ```bash        # Pre-commit hook integration (automatic validation)        git commit -m "Add new feature"  # Automatically validates docstring formatting                # Manual docstring validation        docstring-format-checker src/  # Validates all Python files in src directory                # Simplified CI/CD workflow execution          pip install --no-cache --verbose --no-python-version-warning docstring-format-checker        ```                Enhanced changelog generation with superior formatting and type safety:                ```bash        # Generate changelog with improved formatting and type safety        export GITHUB_TOKEN="${GITHUB_TOKEN}"        export REPOSITORY_NAME="data-science-extensions/docstring-format-checker"         uv run ./src/utils/changelog.py        ```                Pre-commit hook configuration for development teams:                ```yaml        # .pre-commit-config.yaml (team configuration)        repos:          - repo: https://github.com/data-science-extensions/docstring-format-checker            rev: v1.3.0            hooks:              - id: docstring-format-checker        ```                        ### 🔄 Migration and Compatibility                Seamless upgrade path ensuring compatibility and enhanced functionality:                - **Zero Breaking Changes**: All existing functionality remains completely unchanged ensuring smooth upgrade experience        - **Enhanced Capabilities**: New features provide additional functionality without affecting existing workflows or user experience        - **Backward Compatibility**: Complete preservation of existing CLI behaviour, configuration options, and integration patterns        - **Progressive Enhancement**: Users can adopt new features gradually without migration requirements or workflow disruption                        ### 💪 Pull Requests                * Enhance Development Workflow with Pre-commit Integration and Improved Documentation Generation by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/17                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.2.0...v1.3.0                ---                **Pre-commit Integration**: Automated docstring validation through `.pre-commit-hooks.yaml` configuration          **CI/CD Simplification**: Streamlined deployment workflows with reduced dependencies and standard tooling          **Enhanced Documentation**: Superior changelog generation with type safety and professional formatting          **Quality Automation**: Comprehensive automated quality gates ensuring consistent development standards
 
     ??? abstract "Updates"
 
@@ -1603,329 +181,7 @@
 
     ??? note "Release Notes"
 
-        ### 🎯 Summary
-
-        Introduce comprehensive multiple file processing capabilities that transform the CLI tool from single-file operation to sophisticated batch processing whilst maintaining complete backwards compatibility. This release delivers significant functionality enhancement enabling developers to validate entire codebases efficiently through simultaneous checking of multiple files and directories in a single command.
-
-        Transform the validation workflow by expanding CLI argument processing from individual file handling to comprehensive multi-path batch operations. Enhance developer productivity by enabling efficient validation of complex project structures whilst providing enhanced error reporting, improved path validation, and modernised CI/CD integration. Establish robust foundation for enterprise-scale docstring validation workflows.
-
-        **Key Enhancement Areas:**
-
-        - **Multi-Path CLI Processing**: Comprehensive argument transformation supporting multiple file and directory targets
-        - **Enhanced Path Validation**: Advanced error reporting with detailed feedback for invalid paths
-        - **Backwards Compatibility Guarantee**: Complete preservation of existing single-file functionality and behaviour
-        - **Comprehensive Test Coverage**: Seven new testing scenarios covering multiple file operations across all CLI features
-        - **Workflow Modernisation**: Removal of deprecated UV installation flags for improved CI reliability
-
-
-        ### 📈 Release Statistics
-
-
-        #### 🔢 Code Changes Summary
-
-        - **Files Modified**: 4 core files with targeted enhancements
-        - **Lines Added**: 1,575+ new lines including comprehensive tests and documentation
-        - **Test Enhancement**: 354+ new test lines with 7 dedicated multiple file scenarios
-        - **CLI Functionality**: 65+ lines of enhanced CLI logic for multi-path processing
-        - **Documentation Updates**: 1,215+ lines of changelog and usage examples
-
-
-        #### 📊 Testing Excellence
-
-        - **New Test Methods**: 7 comprehensive multiple file testing scenarios
-        - **Test Coverage**: Maintained 100% code coverage across all enhanced functionality
-        - **CLI Integration**: Complete integration testing using authentic command-line simulation
-        - **Edge Case Coverage**: Comprehensive validation of mixed valid/invalid paths and error conditions
-
-
-        ### 🚀 Multiple File Processing Implementation
-
-
-        #### 🏗️ Core CLI Architecture Enhancement
-
-        Transform the CLI argument structure to support comprehensive multiple file and directory targets:
-
-        - **Parameter Transformation**: Enhance CLI argument from single `path: Optional[str]` to multiple `paths: Optional[list[str]]` enabling sophisticated batch processing
-        - **Function Signature Evolution**: Modify `check_docstrings()` function to accept `paths: list[str]` parameter supporting concurrent validation operations
-        - **Advanced Path Validation**: Implement comprehensive validation logic identifying and reporting all invalid paths simultaneously rather than failing on first error
-        - **Result Aggregation System**: Collect and merge docstring validation results from multiple sources into unified, structured output
-
-        **Enhanced CLI Signature:**
-
-        ```python
-        # CLI parameter transformation for multiple file support
-        def main(
-            ctx: Context,
-            paths: Optional[list[str]] = Argument(
-                None, help="Path(s) to Python file(s) or directory(s) for DFC to check"
-            ),
-            # ... other parameters preserved
-        ): ...
-        ```
-
-        **Function Processing Enhancement:**
-
-        ```python
-        # Multi-path processing with comprehensive validation
-        def check_docstrings(
-            paths: list[str],  # Enhanced from single path parameter
-            config: Optional[str] = None,
-            exclude: Optional[list[str]] = None,
-            # ... other parameters
-        ): ...
-        ```
-
-
-        #### 🔍 Advanced Path Validation and Error Management
-
-        Implement sophisticated validation logic supporting comprehensive multiple target path analysis:
-
-        - **Batch Validation Processing**: Validate all provided paths simultaneously before processing execution begins
-        - **Structured Error Reporting**: Report all invalid paths in single, comprehensively formatted error message with enhanced readability
-        - **Early Validation Strategy**: Prevent unnecessary processing overhead by validating complete path set upfront
-        - **Rich Text Error Output**: Format invalid path errors with structured bullet points and enhanced terminal formatting
-
-        **Enhanced Path Validation Logic:**
-
-        ```python
-        # Comprehensive multi-path validation with detailed error reporting
-        path_objs: list[Path] = [Path(path) for path in paths]
-        target_paths: list[Path] = [p for p in path_objs if p.exists()]
-        invalid_paths: list[Path] = [p for p in path_objs if not p.exists()]
-
-        if len(invalid_paths) > 0:
-            console.print(
-                _red(f"[bold]Error: Paths do not exist:[/bold]"),
-                NEW_LINE,
-                NEW_LINE.join([f"- '{invalid_path}'" for invalid_path in invalid_paths]),
-            )
-            raise Exit(1)
-        ```
-
-
-        #### 🔄 Result Aggregation and Processing Architecture
-
-        Implement comprehensive result collection system supporting diverse source integration:
-
-        - **Iterative Path Processing**: Process each valid path individually whilst maintaining complete error isolation between sources
-        - **Advanced Result Merging**: Aggregate docstring validation errors from all sources into unified result dictionary structure
-        - **Mixed Path Type Support**: Handle sophisticated combinations of individual files and directories seamlessly within single command execution
-        - **Configuration Discovery Enhancement**: Utilise first valid path for automatic configuration file discovery when no explicit configuration provided
-
-        **Multi-Path Processing Logic:**
-
-        ```python
-        # Enhanced processing supporting multiple paths with result aggregation
-        all_results: dict[str, list[DocstringError]] = {}
-
-        for target_path in target_paths:
-            if target_path.is_file():
-                errors: list[DocstringError] = checker.check_file(target_path)
-                if errors:
-                    all_results[str(target_path)] = errors
-            else:
-                directory_results: dict[str, list[DocstringError]] = checker.check_directory(
-                    target_path, exclude_patterns=exclude
-                )
-                all_results.update(directory_results)
-        ```
-
-
-        ### 💡 Enhanced Usage Examples and CLI Integration
-
-
-        #### 🛠️ Comprehensive Usage Pattern Enhancement
-
-        Expand CLI help documentation to demonstrate sophisticated multi-path capabilities:
-
-        - **Multiple File Examples**: Add comprehensive examples demonstrating simultaneous checking of multiple Python files
-        - **Advanced Exclusion Integration**: Showcase combining multiple path targets with exclusion patterns for sophisticated filtering operations
-        - **Mixed Usage Scenarios**: Provide examples demonstrating concurrent checking of individual files and complete directories within single command execution
-
-        **New Usage Examples:**
-
-        ```bash
-        # Enhanced multi-file processing capabilities
-        dfc myfile.py other_file.py                    # Check multiple Python files simultaneously
-        dfc -x src/app/__init__.py src/                 # Check directory excluding specific file
-        dfc file1.py file2.py src/ tests/               # Mixed files and directories
-        dfc --output=table myfile.py src/ tests/       # Multiple paths with table output
-        dfc --check src/models/ src/views/              # Batch processing with check flag
-        ```
-
-
-        #### 🔧 Backwards Compatibility Preservation
-
-        Maintain comprehensive backwards compatibility whilst delivering enhanced functionality:
-
-        - **Single File Operation**: Existing `dfc myfile.py` commands execute identically to previous behaviour patterns
-        - **Directory Processing Continuity**: Directory scanning behaviour remains completely unchanged for single directory operations
-        - **Flag Compatibility Assurance**: All existing CLI flags (`--quiet`, `--check`, `--output`, etc.) function seamlessly with enhanced multiple path processing
-        - **Consistent Error Handling**: Maintain identical error behaviour patterns whether processing single or multiple path targets
-
-
-        ### 🧪 Comprehensive Testing Enhancement
-
-
-        #### 📊 Seven New Testing Scenarios
-
-        Implement comprehensive test coverage expansion supporting multiple file functionality validation:
-
-        - **`test_51_multiple_files_success()`**: Validate successful processing of multiple valid files with appropriate success messaging output
-        - **`test_52_multiple_files_with_errors()`**: Test sophisticated error aggregation when subset of files contain docstring validation issues
-        - **`test_53_multiple_files_with_check_flag()`**: Verify `--check` flag behaviour with multiple files and appropriate exit code handling
-        - **`test_54_multiple_files_nonexistent_path()`**: Test comprehensive error handling when subset of paths don't exist alongside valid path targets
-        - **`test_55_multiple_files_mixed_types()`**: Validate processing sophisticated combinations of individual files and complete directories
-        - **`test_56_multiple_files_table_output()`**: Test table output formatting with aggregated results from multiple diverse sources
-        - **`test_57_multiple_files_quiet_mode()`**: Verify quiet mode operational behaviour with comprehensive multiple file processing operations
-
-
-        #### 🔍 Testing Architecture Enhancement
-
-        Achieve comprehensive coverage expansion supporting robust multiple file functionality validation:
-
-        - **354+ New Test Lines**: Extensive test coverage addition ensuring robust multiple file functionality across diverse scenarios
-        - **Edge Case Coverage**: Test scenarios encompass mixed valid/invalid paths, different output formatting options, and comprehensive error condition handling
-        - **CLI Integration Testing**: Complete integration testing utilising `typer.testing.CliRunner` for authentic CLI behaviour simulation across all scenarios
-        - **Temporary File Management**: Robust temporary file creation and cleanup protocols in test scenarios using appropriate context management patterns
-
-
-        ### ⚙️ CI/CD Workflow Modernisation
-
-
-        #### 🔧 Deprecated Configuration Removal
-
-        Modernise CI/CD pipeline configuration by eliminating obsolete UV installation parameters:
-
-        - **Remove `--no-python-version-warning`**: Eliminate deprecated warning suppression flag from `uv pip install` command execution
-        - **Maintain Installation Reliability**: Preserve essential `--no-cache` and `--verbose` flags ensuring installation transparency and debugging capabilities
-        - **Simplify Pipeline Configuration**: Reduce command complexity whilst maintaining robust installation behaviour and monitoring
-        - **Future Compatibility Assurance**: Ensure CI pipeline compatibility with current and anticipated future UV versions and configurations
-
-        **Workflow Command Enhancement:**
-
-        ```yaml
-        # CI/CD workflow simplification removing deprecated flags
-        # Before: With deprecated warning suppression
-        run: uv pip install --no-cache --verbose --no-python-version-warning "${{ env.PACKAGE_NAME }}==${{ env.VERSION }}"
-
-        # After: Streamlined without deprecated configuration
-        run: uv pip install --no-cache --verbose "${{ env.PACKAGE_NAME }}==${{ env.VERSION }}"
-        ```
-
-
-        ### 🎯 Developer Experience Enhancement
-
-
-        #### 🚀 Productivity and Workflow Benefits
-
-        Deliver significant productivity improvements for comprehensive docstring validation workflows:
-
-        - **Batch Processing Efficiency**: Enable simultaneous checking of multiple files rather than requiring separate command invocations
-        - **Workflow Integration Enhancement**: Support comprehensive codebase validation within single command execution for sophisticated CI/CD integration
-        - **Reduced Command Complexity**: Eliminate requirement for shell loops or multiple command invocations across project validation
-        - **Unified Result Reporting**: Provide consistent error reporting and formatting across all processed files and directories
-
-
-        #### 💡 Seamless Backwards Compatibility
-
-        Ensure effortless upgrade path for existing user workflows:
-
-        - **Zero Breaking Changes**: All existing commands and established workflows continue functioning identically without modification requirements
-        - **Progressive Enhancement Adoption**: Enable users to adopt multiple file functionality gradually without migration obligations or workflow disruption
-        - **Consistent Behaviour Preservation**: Single-file processing maintains identical output formatting, error handling, and operational characteristics
-        - **Complete API Preservation**: All existing CLI flags and configuration options operate unchanged with enhanced functionality integration
-
-
-        #### 🔧 Enhanced Error Handling and User Experience
-
-        Improve comprehensive user experience through sophisticated error reporting enhancements:
-
-        - **Comprehensive Validation Reporting**: Report all invalid paths simultaneously rather than terminating execution at first error encounter
-        - **Rich Text Error Formatting**: Enhanced error message presentation with structured bullet points and improved terminal readability
-        - **Contextual Feedback Enhancement**: Specific error messaging identifying precisely which paths are invalid with detailed location information
-        - **Graceful Degradation Support**: Continue processing valid paths effectively even when subset of paths are invalid or inaccessible
-
-
-        ### 📈 Usage Examples and Integration Patterns
-
-        The enhanced CLI architecture supports sophisticated multiple file processing workflows:
-
-        ```bash
-        # Comprehensive multi-file validation operations
-        dfc file1.py file2.py file3.py                 # Multiple individual files
-        dfc src/models.py tests/ docs/examples/         # Combination files and directories
-        dfc --exclude "*/test_*" src/ tests/integration/  # Multiple paths with exclusion patterns
-        dfc --output=table file1.py src/utils/ tests/   # Different output formats with multiple sources
-        dfc --quiet src/ tests/ examples/               # Quiet mode with comprehensive batch processing
-        dfc --check src/models/ src/views/ src/controllers/  # Check flag with sophisticated batch operations
-        ```
-
-        All established single-file usage patterns continue operating identically:
-
-        ```bash
-        # Preserved existing functionality patterns
-        dfc myfile.py                                   # Single file validation
-        dfc src/                                        # Single directory processing
-        dfc --check --quiet myfile.py                   # Combined flags with single file
-        dfc --output=table --exclude "*/test_*" src/    # Complex single directory operations
-        ```
-
-
-        ### 🔍 Technical Implementation Architecture
-
-
-        #### 📐 Enhanced Architecture Design
-
-        The implementation maintains sophisticated separation of concerns across enhanced functionality:
-
-        - **CLI Processing Layer**: Enhanced argument parsing and comprehensive validation logic within `main()` function architecture
-        - **Core Processing Layer**: Updated `check_docstrings()` function supporting iterative path processing with sophisticated error isolation
-        - **Validation Architecture**: Advanced comprehensive path validation with detailed error reporting and structured user feedback
-        - **Result Management Layer**: Sophisticated aggregation logic enabling seamless merging of validation results from diverse source types
-
-
-        #### 🧪 Quality Assurance Excellence
-
-        Comprehensive testing framework ensures complete reliability across enhanced functionality:
-
-        - **100% Test Coverage**: Maintained complete test coverage across all enhanced modules and functionality areas
-        - **173+ Total Tests**: All existing test scenarios continue passing with 7 additional multiple file testing scenarios
-        - **Integration Testing**: Complete CLI integration testing utilising authentic command-line simulation across all operational patterns
-        - **Edge Case Coverage**: Comprehensive testing covering error conditions, mixed scenarios, and sophisticated usage patterns
-
-
-        #### 📚 Documentation and Help System Enhancement
-
-        Enhanced comprehensive help system and usage documentation:
-
-        - **Updated Usage Examples**: CLI help documentation includes comprehensive new multiple file usage pattern demonstrations
-        - **Improved Parameter Descriptions**: Function and parameter descriptions updated accurately reflecting multiple path support capabilities
-        - **Consistent Formatting**: Help text formatting maintains established stylistic conventions whilst showcasing enhanced operational capabilities
-
-
-        ### 🔄 Configuration and Integration Support
-
-        Enhanced configuration system supporting multiple path operations:
-
-        - **Automatic Configuration Discovery**: Utilise first valid path for configuration file detection when explicit configuration not provided
-        - **Consistent Configuration Application**: Apply identical configuration rules across all processed paths ensuring uniform validation behaviour
-        - **Exclusion Pattern Integration**: Support sophisticated exclusion patterns across multiple paths enabling fine-grained control over validation scope
-
-        ### 💪 What's Changed
-
-        * Enhance CLI with Multiple File Support and Workflow Optimisation by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/15
-
-
-        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.1.0...v1.2.0
-
-        ---
-
-        **Installation**: `pip install docstring-format-checker==1.2.0`
-        **Multiple File Usage**: `dfc file1.py file2.py src/ tests/`
-        **Documentation**: Complete usage examples and configuration guides available
-        **Testing**: 100% code coverage with comprehensive multiple file testing scenarios
-
+        ### 🎯 Summary                Introduce comprehensive multiple file processing capabilities that transform the CLI tool from single-file operation to sophisticated batch processing whilst maintaining complete backwards compatibility. This release delivers significant functionality enhancement enabling developers to validate entire codebases efficiently through simultaneous checking of multiple files and directories in a single command.                Transform the validation workflow by expanding CLI argument processing from individual file handling to comprehensive multi-path batch operations. Enhance developer productivity by enabling efficient validation of complex project structures whilst providing enhanced error reporting, improved path validation, and modernised CI/CD integration. Establish robust foundation for enterprise-scale docstring validation workflows.                **Key Enhancement Areas:**                - **Multi-Path CLI Processing**: Comprehensive argument transformation supporting multiple file and directory targets        - **Enhanced Path Validation**: Advanced error reporting with detailed feedback for invalid paths          - **Backwards Compatibility Guarantee**: Complete preservation of existing single-file functionality and behaviour        - **Comprehensive Test Coverage**: Seven new testing scenarios covering multiple file operations across all CLI features        - **Workflow Modernisation**: Removal of deprecated UV installation flags for improved CI reliability                        ### 📈 Release Statistics                        #### 🔢 Code Changes Summary                - **Files Modified**: 4 core files with targeted enhancements        - **Lines Added**: 1,575+ new lines including comprehensive tests and documentation        - **Test Enhancement**: 354+ new test lines with 7 dedicated multiple file scenarios          - **CLI Functionality**: 65+ lines of enhanced CLI logic for multi-path processing        - **Documentation Updates**: 1,215+ lines of changelog and usage examples                        #### 📊 Testing Excellence                - **New Test Methods**: 7 comprehensive multiple file testing scenarios        - **Test Coverage**: Maintained 100% code coverage across all enhanced functionality        - **CLI Integration**: Complete integration testing using authentic command-line simulation        - **Edge Case Coverage**: Comprehensive validation of mixed valid/invalid paths and error conditions                        ### 🚀 Multiple File Processing Implementation                        #### 🏗️ Core CLI Architecture Enhancement                  Transform the CLI argument structure to support comprehensive multiple file and directory targets:                - **Parameter Transformation**: Enhance CLI argument from single `path: Optional[str]` to multiple `paths: Optional[list[str]]` enabling sophisticated batch processing        - **Function Signature Evolution**: Modify `check_docstrings()` function to accept `paths: list[str]` parameter supporting concurrent validation operations        - **Advanced Path Validation**: Implement comprehensive validation logic identifying and reporting all invalid paths simultaneously rather than failing on first error        - **Result Aggregation System**: Collect and merge docstring validation results from multiple sources into unified, structured output                **Enhanced CLI Signature:**                ```python        # CLI parameter transformation for multiple file support        def main(            ctx: Context,            paths: Optional[list[str]] = Argument(                None,                 help="Path(s) to Python file(s) or directory(s) for DFC to check"            ),            # ... other parameters preserved        ): ...        ```                **Function Processing Enhancement:**                ```python          # Multi-path processing with comprehensive validation        def check_docstrings(            paths: list[str],  # Enhanced from single path parameter            config: Optional[str] = None,            exclude: Optional[list[str]] = None,            # ... other parameters        ): ...        ```                        #### 🔍 Advanced Path Validation and Error Management                Implement sophisticated validation logic supporting comprehensive multiple target path analysis:                - **Batch Validation Processing**: Validate all provided paths simultaneously before processing execution begins        - **Structured Error Reporting**: Report all invalid paths in single, comprehensively formatted error message with enhanced readability          - **Early Validation Strategy**: Prevent unnecessary processing overhead by validating complete path set upfront        - **Rich Text Error Output**: Format invalid path errors with structured bullet points and enhanced terminal formatting                **Enhanced Path Validation Logic:**                ```python        # Comprehensive multi-path validation with detailed error reporting        path_objs: list[Path] = [Path(path) for path in paths]        target_paths: list[Path] = [p for p in path_objs if p.exists()]        invalid_paths: list[Path] = [p for p in path_objs if not p.exists()]                if len(invalid_paths) > 0:            console.print(                _red(f"[bold]Error: Paths do not exist:[/bold]"),                NEW_LINE,                NEW_LINE.join([f"- '{invalid_path}'" for invalid_path in invalid_paths]),            )            raise Exit(1)        ```                        #### 🔄 Result Aggregation and Processing Architecture                Implement comprehensive result collection system supporting diverse source integration:                - **Iterative Path Processing**: Process each valid path individually whilst maintaining complete error isolation between sources        - **Advanced Result Merging**: Aggregate docstring validation errors from all sources into unified result dictionary structure        - **Mixed Path Type Support**: Handle sophisticated combinations of individual files and directories seamlessly within single command execution        - **Configuration Discovery Enhancement**: Utilise first valid path for automatic configuration file discovery when no explicit configuration provided                **Multi-Path Processing Logic:**                ```python        # Enhanced processing supporting multiple paths with result aggregation          all_results: dict[str, list[DocstringError]] = {}                for target_path in target_paths:            if target_path.is_file():                errors: list[DocstringError] = checker.check_file(target_path)                if errors:                    all_results[str(target_path)] = errors            else:                directory_results: dict[str, list[DocstringError]] = checker.check_directory(                    target_path, exclude_patterns=exclude                )                all_results.update(directory_results)        ```                        ### 💡 Enhanced Usage Examples and CLI Integration                        #### 🛠️ Comprehensive Usage Pattern Enhancement                Expand CLI help documentation to demonstrate sophisticated multi-path capabilities:                - **Multiple File Examples**: Add comprehensive examples demonstrating simultaneous checking of multiple Python files        - **Advanced Exclusion Integration**: Showcase combining multiple path targets with exclusion patterns for sophisticated filtering operations          - **Mixed Usage Scenarios**: Provide examples demonstrating concurrent checking of individual files and complete directories within single command execution                **New Usage Examples:**                ```bash        # Enhanced multi-file processing capabilities        dfc myfile.py other_file.py                    # Check multiple Python files simultaneously        dfc -x src/app/__init__.py src/                 # Check directory excluding specific file          dfc file1.py file2.py src/ tests/               # Mixed files and directories        dfc --output=table myfile.py src/ tests/       # Multiple paths with table output        dfc --check src/models/ src/views/              # Batch processing with check flag        ```                        #### 🔧 Backwards Compatibility Preservation                Maintain comprehensive backwards compatibility whilst delivering enhanced functionality:                - **Single File Operation**: Existing `dfc myfile.py` commands execute identically to previous behaviour patterns        - **Directory Processing Continuity**: Directory scanning behaviour remains completely unchanged for single directory operations          - **Flag Compatibility Assurance**: All existing CLI flags (`--quiet`, `--check`, `--output`, etc.) function seamlessly with enhanced multiple path processing        - **Consistent Error Handling**: Maintain identical error behaviour patterns whether processing single or multiple path targets                        ### 🧪 Comprehensive Testing Enhancement                        #### 📊 Seven New Testing Scenarios                Implement comprehensive test coverage expansion supporting multiple file functionality validation:                - **`test_51_multiple_files_success()`**: Validate successful processing of multiple valid files with appropriate success messaging output        - **`test_52_multiple_files_with_errors()`**: Test sophisticated error aggregation when subset of files contain docstring validation issues        - **`test_53_multiple_files_with_check_flag()`**: Verify `--check` flag behaviour with multiple files and appropriate exit code handling          - **`test_54_multiple_files_nonexistent_path()`**: Test comprehensive error handling when subset of paths don't exist alongside valid path targets        - **`test_55_multiple_files_mixed_types()`**: Validate processing sophisticated combinations of individual files and complete directories        - **`test_56_multiple_files_table_output()`**: Test table output formatting with aggregated results from multiple diverse sources        - **`test_57_multiple_files_quiet_mode()`**: Verify quiet mode operational behaviour with comprehensive multiple file processing operations                        #### 🔍 Testing Architecture Enhancement                Achieve comprehensive coverage expansion supporting robust multiple file functionality validation:                - **354+ New Test Lines**: Extensive test coverage addition ensuring robust multiple file functionality across diverse scenarios        - **Edge Case Coverage**: Test scenarios encompass mixed valid/invalid paths, different output formatting options, and comprehensive error condition handling        - **CLI Integration Testing**: Complete integration testing utilising `typer.testing.CliRunner` for authentic CLI behaviour simulation across all scenarios          - **Temporary File Management**: Robust temporary file creation and cleanup protocols in test scenarios using appropriate context management patterns                        ### ⚙️ CI/CD Workflow Modernisation                          #### 🔧 Deprecated Configuration Removal                Modernise CI/CD pipeline configuration by eliminating obsolete UV installation parameters:                - **Remove `--no-python-version-warning`**: Eliminate deprecated warning suppression flag from `uv pip install` command execution        - **Maintain Installation Reliability**: Preserve essential `--no-cache` and `--verbose` flags ensuring installation transparency and debugging capabilities        - **Simplify Pipeline Configuration**: Reduce command complexity whilst maintaining robust installation behaviour and monitoring        - **Future Compatibility Assurance**: Ensure CI pipeline compatibility with current and anticipated future UV versions and configurations                **Workflow Command Enhancement:**                ```yaml        # CI/CD workflow simplification removing deprecated flags        # Before: With deprecated warning suppression        run: uv pip install --no-cache --verbose --no-python-version-warning "${{ env.PACKAGE_NAME }}==${{ env.VERSION }}"                # After: Streamlined without deprecated configuration          run: uv pip install --no-cache --verbose "${{ env.PACKAGE_NAME }}==${{ env.VERSION }}"        ```                        ### 🎯 Developer Experience Enhancement                        #### 🚀 Productivity and Workflow Benefits                Deliver significant productivity improvements for comprehensive docstring validation workflows:                - **Batch Processing Efficiency**: Enable simultaneous checking of multiple files rather than requiring separate command invocations        - **Workflow Integration Enhancement**: Support comprehensive codebase validation within single command execution for sophisticated CI/CD integration          - **Reduced Command Complexity**: Eliminate requirement for shell loops or multiple command invocations across project validation        - **Unified Result Reporting**: Provide consistent error reporting and formatting across all processed files and directories                        #### 💡 Seamless Backwards Compatibility                Ensure effortless upgrade path for existing user workflows:                - **Zero Breaking Changes**: All existing commands and established workflows continue functioning identically without modification requirements        - **Progressive Enhancement Adoption**: Enable users to adopt multiple file functionality gradually without migration obligations or workflow disruption        - **Consistent Behaviour Preservation**: Single-file processing maintains identical output formatting, error handling, and operational characteristics        - **Complete API Preservation**: All existing CLI flags and configuration options operate unchanged with enhanced functionality integration                        #### 🔧 Enhanced Error Handling and User Experience                Improve comprehensive user experience through sophisticated error reporting enhancements:                - **Comprehensive Validation Reporting**: Report all invalid paths simultaneously rather than terminating execution at first error encounter        - **Rich Text Error Formatting**: Enhanced error message presentation with structured bullet points and improved terminal readability        - **Contextual Feedback Enhancement**: Specific error messaging identifying precisely which paths are invalid with detailed location information        - **Graceful Degradation Support**: Continue processing valid paths effectively even when subset of paths are invalid or inaccessible                        ### 📈 Usage Examples and Integration Patterns                The enhanced CLI architecture supports sophisticated multiple file processing workflows:                ```bash        # Comprehensive multi-file validation operations        dfc file1.py file2.py file3.py                 # Multiple individual files        dfc src/models.py tests/ docs/examples/         # Combination files and directories          dfc --exclude "*/test_*" src/ tests/integration/  # Multiple paths with exclusion patterns        dfc --output=table file1.py src/utils/ tests/   # Different output formats with multiple sources        dfc --quiet src/ tests/ examples/               # Quiet mode with comprehensive batch processing        dfc --check src/models/ src/views/ src/controllers/  # Check flag with sophisticated batch operations        ```                All established single-file usage patterns continue operating identically:                ```bash        # Preserved existing functionality patterns        dfc myfile.py                                   # Single file validation        dfc src/                                        # Single directory processing          dfc --check --quiet myfile.py                   # Combined flags with single file        dfc --output=table --exclude "*/test_*" src/    # Complex single directory operations        ```                        ### 🔍 Technical Implementation Architecture                          #### 📐 Enhanced Architecture Design                The implementation maintains sophisticated separation of concerns across enhanced functionality:                - **CLI Processing Layer**: Enhanced argument parsing and comprehensive validation logic within `main()` function architecture        - **Core Processing Layer**: Updated `check_docstrings()` function supporting iterative path processing with sophisticated error isolation          - **Validation Architecture**: Advanced comprehensive path validation with detailed error reporting and structured user feedback        - **Result Management Layer**: Sophisticated aggregation logic enabling seamless merging of validation results from diverse source types                        #### 🧪 Quality Assurance Excellence                  Comprehensive testing framework ensures complete reliability across enhanced functionality:                - **100% Test Coverage**: Maintained complete test coverage across all enhanced modules and functionality areas        - **173+ Total Tests**: All existing test scenarios continue passing with 7 additional multiple file testing scenarios        - **Integration Testing**: Complete CLI integration testing utilising authentic command-line simulation across all operational patterns        - **Edge Case Coverage**: Comprehensive testing covering error conditions, mixed scenarios, and sophisticated usage patterns                        #### 📚 Documentation and Help System Enhancement                  Enhanced comprehensive help system and usage documentation:                - **Updated Usage Examples**: CLI help documentation includes comprehensive new multiple file usage pattern demonstrations          - **Improved Parameter Descriptions**: Function and parameter descriptions updated accurately reflecting multiple path support capabilities        - **Consistent Formatting**: Help text formatting maintains established stylistic conventions whilst showcasing enhanced operational capabilities                        ### 🔄 Configuration and Integration Support                Enhanced configuration system supporting multiple path operations:                - **Automatic Configuration Discovery**: Utilise first valid path for configuration file detection when explicit configuration not provided        - **Consistent Configuration Application**: Apply identical configuration rules across all processed paths ensuring uniform validation behaviour        - **Exclusion Pattern Integration**: Support sophisticated exclusion patterns across multiple paths enabling fine-grained control over validation scope                ### 💪 What's Changed                * Enhance CLI with Multiple File Support and Workflow Optimisation by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/15                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.1.0...v1.2.0                ---                **Installation**: `pip install docstring-format-checker==1.2.0`          **Multiple File Usage**: `dfc file1.py file2.py src/ tests/`          **Documentation**: Complete usage examples and configuration guides available          **Testing**: 100% code coverage with comprehensive multiple file testing scenarios        
 
     ??? abstract "Updates"
 
@@ -1965,314 +221,7 @@
 
     ??? note "Release Notes"
 
-        ### 🎯 Summary
-
-        Introduce the definitive major release of `docstring-format-checker`, marking the complete evolution from initial concept to production-ready, enterprise-grade Python CLI tool. This comprehensive release represents the culmination of intensive development spanning 189 commits, 14 merged pull requests, and 13 iterative releases, delivering the most sophisticated Python docstring validation solution available today.
-
-        Transform from basic validation concept to industry-leading tool with advanced ASCII art CLI experience, comprehensive configuration management, robust cross-platform compatibility, and modern Python ecosystem integration. Establish `docstring-format-checker` as the authoritative solution for Python documentation quality assurance, combining powerful validation capabilities with exceptional user experience and professional-grade tooling.
-
-        **Complete Feature Set:**
-
-        - **Dynamic ASCII Art CLI**: Intelligent terminal width adaptation with professional `pyfiglet` banners
-        - **Advanced AST Parsing**: Robust code analysis without regex fragility across all Python constructs
-        - **Sophisticated Configuration**: Four distinct section types with hierarchical TOML-based discovery
-        - **Rich Terminal Experience**: Beautiful coloured output with structured error tables and panels
-        - **Modern Python Integration**: Contemporary version management with `importlib.metadata` and UV packaging
-        - **Comprehensive Testing**: 166 tests achieving 100% code coverage across Windows, macOS, and Linux
-        - **Professional Documentation**: Complete user guides, API documentation, and configuration examples
-
-
-        ### 🚀 Complete Architecture Overview
-
-
-        #### 🏗️ Core Validation Engine Evolution
-
-        Establish the most sophisticated docstring validation system available in the Python ecosystem:
-
-        - **`DocstringChecker()`**: Advanced validation engine with comprehensive rule enforcement and error reporting
-        - **`FunctionAndClassDetails()`**: Structured representation of code elements for precise analysis and validation
-        - **Enhanced AST Integration**: Robust parsing supporting functions, methods, classes, async functions, and `@overload` decorators
-        - **Multi-Format Support**: Intelligent handling of diverse Python code patterns with consistent validation behaviour
-        - **Advanced Error Detection**: Sophisticated validation logic for admonitions, section ordering, parameter matching, and content structure
-
-        **Complete Validation Rule System:**
-
-        ```python
-        VALID_TYPES = (
-            "free_text",  # Summary, details, examples, notes with admonition support
-            "list_name",  # Simple name sections with basic validation
-            "list_type",  # Type-only sections (raises, yields) with parentheses checking
-            "list_name_and_type",  # Parameter-style sections with comprehensive validation
-        )
-        ```
-
-
-        #### ⚙️ Advanced Configuration Management
-
-        Implement the most flexible configuration system in Python documentation tooling:
-
-        - **`Config()`**: Comprehensive configuration container with global settings and section definitions
-        - **`SectionConfig()`**: Individual section configuration with validation rules, admonition support, and customisation options
-        - **`GlobalConfig()`**: Global validation behaviour control with `allow_undefined_sections`, `require_docstrings`, and `check_private` flags
-        - **Hierarchical Discovery**: Intelligent search for `pyproject.toml` configuration files up directory trees
-        - **Validation Enforcement**: Strict configuration validation with comprehensive error reporting and helpful suggestions
-
-        **Advanced Configuration Architecture:**
-
-        ```toml
-        [tool.dfc]  # or [tool.docstring-format-checker]
-        allow_undefined_sections = false
-        require_docstrings = true
-        check_private = true
-
-        sections = [
-            { order = 1, name = "summary",  type = "free_text",          required = true, admonition = "note", prefix = "!!!" },
-            { order = 2, name = "details",  type = "free_text",          required = false, admonition = "abstract", prefix = "???+" },
-            { order = 3, name = "params",   type = "list_name_and_type", required = false },
-            { order = 4, name = "raises",   type = "list_type",          required = false },
-            { order = 5, name = "returns",  type = "list_name_and_type", required = false },
-            { order = 6, name = "yields",   type = "list_type",          required = false },
-            { order = 7, name = "examples", type = "free_text",          required = false, admonition = "example", prefix = "???+" },
-            { order = 8, name = "notes",    type = "free_text",          required = false, admonition = "note", prefix = "???" },
-        ]
-        ```
-
-
-        #### 🎨 Revolutionary CLI Experience
-
-        Deliver the most advanced CLI experience in Python development tooling:
-
-        - **Dynamic ASCII Art Integration**: Professional `pyfiglet` banner generation with intelligent terminal width adaptation (130-column threshold)
-        - **Rich Terminal Output**: Sophisticated coloured output using Rich library with structured error tables, panels, and professional formatting
-        - **Dual Entry Points**: Both `docstring-format-checker` and `dfc` commands with identical functionality for flexibility
-        - **Comprehensive Help System**: Integrated help display combining ASCII banners, standard help, usage examples, and configuration guidance
-        - **Advanced Output Modes**: Multiple output formats (`table`, `list`) with quiet modes and structured exit codes for diverse workflow integration
-
-        **Complete CLI Capabilities:**
-
-        ```bash
-        # Multiple invocation methods with rich features
-        dfc check src/                          # Check directory with ASCII art help
-        docstring-format-checker check file.py  # Full command name
-        dfc check --output table --quiet src/   # Customised output formats
-        dfc config-example                      # Generate comprehensive configuration
-        dfc --help                              # Dynamic ASCII art with complete guidance
-        ```
-
-
-        ### 🎭 Visual Experience Transformation
-
-
-        #### 🖥️ Dynamic ASCII Art System
-
-        Revolutionise CLI aesthetics with intelligent ASCII art adaptation:
-
-        - **Terminal Width Intelligence**: Dynamic selection between compact `dfc` (< 130 columns) and full `docstring-format-checker` (≥ 130 columns) banners
-        - **Professional Typography**: Industry-standard `pyfiglet` integration with consistent magenta styling and proper markup handling
-        - **Cross-Platform Compatibility**: Robust terminal size detection with fallback mechanisms for test environments and CI systems
-        - **Integrated Help Experience**: Seamless combination of ASCII banners with Rich-formatted help panels and examples
-
-        **ASCII Art Display Examples:**
-
-        **Narrow Terminal (< 130 columns):**
-
-        ```
-             _  __
-          __| |/ _| ___
-         / _` | |_ / __|
-        | (_| |  _| (__
-         \__,_|_|  \___|
-        ```
-
-        **Wide Terminal (≥ 130 columns):**
-
-        ```
-             _                _        _                    __                            _             _               _
-          __| | ___   ___ ___| |_ _ __(_)_ __   __ _       / _| ___  _ __ _ __ ___   __ _| |_       ___| |__   ___  ___| | _____ _ __
-         / _` |/ _ \ / __/ __| __| '__| | '_ \ / _` |_____| |_ / _ \| '__| '_ ` _ \ / _` | __|____ / __| '_ \ / _ \/ __| |/ / _ \ '__|
-        | (_| | (_) | (__\__ \ |_| |  | | | | | (_| |_____|  _| (_) | |  | | | | | | (_| | ||_____| (__| | | |  __/ (__|   <  __/ |
-         \__,_|\___/ \___|___/\__|_|  |_|_| |_|\__, |     |_|  \___/|_|  |_| |_| |_|\__,_|\__|     \___|_| |_|\___|\___|_|\_\___|_|
-                                               |___/
-        ```
-
-        #### 📚 Enhanced User Interface Elements
-
-        Deliver comprehensive interface improvements across all user touchpoints:
-
-        - **Rich Panel Integration**: Professional bordered sections for arguments, options, examples, and configuration with consistent styling
-        - **Colour-Coded Examples**: Enhanced usage examples with syntax highlighting and descriptive comments for improved comprehension
-        - **Configuration Modernisation**: Streamlined configuration examples with inline array syntax replacing nested TOML tables
-        - **Error Message Enhancement**: Structured error reporting with file paths, line numbers, function names, and detailed descriptions
-
-
-        ### 🐍 Modern Python Ecosystem Integration
-
-
-        #### 📦 Contemporary Packaging Standards
-
-        Embrace modern Python packaging practices with industry-leading approaches:
-
-        - **Dynamic Version Management**: Complete migration from hardcoded versions to `importlib.metadata` runtime detection
-        - **UV Integration**: Native UV package manager support with modern dependency resolution and version management
-        - **Semantic Versioning Alignment**: Standardised version format without legacy prefixes (`1.1.0` vs `v1.1.0`)
-        - **Python Version Strategy**: Focused support for actively maintained Python versions (3.9-3.13) with dropped legacy support
-        - **Build System Modernisation**: Latest `uv_build` integration with contemporary packaging workflows
-
-        **Enhanced Package Metadata:**
-
-        ```python
-        # src/docstring_format_checker/__init__.py - Modern approach
-        from importlib.metadata import metadata
-
-        _metadata = metadata("docstring-format-checker")
-        __name__: str = _metadata["Name"]
-        __version__: str = _metadata["Version"]
-        __author__: str = _metadata["Author"]
-        __email__: str = _metadata.get("Email", "")
-        ```
-
-
-        #### 🏗️ Infrastructure Modernisation
-
-        Implement contemporary development infrastructure with professional-grade tooling:
-
-        - **GitHub Actions Integration**: Latest `actions/setup-python@v5` with official UV setup actions for enhanced reliability
-        - **Dependency Strategy**: Modern dependency management with `pyfiglet>=1.0.1` for ASCII art, updated development tools
-        - **Documentation Hosting**: Dedicated website integration at `data-science-extensions.com` replacing README-based documentation
-        - **CI/CD Excellence**: Comprehensive testing matrix across platforms with automated coverage reporting and quality gates
-
-
-        ### 🧪 Comprehensive Testing Excellence
-
-
-        #### 🔬 Test Suite Sophistication
-
-        Achieve industry-leading test coverage with advanced testing strategies:
-
-        - **100% Code Coverage**: Complete test coverage across 166 test cases with comprehensive edge case validation
-        - **Cross-Platform Reliability**: Robust testing across Windows, macOS, and Linux with platform-specific compatibility handling
-        - **CLI Integration Testing**: Comprehensive testing of ASCII art generation, help system integration, and terminal compatibility
-        - **Configuration Validation**: Extensive testing of TOML configuration parsing, validation rules, and error handling
-        - **Terminal Compatibility**: Advanced testing of terminal size detection, ASCII art adaptation, and Rich output formatting
-
-        **Test Infrastructure Enhancements:**
-
-        - **OSError Handling**: Robust terminal size detection testing with fallback mechanism validation
-        - **ASCII Art Integration**: Comprehensive testing of `pyfiglet` integration and title selection logic
-        - **Rich Output Validation**: Structured testing of panel formatting, colour output, and markup handling
-        - **Configuration Format Testing**: Updated assertions matching streamlined inline array syntax
-
-
-        #### 📊 Quality Assurance Standards
-
-        Maintain exceptional code quality through comprehensive validation:
-
-        - **Type Safety**: Complete type hint coverage with `mypy` validation across all modules
-        - **Code Formatting**: Consistent `black` formatting with 120-character line length standards
-        - **Import Organisation**: Structured import management with `isort` integration and clear separation patterns
-        - **Linting Excellence**: Comprehensive `pylint` validation with high code quality standards
-        - **Pre-commit Integration**: Automated quality checks with `pre-commit` hooks for consistent standards
-
-
-        ### 🔄 Development Evolution Timeline
-
-
-        #### 📈 Release Progression
-
-        Chronicle the complete development journey through systematic releases:
-
-        **Foundation Releases (v0.1.0 - v0.4.0):**
-
-        - **v0.1.0**: Initial CLI framework with basic validation capabilities and foundational architecture
-        - **v0.2.0**: `@overload` function support and enhanced parsing capabilities
-        - **v0.3.0**: Advanced validation logic with colon usage, title case, and parentheses checking
-        - **v0.4.0**: CLI enhancement with example flags, recursive improvements, and expanded test coverage
-
-        **Enhancement Releases (v0.5.0 - v0.8.0):**
-
-        - **v0.5.0**: Output format improvements and summary statistics integration
-        - **v0.6.0**: List type section validation fixes and error reporting enhancements
-        - **v0.7.0**: List section validation improvements and parameter parsing sophistication
-        - **v0.8.0**: Global configuration system with `allow_undefined_sections`, `require_docstrings`, and `check_private` flags
-
-        **Maturity Releases (v0.9.0 - v1.0.1):**
-
-        - **v0.9.0**: CI/CD modernisation and test reliability improvements with cross-platform compatibility
-        - **v0.10.0**: Windows CI issue resolution and platform-specific assertion handling
-        - **v0.11.0**: Documentation standardisation and test environment isolation
-        - **v1.0.0**: First major release with complete feature set and production readiness
-        - **v1.0.1**: Version management modernisation with `importlib.metadata` integration
-        - **v1.1.0**: Enhanced CLI Experience with ASCII Art and Modernise Python Support
-
-
-        #### 🏆 Current Release (v1.1.0):
-
-        **Revolutionary CLI Experience:**
-
-        - **ASCII Art Integration**: Dynamic `pyfiglet` banners with terminal width adaptation
-        - **Rich Output Enhancement**: Professional panels, colour coding, and structured formatting
-        - **Help System Consolidation**: Integrated help display with examples and configuration guidance
-        - **Python Version Modernisation**: Contemporary Python 3.9+ support with legacy version removal
-
-
-        ### 🎉 Complete User Impact
-
-
-        #### 🚀 Immediate Benefits
-
-        Transform development workflows with comprehensive improvements:
-
-        - **Professional Tool Identity**: Memorable ASCII art creates distinctive, professional CLI experience
-        - **Enhanced Productivity**: Integrated help system reduces documentation lookup time and improves workflow efficiency
-        - **Modern Ecosystem Alignment**: Contemporary Python version support ensures compatibility with current development tools
-        - **Comprehensive Validation**: Advanced AST parsing provides reliable docstring validation without regex limitations
-        - **Cross-Platform Reliability**: Robust testing ensures consistent behaviour across all major operating systems
-
-
-        #### 🌟 Long-term Value
-
-        Establish foundation for sustained development excellence:
-
-        - **Community Adoption**: Professional appearance and comprehensive documentation encourage wider adoption across Python community
-        - **Maintainability Excellence**: Simplified configuration examples and modern tooling reduce maintenance overhead
-        - **Extensibility Foundation**: Enhanced CLI architecture and modern packaging provide platform for future feature development
-        - **Quality Assurance**: Comprehensive validation capabilities ensure consistent documentation standards across large codebases
-        - **Ecosystem Integration**: Modern Python version support and UV integration ensure compatibility with contemporary development workflows
-
-
-        #### 📊 Development Impact
-
-        Deliver measurable improvements to development processes:
-
-        - **Documentation Quality**: Systematic validation ensures consistent, high-quality documentation across entire codebases
-        - **Developer Experience**: Rich terminal output and comprehensive help reduce learning curve and improve adoption
-        - **CI/CD Integration**: Multiple output formats and structured exit codes enable seamless automation workflows
-        - **Configuration Flexibility**: Hierarchical configuration discovery and comprehensive customisation support diverse project requirements
-        - **Error Resolution**: Detailed error reporting with file paths, line numbers, and specific validation failures accelerates issue resolution
-
-
-        ### 🔮 Project Maturity
-
-        **Complete Statistics:**
-
-        - **189 Total Commits**: Comprehensive development history with systematic improvements
-        - **14 Merged Pull Requests**: Structured feature development with thorough review processes
-        - **13 Released Versions**: Systematic release progression with clear version management
-        - **166 Test Cases**: Comprehensive test coverage ensuring reliability and quality
-        - **100% Code Coverage**: Complete validation of all code paths and edge cases
-        - **3 Platform Support**: Robust cross-platform compatibility (Windows, macOS, Linux)
-        - **4 Section Types**: Comprehensive validation rule system supporting diverse documentation patterns
-
-
-        ### 💪 Pull Requests
-
-        * Enhance CLI Experience with ASCII Art and Modernise Python Support by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/14
-
-
-        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.0.1...v1.1.0
-
-        Transform `docstring-format-checker` from conceptual tool to industry-leading Python documentation validation solution, establishing the definitive standard for Python docstring quality assurance with unmatched user experience, comprehensive validation capabilities, and modern Python ecosystem integration.
-
+        ### 🎯 Summary                Introduce the definitive major release of `docstring-format-checker`, marking the complete evolution from initial concept to production-ready, enterprise-grade Python CLI tool. This comprehensive release represents the culmination of intensive development spanning 189 commits, 14 merged pull requests, and 13 iterative releases, delivering the most sophisticated Python docstring validation solution available today.                Transform from basic validation concept to industry-leading tool with advanced ASCII art CLI experience, comprehensive configuration management, robust cross-platform compatibility, and modern Python ecosystem integration. Establish `docstring-format-checker` as the authoritative solution for Python documentation quality assurance, combining powerful validation capabilities with exceptional user experience and professional-grade tooling.                **Complete Feature Set:**                - **Dynamic ASCII Art CLI**: Intelligent terminal width adaptation with professional `pyfiglet` banners        - **Advanced AST Parsing**: Robust code analysis without regex fragility across all Python constructs          - **Sophisticated Configuration**: Four distinct section types with hierarchical TOML-based discovery        - **Rich Terminal Experience**: Beautiful coloured output with structured error tables and panels        - **Modern Python Integration**: Contemporary version management with `importlib.metadata` and UV packaging        - **Comprehensive Testing**: 166 tests achieving 100% code coverage across Windows, macOS, and Linux        - **Professional Documentation**: Complete user guides, API documentation, and configuration examples                        ### 🚀 Complete Architecture Overview                        #### 🏗️ Core Validation Engine Evolution                Establish the most sophisticated docstring validation system available in the Python ecosystem:                - **`DocstringChecker()`**: Advanced validation engine with comprehensive rule enforcement and error reporting        - **`FunctionAndClassDetails()`**: Structured representation of code elements for precise analysis and validation        - **Enhanced AST Integration**: Robust parsing supporting functions, methods, classes, async functions, and `@overload` decorators        - **Multi-Format Support**: Intelligent handling of diverse Python code patterns with consistent validation behaviour          - **Advanced Error Detection**: Sophisticated validation logic for admonitions, section ordering, parameter matching, and content structure                **Complete Validation Rule System:**                ```python        VALID_TYPES = (            "free_text",          # Summary, details, examples, notes with admonition support            "list_name",          # Simple name sections with basic validation              "list_type",          # Type-only sections (raises, yields) with parentheses checking            "list_name_and_type", # Parameter-style sections with comprehensive validation        )        ```                        #### ⚙️ Advanced Configuration Management                Implement the most flexible configuration system in Python documentation tooling:                - **`Config()`**: Comprehensive configuration container with global settings and section definitions        - **`SectionConfig()`**: Individual section configuration with validation rules, admonition support, and customisation options        - **`GlobalConfig()`**: Global validation behaviour control with `allow_undefined_sections`, `require_docstrings`, and `check_private` flags        - **Hierarchical Discovery**: Intelligent search for `pyproject.toml` configuration files up directory trees        - **Validation Enforcement**: Strict configuration validation with comprehensive error reporting and helpful suggestions                **Advanced Configuration Architecture:**                ```toml        [tool.dfc]  # or [tool.docstring-format-checker]        allow_undefined_sections = false        require_docstrings = true          check_private = true                sections = [            { order = 1, name = "summary",  type = "free_text",          required = true, admonition = "note", prefix = "!!!" },            { order = 2, name = "details",  type = "free_text",          required = false, admonition = "abstract", prefix = "???+" },            { order = 3, name = "params",   type = "list_name_and_type", required = false },            { order = 4, name = "raises",   type = "list_type",          required = false },            { order = 5, name = "returns",  type = "list_name_and_type", required = false },            { order = 6, name = "yields",   type = "list_type",          required = false },            { order = 7, name = "examples", type = "free_text",          required = false, admonition = "example", prefix = "???+" },            { order = 8, name = "notes",    type = "free_text",          required = false, admonition = "note", prefix = "???" },        ]        ```                        #### 🎨 Revolutionary CLI Experience                Deliver the most advanced CLI experience in Python development tooling:                - **Dynamic ASCII Art Integration**: Professional `pyfiglet` banner generation with intelligent terminal width adaptation (130-column threshold)        - **Rich Terminal Output**: Sophisticated coloured output using Rich library with structured error tables, panels, and professional formatting        - **Dual Entry Points**: Both `docstring-format-checker` and `dfc` commands with identical functionality for flexibility        - **Comprehensive Help System**: Integrated help display combining ASCII banners, standard help, usage examples, and configuration guidance        - **Advanced Output Modes**: Multiple output formats (`table`, `list`) with quiet modes and structured exit codes for diverse workflow integration                **Complete CLI Capabilities:**                ```bash        # Multiple invocation methods with rich features        dfc check src/                          # Check directory with ASCII art help        docstring-format-checker check file.py  # Full command name        dfc check --output table --quiet src/   # Customised output formats          dfc config-example                      # Generate comprehensive configuration        dfc --help                              # Dynamic ASCII art with complete guidance        ```                        ### 🎭 Visual Experience Transformation                        #### 🖥️ Dynamic ASCII Art System                Revolutionise CLI aesthetics with intelligent ASCII art adaptation:                - **Terminal Width Intelligence**: Dynamic selection between compact `dfc` (< 130 columns) and full `docstring-format-checker` (≥ 130 columns) banners        - **Professional Typography**: Industry-standard `pyfiglet` integration with consistent magenta styling and proper markup handling        - **Cross-Platform Compatibility**: Robust terminal size detection with fallback mechanisms for test environments and CI systems        - **Integrated Help Experience**: Seamless combination of ASCII banners with Rich-formatted help panels and examples                **ASCII Art Display Examples:**                **Narrow Terminal (< 130 columns):**                ```             _  __                __| |/ _| ___          / _` | |_ / __|        | (_| |  _| (__          \__,_|_|  \___|        ```                **Wide Terminal (≥ 130 columns):**                  ```             _                _        _                    __                            _             _               _                       __| | ___   ___ ___| |_ _ __(_)_ __   __ _       / _| ___  _ __ _ __ ___   __ _| |_       ___| |__   ___  ___| | _____ _ __          / _` |/ _ \ / __/ __| __| '__| | '_ \ / _` |_____| |_ / _ \| '__| '_ ` _ \ / _` | __|____ / __| '_ \ / _ \/ __| |/ / _ \ '__|        | (_| | (_) | (__\__ \ |_| |  | | | | | (_| |_____|  _| (_) | |  | | | | | | (_| | ||_____| (__| | | |  __/ (__|   <  __/ |            \__,_|\___/ \___|___/\__|_|  |_|_| |_|\__, |     |_|  \___/|_|  |_| |_| |_|\__,_|\__|     \___|_| |_|\___|\___|_|\_\___|_|                                                  |___/                                                                                          ```                #### 📚 Enhanced User Interface Elements                Deliver comprehensive interface improvements across all user touchpoints:                - **Rich Panel Integration**: Professional bordered sections for arguments, options, examples, and configuration with consistent styling        - **Colour-Coded Examples**: Enhanced usage examples with syntax highlighting and descriptive comments for improved comprehension        - **Configuration Modernisation**: Streamlined configuration examples with inline array syntax replacing nested TOML tables        - **Error Message Enhancement**: Structured error reporting with file paths, line numbers, function names, and detailed descriptions                        ### 🐍 Modern Python Ecosystem Integration                        #### 📦 Contemporary Packaging Standards                Embrace modern Python packaging practices with industry-leading approaches:                - **Dynamic Version Management**: Complete migration from hardcoded versions to `importlib.metadata` runtime detection        - **UV Integration**: Native UV package manager support with modern dependency resolution and version management        - **Semantic Versioning Alignment**: Standardised version format without legacy prefixes (`1.1.0` vs `v1.1.0`)        - **Python Version Strategy**: Focused support for actively maintained Python versions (3.9-3.13) with dropped legacy support        - **Build System Modernisation**: Latest `uv_build` integration with contemporary packaging workflows                **Enhanced Package Metadata:**                ```python        # src/docstring_format_checker/__init__.py - Modern approach        from importlib.metadata import metadata                _metadata = metadata("docstring-format-checker")        __name__: str = _metadata["Name"]        __version__: str = _metadata["Version"]          __author__: str = _metadata["Author"]        __email__: str = _metadata.get("Email", "")        ```                        #### 🏗️ Infrastructure Modernisation                Implement contemporary development infrastructure with professional-grade tooling:                - **GitHub Actions Integration**: Latest `actions/setup-python@v5` with official UV setup actions for enhanced reliability        - **Dependency Strategy**: Modern dependency management with `pyfiglet>=1.0.1` for ASCII art, updated development tools        - **Documentation Hosting**: Dedicated website integration at `data-science-extensions.com` replacing README-based documentation          - **CI/CD Excellence**: Comprehensive testing matrix across platforms with automated coverage reporting and quality gates                        ### 🧪 Comprehensive Testing Excellence                        #### 🔬 Test Suite Sophistication                  Achieve industry-leading test coverage with advanced testing strategies:                - **100% Code Coverage**: Complete test coverage across 166 test cases with comprehensive edge case validation        - **Cross-Platform Reliability**: Robust testing across Windows, macOS, and Linux with platform-specific compatibility handling        - **CLI Integration Testing**: Comprehensive testing of ASCII art generation, help system integration, and terminal compatibility        - **Configuration Validation**: Extensive testing of TOML configuration parsing, validation rules, and error handling        - **Terminal Compatibility**: Advanced testing of terminal size detection, ASCII art adaptation, and Rich output formatting                **Test Infrastructure Enhancements:**                - **OSError Handling**: Robust terminal size detection testing with fallback mechanism validation        - **ASCII Art Integration**: Comprehensive testing of `pyfiglet` integration and title selection logic        - **Rich Output Validation**: Structured testing of panel formatting, colour output, and markup handling        - **Configuration Format Testing**: Updated assertions matching streamlined inline array syntax                        #### 📊 Quality Assurance Standards                Maintain exceptional code quality through comprehensive validation:                - **Type Safety**: Complete type hint coverage with `mypy` validation across all modules        - **Code Formatting**: Consistent `black` formatting with 120-character line length standards        - **Import Organisation**: Structured import management with `isort` integration and clear separation patterns        - **Linting Excellence**: Comprehensive `pylint` validation with high code quality standards        - **Pre-commit Integration**: Automated quality checks with `pre-commit` hooks for consistent standards                        ### 🔄 Development Evolution Timeline                        #### 📈 Release Progression                Chronicle the complete development journey through systematic releases:                **Foundation Releases (v0.1.0 - v0.4.0):**                - **v0.1.0**: Initial CLI framework with basic validation capabilities and foundational architecture        - **v0.2.0**: `@overload` function support and enhanced parsing capabilities          - **v0.3.0**: Advanced validation logic with colon usage, title case, and parentheses checking        - **v0.4.0**: CLI enhancement with example flags, recursive improvements, and expanded test coverage                **Enhancement Releases (v0.5.0 - v0.8.0):**                - **v0.5.0**: Output format improvements and summary statistics integration        - **v0.6.0**: List type section validation fixes and error reporting enhancements        - **v0.7.0**: List section validation improvements and parameter parsing sophistication        - **v0.8.0**: Global configuration system with `allow_undefined_sections`, `require_docstrings`, and `check_private` flags                **Maturity Releases (v0.9.0 - v1.0.1):**                - **v0.9.0**: CI/CD modernisation and test reliability improvements with cross-platform compatibility        - **v0.10.0**: Windows CI issue resolution and platform-specific assertion handling        - **v0.11.0**: Documentation standardisation and test environment isolation        - **v1.0.0**: First major release with complete feature set and production readiness        - **v1.0.1**: Version management modernisation with `importlib.metadata` integration        - **v1.1.0**: Enhanced CLI Experience with ASCII Art and Modernise Python Support                        #### 🏆 Current Release (v1.1.0):                **Revolutionary CLI Experience:**                - **ASCII Art Integration**: Dynamic `pyfiglet` banners with terminal width adaptation        - **Rich Output Enhancement**: Professional panels, colour coding, and structured formatting          - **Help System Consolidation**: Integrated help display with examples and configuration guidance        - **Python Version Modernisation**: Contemporary Python 3.9+ support with legacy version removal                        ### 🎉 Complete User Impact                        #### 🚀 Immediate Benefits                Transform development workflows with comprehensive improvements:                - **Professional Tool Identity**: Memorable ASCII art creates distinctive, professional CLI experience          - **Enhanced Productivity**: Integrated help system reduces documentation lookup time and improves workflow efficiency        - **Modern Ecosystem Alignment**: Contemporary Python version support ensures compatibility with current development tools        - **Comprehensive Validation**: Advanced AST parsing provides reliable docstring validation without regex limitations        - **Cross-Platform Reliability**: Robust testing ensures consistent behaviour across all major operating systems                        #### 🌟 Long-term Value                Establish foundation for sustained development excellence:                - **Community Adoption**: Professional appearance and comprehensive documentation encourage wider adoption across Python community        - **Maintainability Excellence**: Simplified configuration examples and modern tooling reduce maintenance overhead          - **Extensibility Foundation**: Enhanced CLI architecture and modern packaging provide platform for future feature development        - **Quality Assurance**: Comprehensive validation capabilities ensure consistent documentation standards across large codebases        - **Ecosystem Integration**: Modern Python version support and UV integration ensure compatibility with contemporary development workflows                        #### 📊 Development Impact                Deliver measurable improvements to development processes:                - **Documentation Quality**: Systematic validation ensures consistent, high-quality documentation across entire codebases        - **Developer Experience**: Rich terminal output and comprehensive help reduce learning curve and improve adoption        - **CI/CD Integration**: Multiple output formats and structured exit codes enable seamless automation workflows          - **Configuration Flexibility**: Hierarchical configuration discovery and comprehensive customisation support diverse project requirements        - **Error Resolution**: Detailed error reporting with file paths, line numbers, and specific validation failures accelerates issue resolution                        ### 🔮 Project Maturity                **Complete Statistics:**                - **189 Total Commits**: Comprehensive development history with systematic improvements        - **14 Merged Pull Requests**: Structured feature development with thorough review processes          - **13 Released Versions**: Systematic release progression with clear version management        - **166 Test Cases**: Comprehensive test coverage ensuring reliability and quality        - **100% Code Coverage**: Complete validation of all code paths and edge cases        - **3 Platform Support**: Robust cross-platform compatibility (Windows, macOS, Linux)        - **4 Section Types**: Comprehensive validation rule system supporting diverse documentation patterns                        ### 💪 Pull Requests                * Enhance CLI Experience with ASCII Art and Modernise Python Support by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/14                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.0.1...v1.1.0                Transform `docstring-format-checker` from conceptual tool to industry-leading Python documentation validation solution, establishing the definitive standard for Python docstring quality assurance with unmatched user experience, comprehensive validation capabilities, and modern Python ecosystem integration.        
 
     ??? abstract "Updates"
 
@@ -2326,414 +275,7 @@
 
     ??? note "Release Notes"
 
-        ### 🎯 Summary
-
-        Introduce the inaugural major release of `docstring-format-checker`, a comprehensive Python CLI tool that validates docstring formatting and completeness using AST parsing. This milestone release represents the culmination of extensive development spanning 12 minor versions, 12 major pull requests, and countless iterative improvements, delivering a production-ready solution for ensuring consistent, high-quality documentation across Python codebases.
-
-        Transform from initial concept to enterprise-grade tool with configurable validation rules, rich terminal output, comprehensive test coverage, and robust cross-platform compatibility. Establish `docstring-format-checker` as the definitive solution for Python docstring validation, offering flexibility for diverse documentation standards whilst maintaining strict quality enforcement.
-
-        **Core Capabilities:**
-        - **AST-Based Parsing**: Robust code analysis without regex fragility
-        - **Configurable Validation**: Four distinct section types with TOML-based configuration
-        - **Cross-Platform Reliability**: 100% test coverage across Windows, macOS, and Linux
-        - **Rich Terminal Output**: Beautiful coloured output with structured error tables
-        - **Dual CLI Entry Points**: Accessible via `docstring-format-checker` or `dfc` commands
-        - **Modern Packaging**: Dynamic version management with `importlib.metadata` integration
-
-
-        ### 🚀 Foundational Architecture
-
-
-        #### 🏗️ Core Validation Engine
-
-        Establish a sophisticated docstring validation system built on Python AST parsing:
-
-        - **`DocstringChecker()`**: Primary validation engine with comprehensive rule enforcement
-        - **`FunctionAndClassDetails()`**: Structured representation of code elements for precise analysis
-        - **AST Integration**: Robust parsing of Python source files without dependency on fragile regex patterns
-        - **Multi-Format Support**: Handle functions, methods, classes, and async functions uniformly
-        - **Overload Detection**: Intelligent handling of `@overload` decorated functions to avoid duplicate validation
-
-        **Validation Rule Categories:**
-        ```python
-        VALID_TYPES = (
-            "free_text",  # Summary, details, examples, notes
-            "list_name",  # Simple name sections
-            "list_type",  # Type-only sections (raises, yields)
-            "list_name_and_type",  # Parameter-style sections with descriptions
-        )
-        ```
-
-
-        #### ⚙️ Configuration Management System
-
-        Implement hierarchical configuration discovery with TOML-based section definitions:
-
-        - **`Config()`**: Top-level configuration container with global settings and section definitions
-        - **`SectionConfig()`**: Individual section configuration with validation rules and admonition support
-        - **`GlobalConfig()`**: Global validation behaviour control flags
-        - **Automatic Discovery**: Hierarchical search for `pyproject.toml` configuration files up directory tree
-        - **Validation Enforcement**: Strict configuration validation with comprehensive error reporting
-
-        **Configuration Architecture:**
-        ```toml
-        [tool.dfc]  # or [tool.docstring-format-checker]
-
-        [[tool.dfc.sections]]
-        order = 1
-        name = "summary"
-        type = "free_text"
-        admonition = "note"
-        required = true
-
-        [[tool.dfc.sections]]
-        order = 2
-        name = "params"
-        type = "list_name_and_type"
-        required = true
-        ```
-
-
-        #### 🖥️ Rich CLI Interface
-
-        Deliver an intuitive command-line interface with comprehensive functionality:
-
-        - **Dual Entry Points**: Both `docstring-format-checker` and `dfc` commands for flexibility
-        - **Rich Output Formatting**: Coloured terminal output with structured error tables and panels
-        - **Multiple Output Formats**: Support for both `table` and `list` display formats
-        - **Comprehensive Help**: Built-in examples, configuration generation, and detailed usage instructions
-        - **Error Handling**: Graceful error reporting with structured exit codes
-
-        **CLI Features:**
-        ```bash
-        # Multiple invocation methods
-        dfc check src/                           # Check directory
-        docstring-format-checker check file.py   # Check single file
-        dfc config-example                       # Generate example configuration
-        dfc check --output table --quiet src/    # Customised output
-        ```
-
-
-        ### 🔧 Development Evolution
-
-
-        #### 📦 Version Management Modernisation
-
-        Replace custom version management with industry-standard approaches:
-
-        - **Remove Custom Scripts**: Eliminate 149-line `bump_version.py` script in favour of native UV commands
-        - **Dynamic Metadata Integration**: Leverage `importlib.metadata` for runtime version detection from `pyproject.toml`
-        - **Single Source Truth**: Centralise all package metadata exclusively in `pyproject.toml`
-        - **Automatic Synchronisation**: Ensure version consistency without manual intervention across all modules
-
-        **Enhanced Package Initialisation:**
-        ```python
-        # src/docstring_format_checker/__init__.py
-        from importlib.metadata import metadata
-
-        _metadata = metadata("docstring-format-checker")
-        __version__: str = _metadata["Version"]  # Dynamic from pyproject.toml
-        __author__: str = _metadata["Author"]
-        __email__: str = _metadata.get("Email", "")
-        ```
-
-
-        #### 🔧 CI/CD Infrastructure Enhancement
-
-        Modernise continuous integration and deployment workflows:
-
-        - **Official UV GitHub Action**: Replace manual UV installation with `astral-sh/setup-uv@v6` action
-        - **Streamlined Dependency Management**: Let UV handle Python installation and dependency resolution
-        - **Native Version Bumping**: Use `uv version` command instead of custom Python scripts
-        - **Improved Workflow Efficiency**: Reduce CI execution time and improve reliability
-
-        **GitHub Actions Modernisation:**
-        ```yaml
-        # .github/workflows/cd.yml
-        - name: Setup UV
-          uses: astral-sh/setup-uv@v6
-
-        - name: Bump version
-          run: uv version --project-root . patch
-        ```
-
-
-        #### 🧪 Comprehensive Test Suite
-
-        Achieve 100% test coverage with robust validation:
-
-        - **167 Test Cases**: Comprehensive coverage across all modules and edge cases
-        - **Cross-Platform Compatibility**: Validated across Windows, macOS, and Linux environments
-        - **CLI Testing**: Thorough validation of command-line interface with `typer.testing.CliRunner`
-        - **Configuration Testing**: Extensive TOML configuration validation and error handling
-        - **AST Parsing Tests**: Complete validation of Python code analysis functionality
-
-        **Coverage Breakdown:**
-        ```
-        src/docstring_format_checker/__init__.py:      100%
-        src/docstring_format_checker/cli.py:           100%
-        src/docstring_format_checker/config.py:        100%
-        src/docstring_format_checker/core.py:          100%
-        src/docstring_format_checker/utils/exceptions.py: 100%
-        ------------------------------------------------------
-        TOTAL COVERAGE:                                100%
-        ```
-
-
-        ### 📋 Feature Completeness
-
-
-        #### 🔍 Advanced Validation Rules
-
-        Implement comprehensive docstring validation logic:
-
-        - **Section Detection**: Intelligent parsing of docstring sections with admonition support
-        - **Title Case Validation**: Ensure proper capitalisation of section headers
-        - **Colon Usage Checks**: Validate proper punctuation in section definitions
-        - **Parentheses Validation**: Check type annotations and parameter formatting
-        - **Blank Line Requirements**: Enforce proper spacing and structure
-        - **Type Annotation Validation**: Comprehensive parameter and return type checking
-
-        **Validation Categories:**
-        ```python
-        # Section validation types with specific rules
-        "free_text": {
-            "admonition_support": True,
-            "content_validation": "flexible",
-            "examples": ["summary", "details", "examples", "notes"],
-        }
-        "list_name_and_type": {
-            "parameter_parsing": True,
-            "type_validation": True,
-            "examples": ["params", "returns", "attributes"],
-        }
-        ```
-
-
-        #### 🛠️ Configuration Flexibility
-
-        Provide extensive customisation options:
-
-        - **Four Section Types**: Support for all common docstring patterns and formats
-        - **Admonition Integration**: Rich admonition support with customisable prefixes
-        - **Global Configuration**: Workspace-wide settings for consistent validation
-        - **Section Ordering**: Enforce specific section order with configurable priorities
-        - **Required vs Optional**: Flexible enforcement of mandatory and optional sections
-
-        **Advanced Configuration:**
-        ```toml
-        [tool.dfc.global]
-        require_docstrings = true
-        check_class_docstrings = true
-        check_method_docstrings = true
-        check_function_docstrings = true
-
-        [[tool.dfc.sections]]
-        order = 1
-        name = "summary"
-        type = "free_text"
-        admonition = "note"
-        prefix = "!!!"
-        required = true
-        ```
-
-
-        #### 📊 Rich Output Formatting
-
-        Deliver beautiful, informative terminal output:
-
-        - **Structured Error Reporting**: Clear, actionable error messages with file and line references
-        - **Progress Indicators**: Visual feedback during directory scanning and validation
-        - **Summary Statistics**: Comprehensive success/failure rates and file counts
-        - **Colour-Coded Results**: Green for success, red for errors, with emoji indicators
-        - **Table and List Formats**: Multiple display options for different terminal preferences
-
-        **Example Output:**
-        ```
-        📋 Docstring Format Checker Results
-
-        ✅ src/utils/helpers.py
-        ❌ src/models/user.py
-           └── Function 'create_user' missing required section: 'params'
-           └── Function 'delete_user' missing required section: 'returns'
-
-        📊 Summary: 1/3 files passed (33.3%)
-        ```
-
-
-        ### 🏆 Technical Excellence
-
-
-        #### 🎯 Code Quality Standards
-
-        Maintain exceptional code quality with comprehensive validation:
-
-        - **Type Safety**: Complete type hint coverage with dataclass-based configuration
-        - **Import Organisation**: Consistent three-tier import structure (stdlib, third-party, local)
-        - **Error Handling**: Comprehensive exception hierarchy with structured error messages
-        - **Code Organisation**: Modular architecture with clear separation of concerns
-        - **Documentation**: Enhanced docstrings following project standards across all modules
-
-        **Module Structure:**
-        ```python
-        # Consistent import organisation
-        # ### Python StdLib Imports ----
-        import ast
-        from pathlib import Path
-
-        # ### Python Third Party Imports ----
-        import typer
-        from rich.console import Console
-
-        # ### Local First Party Imports ----
-        from docstring_format_checker.config import load_config
-        ```
-
-
-        #### 🚀 Performance Optimisation
-
-        Deliver efficient validation with optimised processing:
-
-        - **AST Parsing**: Efficient code analysis with minimal memory overhead
-        - **File Processing**: Optimised directory traversal with glob pattern matching
-        - **Error Reporting**: Structured error collection with minimal performance impact
-        - **Configuration Caching**: Cached configuration parsing for repeated operations
-        - **Lazy Loading**: On-demand module loading to reduce startup time
-
-
-        #### 🔐 Robust Error Handling
-
-        Implement comprehensive error management:
-
-        - **Custom Exception Hierarchy**: Structured exceptions for different failure scenarios
-        - **Graceful Degradation**: Intelligent handling of malformed files and configurations
-        - **User-Friendly Messages**: Clear, actionable error descriptions with remediation suggestions
-        - **Exit Code Management**: Proper CLI exit codes for integration with CI/CD systems
-        - **Validation Failures**: Detailed reporting of docstring validation errors
-
-
-        ### 📚 Documentation and Examples
-
-
-        #### 📖 Comprehensive Documentation
-
-        Provide extensive documentation and usage examples:
-
-        - **API Documentation**: Complete module documentation with examples
-        - **Configuration Guide**: Detailed configuration options with real-world examples
-        - **Usage Examples**: Practical examples for common use cases
-        - **Integration Guide**: Instructions for CI/CD integration and pre-commit hooks
-        - **Architecture Overview**: Detailed explanation of tool internals and design decisions
-
-
-        #### 🎯 Example Configurations
-
-        Include practical configuration templates:
-
-        - **Default Configuration**: Production-ready configuration for most projects
-        - **Minimal Configuration**: Lightweight setup for simple projects
-        - **Advanced Configuration**: Comprehensive setup with all features enabled
-        - **Framework-Specific**: Tailored configurations for popular Python frameworks
-
-        **Configuration Examples:**
-        ```toml
-        # Simple configuration
-        [tool.dfc]
-        [[tool.dfc.sections]]
-        order = 1
-        name = "summary"
-        type = "free_text"
-        required = true
-
-        # Advanced configuration with admonitions
-        [[tool.dfc.sections]]
-        order = 2
-        name = "details"
-        type = "free_text"
-        admonition = "abstract"
-        prefix = "???"
-        required = false
-        ```
-
-
-        ### 🎊 Release Highlights
-
-
-        #### ✨ First Major Release
-
-        Mark the transition to stable, production-ready status:
-
-        - **Semantic Versioning**: Adopt semantic versioning with v1.0.1 marking API stability
-        - **Production Readiness**: Comprehensive testing and validation across all supported platforms
-        - **Backward Compatibility**: Commitment to maintaining API compatibility in future releases
-        - **Enterprise Grade**: Suitable for large-scale projects and enterprise environments
-
-        **Development Timeline:**
-        - **12 Version Releases**: From v0.1.0 through v1.0.0 with iterative improvements
-        - **12 Pull Requests**: Systematic feature development and bug fixes
-        - **100% Test Coverage**: Comprehensive validation across all code paths
-        - **Cross-Platform Support**: Validated on Windows, macOS, and Linux
-
-
-        #### 🔄 Continuous Evolution
-
-        Establish foundation for continued development:
-
-        - **Modular Architecture**: Clean separation enabling easy feature additions
-        - **Extensible Configuration**: Framework for adding new validation rules
-        - **Rich Plugin System**: Foundation for third-party extensions
-        - **Community Contributions**: Clear contribution guidelines and development workflows
-
-
-        ### 🚀 Getting Started
-
-        Begin using `docstring-format-checker` immediately:
-
-        ```bash
-        # Install with UV
-        uv add docstring-format-checker
-
-        # Quick start - check a file
-        dfc check my_module.py
-
-        # Check entire project
-        dfc check src/
-
-        # Generate configuration template
-        dfc config-example
-
-        # Advanced usage with custom configuration
-        dfc check --config pyproject.toml --output table --quiet src/
-        ```
-
-
-        #### 🎯 Next Steps
-
-        Continue enhancing your documentation workflow:
-
-        1. **Generate Configuration**: Use `dfc config-example` to create project-specific rules
-        2. **CI Integration**: Add docstring validation to continuous integration workflows
-        3. **Pre-commit Hooks**: Enforce validation before code commits
-        4. **Team Standards**: Establish consistent documentation standards across your team
-        5. **Advanced Features**: Explore custom section types and validation rules
-
-        **CI Integration Example:**
-        ```yaml
-        # .github/workflows/test.yml
-        - name: Check docstrings
-          run: dfc check src/ --check
-        ```
-
-        Transform your Python project's documentation quality with `docstring-format-checker` v1.0.1 – the comprehensive, configurable, and reliable solution for docstring validation and enforcement.
-
-
-        ### 💪 Pull Requests
-
-        * Modernise Version Management and GitHub Actions Integration by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/12
-
-
-        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.0.0...v1.0.1
-
+        ### 🎯 Summary                Introduce the inaugural major release of `docstring-format-checker`, a comprehensive Python CLI tool that validates docstring formatting and completeness using AST parsing. This milestone release represents the culmination of extensive development spanning 12 minor versions, 12 major pull requests, and countless iterative improvements, delivering a production-ready solution for ensuring consistent, high-quality documentation across Python codebases.                Transform from initial concept to enterprise-grade tool with configurable validation rules, rich terminal output, comprehensive test coverage, and robust cross-platform compatibility. Establish `docstring-format-checker` as the definitive solution for Python docstring validation, offering flexibility for diverse documentation standards whilst maintaining strict quality enforcement.                **Core Capabilities:**        - **AST-Based Parsing**: Robust code analysis without regex fragility        - **Configurable Validation**: Four distinct section types with TOML-based configuration        - **Cross-Platform Reliability**: 100% test coverage across Windows, macOS, and Linux        - **Rich Terminal Output**: Beautiful coloured output with structured error tables        - **Dual CLI Entry Points**: Accessible via `docstring-format-checker` or `dfc` commands        - **Modern Packaging**: Dynamic version management with `importlib.metadata` integration                        ### 🚀 Foundational Architecture                        #### 🏗️ Core Validation Engine                Establish a sophisticated docstring validation system built on Python AST parsing:                - **`DocstringChecker()`**: Primary validation engine with comprehensive rule enforcement        - **`FunctionAndClassDetails()`**: Structured representation of code elements for precise analysis        - **AST Integration**: Robust parsing of Python source files without dependency on fragile regex patterns        - **Multi-Format Support**: Handle functions, methods, classes, and async functions uniformly        - **Overload Detection**: Intelligent handling of `@overload` decorated functions to avoid duplicate validation                **Validation Rule Categories:**        ```python        VALID_TYPES = (            "free_text",        # Summary, details, examples, notes            "list_name",        # Simple name sections            "list_type",        # Type-only sections (raises, yields)            "list_name_and_type",  # Parameter-style sections with descriptions        )        ```                        #### ⚙️ Configuration Management System                  Implement hierarchical configuration discovery with TOML-based section definitions:                - **`Config()`**: Top-level configuration container with global settings and section definitions        - **`SectionConfig()`**: Individual section configuration with validation rules and admonition support        - **`GlobalConfig()`**: Global validation behaviour control flags        - **Automatic Discovery**: Hierarchical search for `pyproject.toml` configuration files up directory tree        - **Validation Enforcement**: Strict configuration validation with comprehensive error reporting                **Configuration Architecture:**        ```toml        [tool.dfc]  # or [tool.docstring-format-checker]                [[tool.dfc.sections]]        order = 1        name = "summary"        type = "free_text"        admonition = "note"        required = true                [[tool.dfc.sections]]        order = 2        name = "params"        type = "list_name_and_type"        required = true        ```                        #### 🖥️ Rich CLI Interface                Deliver an intuitive command-line interface with comprehensive functionality:                - **Dual Entry Points**: Both `docstring-format-checker` and `dfc` commands for flexibility        - **Rich Output Formatting**: Coloured terminal output with structured error tables and panels        - **Multiple Output Formats**: Support for both `table` and `list` display formats        - **Comprehensive Help**: Built-in examples, configuration generation, and detailed usage instructions        - **Error Handling**: Graceful error reporting with structured exit codes                **CLI Features:**        ```bash        # Multiple invocation methods        dfc check src/                           # Check directory        docstring-format-checker check file.py   # Check single file        dfc config-example                       # Generate example configuration        dfc check --output table --quiet src/    # Customised output        ```                        ### 🔧 Development Evolution                        #### 📦 Version Management Modernisation                Replace custom version management with industry-standard approaches:                - **Remove Custom Scripts**: Eliminate 149-line `bump_version.py` script in favour of native UV commands        - **Dynamic Metadata Integration**: Leverage `importlib.metadata` for runtime version detection from `pyproject.toml`        - **Single Source Truth**: Centralise all package metadata exclusively in `pyproject.toml`        - **Automatic Synchronisation**: Ensure version consistency without manual intervention across all modules                **Enhanced Package Initialisation:**        ```python        # src/docstring_format_checker/__init__.py        from importlib.metadata import metadata                _metadata = metadata("docstring-format-checker")        __version__: str = _metadata["Version"]  # Dynamic from pyproject.toml        __author__: str = _metadata["Author"]        __email__: str = _metadata.get("Email", "")        ```                        #### 🔧 CI/CD Infrastructure Enhancement                Modernise continuous integration and deployment workflows:                - **Official UV GitHub Action**: Replace manual UV installation with `astral-sh/setup-uv@v6` action        - **Streamlined Dependency Management**: Let UV handle Python installation and dependency resolution        - **Native Version Bumping**: Use `uv version` command instead of custom Python scripts        - **Improved Workflow Efficiency**: Reduce CI execution time and improve reliability                **GitHub Actions Modernisation:**        ```yaml        # .github/workflows/cd.yml        - name: Setup UV          uses: astral-sh/setup-uv@v6                - name: Bump version          run: uv version --project-root . patch        ```                        #### 🧪 Comprehensive Test Suite                Achieve 100% test coverage with robust validation:                - **167 Test Cases**: Comprehensive coverage across all modules and edge cases        - **Cross-Platform Compatibility**: Validated across Windows, macOS, and Linux environments        - **CLI Testing**: Thorough validation of command-line interface with `typer.testing.CliRunner`        - **Configuration Testing**: Extensive TOML configuration validation and error handling        - **AST Parsing Tests**: Complete validation of Python code analysis functionality                **Coverage Breakdown:**        ```        src/docstring_format_checker/__init__.py:      100%        src/docstring_format_checker/cli.py:           100%        src/docstring_format_checker/config.py:        100%        src/docstring_format_checker/core.py:          100%        src/docstring_format_checker/utils/exceptions.py: 100%        ------------------------------------------------------        TOTAL COVERAGE:                                100%        ```                        ### 📋 Feature Completeness                        #### 🔍 Advanced Validation Rules                Implement comprehensive docstring validation logic:                - **Section Detection**: Intelligent parsing of docstring sections with admonition support        - **Title Case Validation**: Ensure proper capitalisation of section headers        - **Colon Usage Checks**: Validate proper punctuation in section definitions        - **Parentheses Validation**: Check type annotations and parameter formatting        - **Blank Line Requirements**: Enforce proper spacing and structure        - **Type Annotation Validation**: Comprehensive parameter and return type checking                **Validation Categories:**        ```python        # Section validation types with specific rules        "free_text": {            "admonition_support": True,            "content_validation": "flexible",            "examples": ["summary", "details", "examples", "notes"]        }        "list_name_and_type": {            "parameter_parsing": True,            "type_validation": True,            "examples": ["params", "returns", "attributes"]        }        ```                        #### 🛠️ Configuration Flexibility                Provide extensive customisation options:                - **Four Section Types**: Support for all common docstring patterns and formats        - **Admonition Integration**: Rich admonition support with customisable prefixes        - **Global Configuration**: Workspace-wide settings for consistent validation        - **Section Ordering**: Enforce specific section order with configurable priorities        - **Required vs Optional**: Flexible enforcement of mandatory and optional sections                **Advanced Configuration:**        ```toml        [tool.dfc.global]        require_docstrings = true        check_class_docstrings = true        check_method_docstrings = true        check_function_docstrings = true                [[tool.dfc.sections]]        order = 1        name = "summary"        type = "free_text"        admonition = "note"        prefix = "!!!"        required = true        ```                        #### 📊 Rich Output Formatting                Deliver beautiful, informative terminal output:                - **Structured Error Reporting**: Clear, actionable error messages with file and line references          - **Progress Indicators**: Visual feedback during directory scanning and validation        - **Summary Statistics**: Comprehensive success/failure rates and file counts        - **Colour-Coded Results**: Green for success, red for errors, with emoji indicators        - **Table and List Formats**: Multiple display options for different terminal preferences                **Example Output:**        ```        📋 Docstring Format Checker Results                ✅ src/utils/helpers.py        ❌ src/models/user.py           └── Function 'create_user' missing required section: 'params'           └── Function 'delete_user' missing required section: 'returns'                📊 Summary: 1/3 files passed (33.3%)        ```                        ### 🏆 Technical Excellence                        #### 🎯 Code Quality Standards                Maintain exceptional code quality with comprehensive validation:                - **Type Safety**: Complete type hint coverage with dataclass-based configuration        - **Import Organisation**: Consistent three-tier import structure (stdlib, third-party, local)        - **Error Handling**: Comprehensive exception hierarchy with structured error messages        - **Code Organisation**: Modular architecture with clear separation of concerns        - **Documentation**: Enhanced docstrings following project standards across all modules                **Module Structure:**        ```python        # Consistent import organisation        # ### Python StdLib Imports ----        import ast        from pathlib import Path                # ### Python Third Party Imports ----        import typer        from rich.console import Console                # ### Local First Party Imports ----        from docstring_format_checker.config import load_config        ```                        #### 🚀 Performance Optimisation                Deliver efficient validation with optimised processing:                - **AST Parsing**: Efficient code analysis with minimal memory overhead        - **File Processing**: Optimised directory traversal with glob pattern matching        - **Error Reporting**: Structured error collection with minimal performance impact        - **Configuration Caching**: Cached configuration parsing for repeated operations        - **Lazy Loading**: On-demand module loading to reduce startup time                        #### 🔐 Robust Error Handling                Implement comprehensive error management:                - **Custom Exception Hierarchy**: Structured exceptions for different failure scenarios        - **Graceful Degradation**: Intelligent handling of malformed files and configurations        - **User-Friendly Messages**: Clear, actionable error descriptions with remediation suggestions        - **Exit Code Management**: Proper CLI exit codes for integration with CI/CD systems        - **Validation Failures**: Detailed reporting of docstring validation errors                        ### 📚 Documentation and Examples                        #### 📖 Comprehensive Documentation                Provide extensive documentation and usage examples:                - **API Documentation**: Complete module documentation with examples        - **Configuration Guide**: Detailed configuration options with real-world examples        - **Usage Examples**: Practical examples for common use cases        - **Integration Guide**: Instructions for CI/CD integration and pre-commit hooks        - **Architecture Overview**: Detailed explanation of tool internals and design decisions                        #### 🎯 Example Configurations                Include practical configuration templates:                - **Default Configuration**: Production-ready configuration for most projects        - **Minimal Configuration**: Lightweight setup for simple projects        - **Advanced Configuration**: Comprehensive setup with all features enabled        - **Framework-Specific**: Tailored configurations for popular Python frameworks                **Configuration Examples:**        ```toml        # Simple configuration        [tool.dfc]        [[tool.dfc.sections]]        order = 1        name = "summary"        type = "free_text"        required = true                # Advanced configuration with admonitions        [[tool.dfc.sections]]        order = 2        name = "details"        type = "free_text"        admonition = "abstract"        prefix = "???"        required = false        ```                        ### 🎊 Release Highlights                        #### ✨ First Major Release                Mark the transition to stable, production-ready status:                - **Semantic Versioning**: Adopt semantic versioning with v1.0.1 marking API stability        - **Production Readiness**: Comprehensive testing and validation across all supported platforms        - **Backward Compatibility**: Commitment to maintaining API compatibility in future releases        - **Enterprise Grade**: Suitable for large-scale projects and enterprise environments                **Development Timeline:**        - **12 Version Releases**: From v0.1.0 through v1.0.0 with iterative improvements        - **12 Pull Requests**: Systematic feature development and bug fixes        - **100% Test Coverage**: Comprehensive validation across all code paths        - **Cross-Platform Support**: Validated on Windows, macOS, and Linux                        #### 🔄 Continuous Evolution                Establish foundation for continued development:                - **Modular Architecture**: Clean separation enabling easy feature additions        - **Extensible Configuration**: Framework for adding new validation rules        - **Rich Plugin System**: Foundation for third-party extensions        - **Community Contributions**: Clear contribution guidelines and development workflows                        ### 🚀 Getting Started                Begin using `docstring-format-checker` immediately:                ```bash        # Install with UV        uv add docstring-format-checker                # Quick start - check a file        dfc check my_module.py                # Check entire project        dfc check src/                # Generate configuration template        dfc config-example                # Advanced usage with custom configuration        dfc check --config pyproject.toml --output table --quiet src/        ```                        #### 🎯 Next Steps                Continue enhancing your documentation workflow:                1. **Generate Configuration**: Use `dfc config-example` to create project-specific rules        2. **CI Integration**: Add docstring validation to continuous integration workflows          3. **Pre-commit Hooks**: Enforce validation before code commits        4. **Team Standards**: Establish consistent documentation standards across your team        5. **Advanced Features**: Explore custom section types and validation rules                **CI Integration Example:**        ```yaml        # .github/workflows/test.yml        - name: Check docstrings          run: dfc check src/ --check        ```                Transform your Python project's documentation quality with `docstring-format-checker` v1.0.1 – the comprehensive, configurable, and reliable solution for docstring validation and enforcement.                        ### 💪 Pull Requests                * Modernise Version Management and GitHub Actions Integration by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/12                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.0.0...v1.0.1        
 
     ??? abstract "Updates"
 
@@ -2766,416 +308,7 @@
 
     ??? note "Release Notes"
 
-        ### 🎯 Summary
-
-        Introduce the inaugural major release of `docstring-format-checker`, a powerful Python CLI tool that validates docstring formatting and completeness using AST parsing. This milestone release represents the culmination of comprehensive development spanning 11 minor versions and 11 major pull requests, delivering a production-ready solution for ensuring consistent, high-quality documentation across Python codebases.
-
-        Transform from initial concept to enterprise-grade tool with configurable validation rules, rich terminal output, comprehensive test coverage, and robust cross-platform compatibility. Establish `docstring-format-checker` as the definitive solution for Python docstring validation, offering flexibility for diverse documentation standards whilst maintaining strict quality enforcement.
-
-        **Core Capabilities:**
-        - **AST-Based Parsing**: Robust code analysis without regex fragility
-        - **Configurable Validation**: Four distinct section types with TOML-based configuration
-        - **Cross-Platform Reliability**: 100% test coverage across Windows, macOS, and Linux
-        - **Rich Terminal Output**: Beautiful coloured output with structured error tables
-        - **Dual CLI Entry Points**: Accessible via `docstring-format-checker` or `dfc` commands
-
-
-        ### 🚀 Foundational Architecture
-
-
-        #### 🏗️ Core Validation Engine
-
-        Establish a sophisticated docstring validation system built on Python AST parsing:
-
-        - **`DocstringChecker()`**: Primary validation engine with comprehensive rule enforcement
-        - **`FunctionAndClassDetails()`**: Structured representation of code elements for precise analysis
-        - **AST Integration**: Robust parsing of Python source files without dependency on fragile regex patterns
-        - **Multi-Format Support**: Handle functions, methods, classes, and async functions uniformly
-
-        **Validation Rule Categories:**
-        ```python
-        VALID_TYPES = (
-            "free_text",  # Summary, details, examples, notes
-            "list_name",  # Simple name sections
-            "list_type",  # Type-only sections (raises, yields)
-            "list_name_and_type",  # Parameter-style sections with descriptions
-        )
-        ```
-
-        #### ⚙️ Configuration Management System
-
-        Implement hierarchical configuration discovery with TOML-based section definitions:
-
-        - **`Config()`**: Top-level configuration container with global settings and section definitions
-        - **`SectionConfig()`**: Individual section configuration with validation rules
-        - **`GlobalConfig()`**: Global validation behaviour control flags
-        - **Automatic Discovery**: Hierarchical search for `pyproject.toml` configuration files
-
-        **Configuration Architecture:**
-        ```toml
-        [tool.dfc]
-        allow_undefined_sections = false
-        require_docstrings = true
-        check_private = true
-        sections = [
-            { order = 1, name = "summary", type = "free_text", required = true },
-            { order = 2, name = "params", type = "list_name_and_type", required = true },
-            # ... additional sections
-        ]
-        ```
-
-        #### 🖥️ Command-Line Interface Excellence
-
-        Deliver a polished CLI experience with comprehensive features:
-
-        - **Typer Integration**: Modern CLI framework with automatic help generation
-        - **Rich Output**: Structured error tables and coloured terminal output
-        - **Multiple Output Formats**: Table format for detailed analysis, list format for CI/CD integration
-        - **Example System**: Built-in configuration and usage examples accessible via `--example` flag
-
-
-        ### 🎨 User Experience Enhancements
-
-
-        #### 🌈 Rich Terminal Output
-
-        Provide professional-grade terminal output with visual clarity:
-
-        - **Error Tables**: Structured display of validation errors with file, function, and line details
-        - **Colour Coding**: Green for success, red for errors, cyan for information
-        - **Cross-Platform Compatibility**: Handle terminal width variations and Unicode support differences
-        - **Quiet Modes**: Minimal output options for automated workflows and CI/CD integration
-
-        #### 📋 Flexible Output Formats
-
-        Support diverse workflow requirements with multiple output modes:
-
-        - **Table Format**: Rich structured display ideal for interactive development
-        - **List Format**: Simple line-by-line output perfect for CI/CD parsing and automation
-        - **Summary Statistics**: Clear reporting of validation results with error counts
-        - **Exit Code Standards**: Consistent return codes (0=success, 1=validation errors, 2=CLI errors)
-
-        #### 🔧 Dual CLI Entry Points
-
-        Provide convenient access through multiple command interfaces:
-
-        - **`docstring-format-checker`**: Full descriptive command name for clarity
-        - **`dfc`**: Abbreviated form for frequent use and scripting
-        - **Consistent Behaviour**: Identical functionality across both entry points
-        - **Auto-completion Support**: Built-in shell completion capabilities
-
-
-        ### 🧪 Comprehensive Validation Logic
-
-
-        #### 📝 Section Type Validation
-
-        Implement sophisticated validation for four distinct docstring section types:
-
-        **Free Text Sections (`free_text`):**
-        - Summary, details, examples, notes sections
-        - Support for admonition syntax with customisable prefixes
-        - Flexible content validation with configurable requirements
-
-        **List Name Sections (`list_name`):**
-        - Simple name-only lists for basic documentation
-        - Validation of proper formatting and structure
-        - Support for bullet points and indentation requirements
-
-        **List Type Sections (`list_type`):**
-        - Exception and yield type documentation
-        - Type information validation with parentheses checking
-        - Title case enforcement for consistency
-
-        **List Name and Type Sections (`list_name_and_type`):**
-        - Parameter documentation with name, type, and description
-        - Advanced parsing to distinguish definitions from descriptions
-        - Multi-criteria validation including indentation and word count analysis
-
-        #### 🎯 Advanced Rule Enforcement
-
-        Deliver comprehensive validation with intelligent error detection:
-
-        - **Colon Usage Validation**: Ensure proper colon placement in admonition and non-admonition sections
-        - **Title Case Enforcement**: Validate section headers follow proper capitalisation
-        - **Parentheses Requirements**: Check type definitions include required parentheses
-        - **Indentation Analysis**: Multi-level validation of content structure and formatting
-        - **Blank Line Requirements**: Enforce proper spacing after docstrings for readability
-
-        #### 🚫 Smart Error Prevention
-
-        Reduce false positives whilst maintaining strict validation:
-
-        - **Context-Aware Parsing**: Distinguish between parameter definitions and description content
-        - **Bullet Point Detection**: Recognise legitimate description patterns vs. malformed parameters
-        - **Word Count Analysis**: Use intelligent thresholds to identify content vs. structure issues
-        - **Configuration Flexibility**: Allow customisation of validation strictness per project requirements
-
-
-        ### 🔄 Continuous Integration Excellence
-
-
-        #### 🏗️ GitHub Actions Integration
-
-        Establish robust CI/CD workflows with comprehensive testing:
-
-        - **Multi-Platform Testing**: Validate functionality across Ubuntu, macOS, and Windows
-        - **Python Version Matrix**: Support Python 3.9 through 3.13 with comprehensive compatibility testing
-        - **UV Package Manager**: Modern dependency management with faster resolution and caching
-        - **Automated Versioning**: Streamlined release processes with automatic changelog generation
-
-        #### 📊 Quality Assurance Standards
-
-        Maintain exceptional code quality with comprehensive validation:
-
-        - **100% Test Coverage**: Complete test suite with 199 individual test cases across all modules
-        - **Cross-Platform Reliability**: Resolve Windows-specific issues with file locking and terminal formatting
-        - **Pre-commit Hooks**: Automated code quality checks with Black formatting and lint validation
-        - **Documentation Standards**: Consistent docstring formatting across entire codebase
-
-        #### 🚀 Release Automation
-
-        Streamline release processes with automated workflows:
-
-        - **Version Bumping**: Automated version management with changelog generation
-        - **Coverage Reporting**: Automatic generation and publication of test coverage reports
-        - **Documentation Deployment**: Automated documentation site updates with MkDocs integration
-        - **PyPI Publishing**: Seamless package distribution with automated release workflows
-
-
-        ### 🧬 Exception Handling Architecture
-
-
-        #### 🎯 Structured Error Classes
-
-        Implement comprehensive exception hierarchy for clear error communication:
-
-        - **`DocstringError()`**: Base exception for docstring validation issues with detailed context
-        - **`InvalidConfigError()`**: Configuration file validation with specific error details
-        - **`InvalidTypeValuesError()`**: Type validation errors with suggestions for correction
-        - **`DirectoryNotFoundError()`**: File system errors with helpful resolution guidance
-
-        #### 📋 Error Reporting Excellence
-
-        Provide detailed error information for rapid issue resolution:
-
-        - **Line Number Precision**: Exact location reporting for validation errors
-        - **Context Information**: Include surrounding code context for error understanding
-        - **Suggestion Engine**: Provide specific recommendations for error resolution
-        - **Batch Error Processing**: Handle multiple errors efficiently with comprehensive reporting
-
-
-        ### 📈 Platform Compatibility Achievements
-
-
-        #### 🌐 Cross-Platform Reliability
-
-        Resolve critical compatibility issues across operating systems:
-
-        - **Windows File Locking**: Fix temporary file management with proper handle cleanup and `flush()` calls
-        - **Terminal Width Handling**: Accommodate varying terminal sizes and line wrapping differences
-        - **Unicode Support**: Handle diverse character sets and border compatibility across terminals
-        - **Path Management**: Ensure consistent absolute path usage across all platforms
-
-        #### 🧪 Test Suite Robustness
-
-        Achieve comprehensive test reliability with platform-agnostic approaches:
-
-        - **Isolated Test Environments**: Prevent interference with temporary directories and proper cleanup
-        - **ANSI Code Handling**: Strip formatting codes for consistent output validation across terminals
-        - **Help Text Flexibility**: Handle platform-specific formatting variations in CLI output
-        - **Assertion Robustness**: Use flexible matching patterns for cross-platform compatibility
-
-
-        ### 🔍 Development Workflow Excellence
-
-
-        #### 📝 Documentation Standards
-
-        Establish comprehensive documentation practices throughout the project:
-
-        - **Docstring Standardisation**: Implement consistent `!!! note "Summary"` format across all modules
-        - **API Documentation**: Complete function and class documentation with parameter details
-        - **Usage Examples**: Built-in examples accessible through CLI for immediate reference
-        - **Contributing Guidelines**: Detailed development and contribution documentation
-
-        #### 🛠️ Developer Experience
-
-        Provide exceptional development tooling and workflows:
-
-        - **Utility Scripts**: Comprehensive automation for linting, testing, and version management
-        - **Pre-commit Integration**: Automated code quality enforcement with configurable rules
-        - **Coverage Reporting**: Detailed test coverage analysis with HTML and XML output formats
-        - **Modern Tooling**: Integration with contemporary Python tools including UV, Typer, and Rich
-
-
-        ### 🎯 Configuration Flexibility
-
-
-        #### 📋 TOML Integration
-
-        Provide comprehensive configuration management through TOML files:
-
-        - **Multiple Configuration Names**: Support both `[tool.dfc]` and `[tool.docstring-format-checker]` sections
-        - **Hierarchical Discovery**: Automatic search for configuration files in project hierarchy
-        - **Validation Engine**: Comprehensive configuration validation with detailed error reporting
-        - **Default Configuration**: Sensible defaults for immediate use without configuration
-
-        #### 🔧 Customisation Options
-
-        Enable extensive customisation for diverse project requirements:
-
-        - **Section Definition**: Complete control over docstring section requirements and order
-        - **Admonition Support**: Configurable admonition types with custom prefixes
-        - **Global Flags**: Control validation behaviour with `allow_undefined_sections`, `require_docstrings`, and `check_private`
-        - **Type System**: Four distinct section types to accommodate different documentation patterns
-
-        #### 📊 Configuration Examples
-
-        Provide comprehensive examples for immediate implementation:
-
-        - **Default Configuration**: Production-ready configuration suitable for most Python projects
-        - **Custom Sections**: Examples of specialised section configurations for specific needs
-        - **Integration Patterns**: Demonstrate integration with existing project configurations
-        - **Migration Guides**: Support for updating configurations across versions
-
-
-        ### 🏆 Quality Metrics
-
-
-        #### 📈 Test Coverage Excellence
-
-        Achieve and maintain exceptional test coverage across all components:
-
-        ```
-        Module Coverage Statistics:
-        - src/docstring_format_checker/__init__.py:      100%
-        - src/docstring_format_checker/cli.py:           100%
-        - src/docstring_format_checker/config.py:        100%
-        - src/docstring_format_checker/core.py:          100%
-        - src/docstring_format_checker/utils/exceptions.py: 100%
-        ------------------------------------------------------
-        TOTAL COVERAGE:                                  100%
-        ```
-
-        #### 🎯 Code Quality Standards
-
-        Maintain exceptional code quality with comprehensive validation:
-
-        - **Type Safety**: Complete type hint coverage with dataclass-based configuration
-        - **Error Handling**: Comprehensive exception hierarchy with structured error messages
-        - **Code Organisation**: Consistent import structure and modular architecture
-        - **Documentation**: Enhanced docstrings following project standards across all modules
-
-        #### 🚀 Performance Benchmarks
-
-        Deliver efficient validation with optimised processing:
-
-        - **AST Parsing**: Efficient code analysis with minimal memory overhead
-        - **File Processing**: Optimised directory traversal with pattern matching
-        - **Error Reporting**: Structured error collection with minimal performance impact
-        - **Configuration Loading**: Cached configuration parsing for repeated operations
-
-
-        ### 🌟 User Benefits
-
-
-        #### 👥 For Development Teams
-
-        Enable consistent documentation standards across development teams:
-
-        - **Standardised Documentation**: Enforce consistent docstring formats across entire codebase
-        - **Flexible Configuration**: Adapt validation rules to match team conventions and standards
-        - **CI/CD Integration**: Automated validation with reliable exit codes for build pipelines
-        - **Rich Feedback**: Detailed error reporting with specific suggestions for resolution
-
-        #### 🏢 For Enterprise Users
-
-        Provide enterprise-grade documentation validation capabilities:
-
-        - **Scalable Architecture**: Handle large codebases with efficient processing
-        - **Compliance Support**: Configurable validation rules for documentation standards compliance
-        - **Cross-Platform Deployment**: Consistent behaviour across diverse development environments
-        - **Quality Assurance**: 100% test coverage ensuring reliable operation in production environments
-
-        #### 🛠️ For Open Source Projects
-
-        Support open source development with comprehensive validation tools:
-
-        - **Easy Integration**: Simple installation and configuration for immediate use
-        - **Documentation Excellence**: Enforce high-quality documentation standards for contributors
-        - **CI/CD Ready**: Seamless integration with GitHub Actions and other CI platforms
-        - **Community Standards**: Support common Python documentation patterns and conventions
-
-
-        ### 📊 Version Evolution Summary
-
-
-        #### 🎯 Release Timeline
-
-        Track the comprehensive evolution from initial concept to production release:
-
-        - **v0.1.0**: Initial release with basic validation functionality
-        - **v0.2.0**: Add `@overload` function support and CI/CD workflows
-        - **v0.3.0**: Enhance error message formatting and admonition validation
-        - **v0.4.0**: Remove recursive flags, add examples system, improve CLI interface
-        - **v0.5.0**: Resolve output formatting issues with list mode and summary statistics
-        - **v0.6.0**: Fix description line validation and list output formatting
-        - **v0.7.0**: Improve validation logic for list sections with enhanced type handling
-        - **v0.8.0**: Introduce global configuration architecture with comprehensive control flags
-        - **v0.9.0**: Refactor configuration structure and enhance test reliability
-        - **v0.10.0**: Resolve Windows CI issues and improve cross-platform compatibility
-        - **v0.11.0**: Standardise documentation formats and complete test suite reliability improvements
-
-        #### 📈 Cumulative Improvements
-
-        Demonstrate the comprehensive scope of development across all versions:
-
-        - **199 Test Cases**: Comprehensive test suite covering all functionality and edge cases
-        - **11 Pull Requests**: Major feature additions and reliability improvements
-        - **74 Files Modified**: Extensive codebase development with complete project structure
-        - **21,938 Lines Added**: Substantial functionality implementation with comprehensive documentation
-        - **100% Coverage**: Complete test coverage across all modules and functions
-
-
-        ### 🔮 Future Roadmap Foundation
-
-        Establish architectural foundation for continued evolution:
-
-        - **Plugin System**: Configuration structure ready for extensible validation rules
-        - **Custom Section Types**: Framework prepared for additional docstring section types
-        - **IDE Integration**: Rich error reporting suitable for editor integration and tooling
-        - **Performance Optimisation**: Modular architecture enabling targeted performance enhancements
-        - **Community Extensions**: Extensible design supporting community-contributed validation rules
-
-
-        ### 💪 Pull Requests
-
-        ### What's Changed
-        * Complete Foundation Setup: Introduce Docstring Format Checker CLI Tool with 100% Test Coverage and Professional Documentation by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/1
-        * Fix `@overload` Function Handling: Enhance Docstring Checker to Properly Ignore Function Type Overloads by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/2
-        * Comprehensive Docstring Validation Enhancement: Introduce Advanced Rule Enforcement and Achieve 100% Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/3
-        * Enhanced CLI Error Output Formatting: Improve Multi-Error Message Presentation and Achieve Comprehensive Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/4
-        * Streamline CLI Architecture: Simplify Interface Design and Achieve Complete Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/5
-        * Advanced List Output Formatting & Error Summary Display by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/6
-        * Enhanced Docstring Validation Logic: Description Line Colon Handling & Complete Code Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/7
-        * Enhanced Docstring Validation Logic: Advanced Parameter Description Handling by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/8
-        * Major Test Suite Refactor and Configuration Architecture Enhancement by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/9
-        * Enhanced CLI Architecture and Cross-Platform Test Reliability by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/10
-        * Comprehensive Docstring Validation Enhancement and Test Suite Reliability Improvement by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/11
-
-
-        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.1.0...v1.0.0
-
-
-        ---
-
-        **Version**: v0.0.0 → v1.0.0
-        **Tests**: 199 comprehensive test cases (100% coverage)
-        **Platforms**: Windows, macOS, Linux
-        **Python**: 3.9+ supported
-        **PyPI Status**: Production/Stable
-
+        ### 🎯 Summary                Introduce the inaugural major release of `docstring-format-checker`, a powerful Python CLI tool that validates docstring formatting and completeness using AST parsing. This milestone release represents the culmination of comprehensive development spanning 11 minor versions and 11 major pull requests, delivering a production-ready solution for ensuring consistent, high-quality documentation across Python codebases.                Transform from initial concept to enterprise-grade tool with configurable validation rules, rich terminal output, comprehensive test coverage, and robust cross-platform compatibility. Establish `docstring-format-checker` as the definitive solution for Python docstring validation, offering flexibility for diverse documentation standards whilst maintaining strict quality enforcement.                **Core Capabilities:**        - **AST-Based Parsing**: Robust code analysis without regex fragility        - **Configurable Validation**: Four distinct section types with TOML-based configuration        - **Cross-Platform Reliability**: 100% test coverage across Windows, macOS, and Linux        - **Rich Terminal Output**: Beautiful coloured output with structured error tables        - **Dual CLI Entry Points**: Accessible via `docstring-format-checker` or `dfc` commands                        ### 🚀 Foundational Architecture                        #### 🏗️ Core Validation Engine                Establish a sophisticated docstring validation system built on Python AST parsing:                - **`DocstringChecker()`**: Primary validation engine with comprehensive rule enforcement        - **`FunctionAndClassDetails()`**: Structured representation of code elements for precise analysis        - **AST Integration**: Robust parsing of Python source files without dependency on fragile regex patterns        - **Multi-Format Support**: Handle functions, methods, classes, and async functions uniformly                **Validation Rule Categories:**        ```python        VALID_TYPES = (            "free_text",           # Summary, details, examples, notes            "list_name",           # Simple name sections            "list_type",           # Type-only sections (raises, yields)            "list_name_and_type",  # Parameter-style sections with descriptions        )        ```                #### ⚙️ Configuration Management System                  Implement hierarchical configuration discovery with TOML-based section definitions:                - **`Config()`**: Top-level configuration container with global settings and section definitions        - **`SectionConfig()`**: Individual section configuration with validation rules        - **`GlobalConfig()`**: Global validation behaviour control flags        - **Automatic Discovery**: Hierarchical search for `pyproject.toml` configuration files                **Configuration Architecture:**        ```toml        [tool.dfc]        allow_undefined_sections = false        require_docstrings = true        check_private = true        sections = [            { order = 1, name = "summary", type = "free_text", required = true },            { order = 2, name = "params", type = "list_name_and_type", required = true },            # ... additional sections        ]        ```                #### 🖥️ Command-Line Interface Excellence                Deliver a polished CLI experience with comprehensive features:                - **Typer Integration**: Modern CLI framework with automatic help generation        - **Rich Output**: Structured error tables and coloured terminal output        - **Multiple Output Formats**: Table format for detailed analysis, list format for CI/CD integration        - **Example System**: Built-in configuration and usage examples accessible via `--example` flag                        ### 🎨 User Experience Enhancements                        #### 🌈 Rich Terminal Output                Provide professional-grade terminal output with visual clarity:                - **Error Tables**: Structured display of validation errors with file, function, and line details        - **Colour Coding**: Green for success, red for errors, cyan for information        - **Cross-Platform Compatibility**: Handle terminal width variations and Unicode support differences        - **Quiet Modes**: Minimal output options for automated workflows and CI/CD integration                #### 📋 Flexible Output Formats                Support diverse workflow requirements with multiple output modes:                - **Table Format**: Rich structured display ideal for interactive development        - **List Format**: Simple line-by-line output perfect for CI/CD parsing and automation        - **Summary Statistics**: Clear reporting of validation results with error counts        - **Exit Code Standards**: Consistent return codes (0=success, 1=validation errors, 2=CLI errors)                #### 🔧 Dual CLI Entry Points                Provide convenient access through multiple command interfaces:                - **`docstring-format-checker`**: Full descriptive command name for clarity        - **`dfc`**: Abbreviated form for frequent use and scripting        - **Consistent Behaviour**: Identical functionality across both entry points        - **Auto-completion Support**: Built-in shell completion capabilities                        ### 🧪 Comprehensive Validation Logic                        #### 📝 Section Type Validation                Implement sophisticated validation for four distinct docstring section types:                **Free Text Sections (`free_text`):**        - Summary, details, examples, notes sections        - Support for admonition syntax with customisable prefixes        - Flexible content validation with configurable requirements                **List Name Sections (`list_name`):**        - Simple name-only lists for basic documentation        - Validation of proper formatting and structure        - Support for bullet points and indentation requirements                **List Type Sections (`list_type`):**          - Exception and yield type documentation        - Type information validation with parentheses checking        - Title case enforcement for consistency                **List Name and Type Sections (`list_name_and_type`):**        - Parameter documentation with name, type, and description        - Advanced parsing to distinguish definitions from descriptions        - Multi-criteria validation including indentation and word count analysis                #### 🎯 Advanced Rule Enforcement                Deliver comprehensive validation with intelligent error detection:                - **Colon Usage Validation**: Ensure proper colon placement in admonition and non-admonition sections        - **Title Case Enforcement**: Validate section headers follow proper capitalisation        - **Parentheses Requirements**: Check type definitions include required parentheses        - **Indentation Analysis**: Multi-level validation of content structure and formatting        - **Blank Line Requirements**: Enforce proper spacing after docstrings for readability                #### 🚫 Smart Error Prevention                Reduce false positives whilst maintaining strict validation:                - **Context-Aware Parsing**: Distinguish between parameter definitions and description content        - **Bullet Point Detection**: Recognise legitimate description patterns vs. malformed parameters        - **Word Count Analysis**: Use intelligent thresholds to identify content vs. structure issues        - **Configuration Flexibility**: Allow customisation of validation strictness per project requirements                        ### 🔄 Continuous Integration Excellence                        #### 🏗️ GitHub Actions Integration                Establish robust CI/CD workflows with comprehensive testing:                - **Multi-Platform Testing**: Validate functionality across Ubuntu, macOS, and Windows        - **Python Version Matrix**: Support Python 3.9 through 3.13 with comprehensive compatibility testing        - **UV Package Manager**: Modern dependency management with faster resolution and caching        - **Automated Versioning**: Streamlined release processes with automatic changelog generation                #### 📊 Quality Assurance Standards                Maintain exceptional code quality with comprehensive validation:                - **100% Test Coverage**: Complete test suite with 199 individual test cases across all modules        - **Cross-Platform Reliability**: Resolve Windows-specific issues with file locking and terminal formatting        - **Pre-commit Hooks**: Automated code quality checks with Black formatting and lint validation        - **Documentation Standards**: Consistent docstring formatting across entire codebase                #### 🚀 Release Automation                Streamline release processes with automated workflows:                - **Version Bumping**: Automated version management with changelog generation        - **Coverage Reporting**: Automatic generation and publication of test coverage reports        - **Documentation Deployment**: Automated documentation site updates with MkDocs integration        - **PyPI Publishing**: Seamless package distribution with automated release workflows                        ### 🧬 Exception Handling Architecture                        #### 🎯 Structured Error Classes                Implement comprehensive exception hierarchy for clear error communication:                - **`DocstringError()`**: Base exception for docstring validation issues with detailed context        - **`InvalidConfigError()`**: Configuration file validation with specific error details        - **`InvalidTypeValuesError()`**: Type validation errors with suggestions for correction        - **`DirectoryNotFoundError()`**: File system errors with helpful resolution guidance                #### 📋 Error Reporting Excellence                Provide detailed error information for rapid issue resolution:                - **Line Number Precision**: Exact location reporting for validation errors        - **Context Information**: Include surrounding code context for error understanding        - **Suggestion Engine**: Provide specific recommendations for error resolution        - **Batch Error Processing**: Handle multiple errors efficiently with comprehensive reporting                        ### 📈 Platform Compatibility Achievements                        #### 🌐 Cross-Platform Reliability                Resolve critical compatibility issues across operating systems:                - **Windows File Locking**: Fix temporary file management with proper handle cleanup and `flush()` calls        - **Terminal Width Handling**: Accommodate varying terminal sizes and line wrapping differences        - **Unicode Support**: Handle diverse character sets and border compatibility across terminals        - **Path Management**: Ensure consistent absolute path usage across all platforms                #### 🧪 Test Suite Robustness                Achieve comprehensive test reliability with platform-agnostic approaches:                - **Isolated Test Environments**: Prevent interference with temporary directories and proper cleanup        - **ANSI Code Handling**: Strip formatting codes for consistent output validation across terminals        - **Help Text Flexibility**: Handle platform-specific formatting variations in CLI output        - **Assertion Robustness**: Use flexible matching patterns for cross-platform compatibility                        ### 🔍 Development Workflow Excellence                        #### 📝 Documentation Standards                Establish comprehensive documentation practices throughout the project:                - **Docstring Standardisation**: Implement consistent `!!! note "Summary"` format across all modules        - **API Documentation**: Complete function and class documentation with parameter details        - **Usage Examples**: Built-in examples accessible through CLI for immediate reference        - **Contributing Guidelines**: Detailed development and contribution documentation                #### 🛠️ Developer Experience                Provide exceptional development tooling and workflows:                - **Utility Scripts**: Comprehensive automation for linting, testing, and version management        - **Pre-commit Integration**: Automated code quality enforcement with configurable rules        - **Coverage Reporting**: Detailed test coverage analysis with HTML and XML output formats        - **Modern Tooling**: Integration with contemporary Python tools including UV, Typer, and Rich                        ### 🎯 Configuration Flexibility                        #### 📋 TOML Integration                Provide comprehensive configuration management through TOML files:                - **Multiple Configuration Names**: Support both `[tool.dfc]` and `[tool.docstring-format-checker]` sections        - **Hierarchical Discovery**: Automatic search for configuration files in project hierarchy        - **Validation Engine**: Comprehensive configuration validation with detailed error reporting        - **Default Configuration**: Sensible defaults for immediate use without configuration                #### 🔧 Customisation Options                Enable extensive customisation for diverse project requirements:                - **Section Definition**: Complete control over docstring section requirements and order        - **Admonition Support**: Configurable admonition types with custom prefixes        - **Global Flags**: Control validation behaviour with `allow_undefined_sections`, `require_docstrings`, and `check_private`        - **Type System**: Four distinct section types to accommodate different documentation patterns                #### 📊 Configuration Examples                Provide comprehensive examples for immediate implementation:                - **Default Configuration**: Production-ready configuration suitable for most Python projects        - **Custom Sections**: Examples of specialised section configurations for specific needs        - **Integration Patterns**: Demonstrate integration with existing project configurations        - **Migration Guides**: Support for updating configurations across versions                        ### 🏆 Quality Metrics                        #### 📈 Test Coverage Excellence                Achieve and maintain exceptional test coverage across all components:                ```        Module Coverage Statistics:        - src/docstring_format_checker/__init__.py:      100%        - src/docstring_format_checker/cli.py:           100%          - src/docstring_format_checker/config.py:        100%        - src/docstring_format_checker/core.py:          100%        - src/docstring_format_checker/utils/exceptions.py: 100%        ------------------------------------------------------        TOTAL COVERAGE:                                  100%        ```                #### 🎯 Code Quality Standards                Maintain exceptional code quality with comprehensive validation:                - **Type Safety**: Complete type hint coverage with dataclass-based configuration        - **Error Handling**: Comprehensive exception hierarchy with structured error messages          - **Code Organisation**: Consistent import structure and modular architecture        - **Documentation**: Enhanced docstrings following project standards across all modules                #### 🚀 Performance Benchmarks                Deliver efficient validation with optimised processing:                - **AST Parsing**: Efficient code analysis with minimal memory overhead        - **File Processing**: Optimised directory traversal with pattern matching        - **Error Reporting**: Structured error collection with minimal performance impact        - **Configuration Loading**: Cached configuration parsing for repeated operations                        ### 🌟 User Benefits                        #### 👥 For Development Teams                Enable consistent documentation standards across development teams:                - **Standardised Documentation**: Enforce consistent docstring formats across entire codebase        - **Flexible Configuration**: Adapt validation rules to match team conventions and standards        - **CI/CD Integration**: Automated validation with reliable exit codes for build pipelines        - **Rich Feedback**: Detailed error reporting with specific suggestions for resolution                #### 🏢 For Enterprise Users                Provide enterprise-grade documentation validation capabilities:                - **Scalable Architecture**: Handle large codebases with efficient processing        - **Compliance Support**: Configurable validation rules for documentation standards compliance        - **Cross-Platform Deployment**: Consistent behaviour across diverse development environments        - **Quality Assurance**: 100% test coverage ensuring reliable operation in production environments                #### 🛠️ For Open Source Projects                Support open source development with comprehensive validation tools:                - **Easy Integration**: Simple installation and configuration for immediate use        - **Documentation Excellence**: Enforce high-quality documentation standards for contributors        - **CI/CD Ready**: Seamless integration with GitHub Actions and other CI platforms        - **Community Standards**: Support common Python documentation patterns and conventions                        ### 📊 Version Evolution Summary                        #### 🎯 Release Timeline                Track the comprehensive evolution from initial concept to production release:                - **v0.1.0**: Initial release with basic validation functionality        - **v0.2.0**: Add `@overload` function support and CI/CD workflows        - **v0.3.0**: Enhance error message formatting and admonition validation        - **v0.4.0**: Remove recursive flags, add examples system, improve CLI interface        - **v0.5.0**: Resolve output formatting issues with list mode and summary statistics        - **v0.6.0**: Fix description line validation and list output formatting        - **v0.7.0**: Improve validation logic for list sections with enhanced type handling        - **v0.8.0**: Introduce global configuration architecture with comprehensive control flags        - **v0.9.0**: Refactor configuration structure and enhance test reliability        - **v0.10.0**: Resolve Windows CI issues and improve cross-platform compatibility        - **v0.11.0**: Standardise documentation formats and complete test suite reliability improvements                #### 📈 Cumulative Improvements                Demonstrate the comprehensive scope of development across all versions:                - **199 Test Cases**: Comprehensive test suite covering all functionality and edge cases        - **11 Pull Requests**: Major feature additions and reliability improvements        - **74 Files Modified**: Extensive codebase development with complete project structure          - **21,938 Lines Added**: Substantial functionality implementation with comprehensive documentation        - **100% Coverage**: Complete test coverage across all modules and functions                        ### 🔮 Future Roadmap Foundation                Establish architectural foundation for continued evolution:                - **Plugin System**: Configuration structure ready for extensible validation rules        - **Custom Section Types**: Framework prepared for additional docstring section types        - **IDE Integration**: Rich error reporting suitable for editor integration and tooling        - **Performance Optimisation**: Modular architecture enabling targeted performance enhancements        - **Community Extensions**: Extensible design supporting community-contributed validation rules                        ### 💪 Pull Requests                 ### What's Changed        * Complete Foundation Setup: Introduce Docstring Format Checker CLI Tool with 100% Test Coverage and Professional Documentation by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/1        * Fix `@overload` Function Handling: Enhance Docstring Checker to Properly Ignore Function Type Overloads by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/2        * Comprehensive Docstring Validation Enhancement: Introduce Advanced Rule Enforcement and Achieve 100% Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/3        * Enhanced CLI Error Output Formatting: Improve Multi-Error Message Presentation and Achieve Comprehensive Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/4        * Streamline CLI Architecture: Simplify Interface Design and Achieve Complete Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/5        * Advanced List Output Formatting & Error Summary Display by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/6        * Enhanced Docstring Validation Logic: Description Line Colon Handling & Complete Code Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/7        * Enhanced Docstring Validation Logic: Advanced Parameter Description Handling by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/8        * Major Test Suite Refactor and Configuration Architecture Enhancement by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/9        * Enhanced CLI Architecture and Cross-Platform Test Reliability by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/10        * Comprehensive Docstring Validation Enhancement and Test Suite Reliability Improvement by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/11                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.1.0...v1.0.0                        ---                **Version**: v0.0.0 → v1.0.0          **Tests**: 199 comprehensive test cases (100% coverage)          **Platforms**: Windows, macOS, Linux          **Python**: 3.9+ supported          **PyPI Status**: Production/Stable        
 
     ??? abstract "Updates"
 
@@ -3193,11 +326,7 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed
-        * Comprehensive Docstring Validation Enhancement and Test Suite Reliability Improvement by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/11
-
-
-        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.10.0...v0.11.0
+        ### What's Changed        * Comprehensive Docstring Validation Enhancement and Test Suite Reliability Improvement by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/11                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.10.0...v0.11.0
 
     ??? abstract "Updates"
 
@@ -3226,11 +355,7 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed
-        * Enhanced CLI Architecture and Cross-Platform Test Reliability by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/10
-
-
-        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.9.0...v0.10.0
+        ### What's Changed        * Enhanced CLI Architecture and Cross-Platform Test Reliability by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/10                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.9.0...v0.10.0
 
     ??? abstract "Updates"
 
@@ -3270,11 +395,7 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed
-        * Major Test Suite Refactor and Configuration Architecture Enhancement by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/9
-
-
-        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.8.0...v0.9.0
+        ### What's Changed        * Major Test Suite Refactor and Configuration Architecture Enhancement by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/9                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.8.0...v0.9.0
 
     ??? abstract "Updates"
 
@@ -3296,11 +417,7 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed
-        * Enhanced Docstring Validation Logic: Advanced Parameter Description Handling by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/8
-
-
-        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.7.0...v0.8.0
+        ### What's Changed        * Enhanced Docstring Validation Logic: Advanced Parameter Description Handling by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/8                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.7.0...v0.8.0
 
     ??? abstract "Updates"
 
@@ -3325,11 +442,7 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed
-        * Enhanced Docstring Validation Logic: Description Line Colon Handling & Complete Code Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/7
-
-
-        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.6.0...v0.7.0
+        ### What's Changed        * Enhanced Docstring Validation Logic: Description Line Colon Handling & Complete Code Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/7                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.6.0...v0.7.0
 
     ??? abstract "Updates"
 
@@ -3358,11 +471,7 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed
-        * Advanced List Output Formatting & Error Summary Display by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/6
-
-
-        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.5.0...v0.6.0
+        ### What's Changed        * Advanced List Output Formatting & Error Summary Display by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/6                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.5.0...v0.6.0
 
     ??? abstract "Updates"
 
@@ -3380,11 +489,7 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed
-        * Streamline CLI Architecture: Simplify Interface Design and Achieve Complete Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/5
-
-
-        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.4.0...v0.5.0
+        ### What's Changed        * Streamline CLI Architecture: Simplify Interface Design and Achieve Complete Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/5                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.4.0...v0.5.0
 
     ??? abstract "Updates"
 
@@ -3412,11 +517,7 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed
-        * Enhanced CLI Error Output Formatting: Improve Multi-Error Message Presentation and Achieve Comprehensive Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/4
-
-
-        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.3.0...v0.4.0
+        ### What's Changed        * Enhanced CLI Error Output Formatting: Improve Multi-Error Message Presentation and Achieve Comprehensive Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/4                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.3.0...v0.4.0
 
     ??? abstract "Updates"
 
@@ -3436,11 +537,7 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed
-        * Comprehensive Docstring Validation Enhancement: Introduce Advanced Rule Enforcement and Achieve 100% Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/3
-
-
-        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.2.0...v0.3.0
+        ### What's Changed        * Comprehensive Docstring Validation Enhancement: Introduce Advanced Rule Enforcement and Achieve 100% Test Coverage by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/3                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.2.0...v0.3.0
 
     ??? abstract "Updates"
 
@@ -3479,11 +576,7 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed
-        * Fix `@overload` Function Handling: Enhance Docstring Checker to Properly Ignore Function Type Overloads by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/2
-
-
-        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.1.0...v0.2.0
+        ### What's Changed        * Fix `@overload` Function Handling: Enhance Docstring Checker to Properly Ignore Function Type Overloads by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/2                        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v0.1.0...v0.2.0
 
     ??? abstract "Updates"
 
@@ -3507,13 +600,7 @@
 
     ??? note "Release Notes"
 
-        ### What's Changed
-        * Complete Foundation Setup: Introduce Docstring Format Checker CLI Tool with 100% Test Coverage and Professional Documentation by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/1
-
-        ### New Contributors
-        * @chrimaho made their first contribution in https://github.com/data-science-extensions/docstring-format-checker/pull/1
-
-        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/commits/v0.1.0
+        ### What's Changed        * Complete Foundation Setup: Introduce Docstring Format Checker CLI Tool with 100% Test Coverage and Professional Documentation by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/1                ### New Contributors        * @chrimaho made their first contribution in https://github.com/data-science-extensions/docstring-format-checker/pull/1                **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/commits/v0.1.0
 
     ??? abstract "Updates"
 
@@ -3656,3 +743,5 @@
             (by []())
         * [`416b0b3`](https://github.com/data-science-extensions/docstring-format-checker/commit/416b0b36cf5c4615295a7464a1544911aaa253d5): Initial commit
             (by [chrimaho](https://github.com/chrimaho))
+
+
