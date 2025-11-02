@@ -95,7 +95,7 @@ def run_blacken_docs() -> None:
 
         # Check for parsing errors (exit code 2 or "cannot parse" message)
         # These should halt execution immediately
-        output_combined: str = (result.stdout + result.stderr).lower()
+        output_combined: str = ((result.stdout or "") + (result.stderr or "")).lower()
         if result.returncode == 2 or "cannot parse" in output_combined or "parse error" in output_combined:
             print(f"\n❌ blacken-docs encountered a parsing error. Halting.", file=sys.stderr, flush=True)
             raise subprocess.CalledProcessError(result.returncode, _command, result.stdout, result.stderr)
