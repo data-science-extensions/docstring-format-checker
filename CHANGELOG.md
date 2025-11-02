@@ -9,6 +9,772 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v1.6.0"
+
+    ## **v1.6.0 - Introduce Parameter Type Validation**
+
+    <!-- md:tag v1.6.0 --><br>
+    <!-- md:date 2025-11-02 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v1.6.0](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.6.0) -->
+
+    ??? note "Release Notes"
+
+        ### Summary
+        
+        This release introduces a major new feature: comprehensive parameter type validation that ensures consistency between function signature type annotations and docstring parameter documentation. The validation system proactively detects inconsistencies where developers modify function signatures without updating corresponding documentation, preventing type information drift that can mislead API consumers and cause runtime errors. The feature is enabled by default but can be disabled via configuration for gradual adoption in legacy codebases. The implementation includes five specialised validation methods that extract, normalise, compare, and report type annotation mismatches, with support for complex types including `Optional`, `Union`, `list[T]`, `dict[K, V]`, and deeply nested generics. The release maintains perfect code quality standards with 100% test coverage (897 statements), Pylint score of 10.00/10, and includes 23 new comprehensive test cases covering all validation scenarios. All changes are backwards compatible, requiring no migration effort from existing users.
+        
+        
+        ### Release Statistics
+        
+        | Attribute                 | Note                                          |
+        | ------------------------- | --------------------------------------------- |
+        | **Version:**              | [`v1.6.0`]                                    |
+        | **Python Support:**       | `3.9`, `3.10`, `3.11`, `3.12`, `3.13`, `3.14` |
+        | **Test Coverage:**        | 100% (897 statements, +63 from v1.5.1)        |
+        | **Pylint Score:**         | 10.00/10                                      |
+        | **Complexity:**           | All functions ≤13 threshold                   |
+        | **Functions:**            | 103 (+5 validation methods)                   |
+        | **Tests Passing:**        | 206/206 (+23 from v1.5.1)                     |
+        | **Files Changed:**        | 6                                             |
+        | **Lines Added:**          | 1,366                                         |
+        | **Lines Removed:**        | 26                                            |
+        | **Commits:**              | 7                                             |
+        | **Pull Requests Merged:** | 1 (PR #21)                                    |
+        
+        
+        
+        ### 🔍 Parameter Type Validation Feature
+        
+        
+        #### Overview
+        
+        Introduce a comprehensive type validation system that compares parameter type annotations in function signatures against their documented types in docstrings. This feature proactively detects inconsistencies where developers modify function signatures without updating corresponding documentation, preventing type information drift that can mislead API consumers and cause runtime errors.
+        
+        
+        #### Problem Statement
+        
+        **Documentation Drift During Refactoring:**
+        
+        When refactoring code, developers frequently update function signatures by:
+        - Adding type hints to previously untyped parameters
+        - Changing parameter types (e.g., `str` → `Optional[str]`)
+        - Modifying complex types (e.g., `list` → `list[str]`)
+        
+        However, docstrings often lag behind these changes, creating inconsistencies between actual implementation and documentation. This causes:
+        
+        - **API Consumer Confusion**: Users rely on docstring documentation but receive different types
+        - **Type Checker Limitations**: Tools like `mypy` validate signatures but not docstring accuracy
+        - **Maintenance Burden**: Manual review required to catch documentation drift
+        - **Runtime Surprises**: Functions accept types not mentioned in docstrings
+        
+        
+        **Example Inconsistency:**
+        ```python
+        def process_data(value: Optional[str], count: int = 10) -> list[str]:
+            """
+            Process data value.
+
+            Params:
+                value (str): Input value to process.  # ❌ Missing Optional
+                count (float): Number of iterations.  # ❌ Wrong type (int vs float)
+
+            Returns:
+                (list): Processed results.            # ❌ Missing generic type
+            """
+            ...
+        ```
+        
+        
+        #### Solution Architecture
+        
+        Implement validation system comprising five coordinated methods in the `DocstringChecker` class that extract, normalise, compare, and report type annotation mismatches.
+        
+        
+        #### Configuration Integration
+        
+        Add new global configuration flag enabling parameter type validation across all docstring checks.
+        
+        
+        **Files Modified:**
+        - `pyproject.toml`
+        - `src/docstring_format_checker/config.py`
+        - `src/docstring_format_checker/cli.py`
+        
+        
+        **Configuration Changes:**
+        
+        `pyproject.toml`:
+        ```toml
+        [tool.docstring_format_checker.global]
+        allow_undefined_sections = false
+        require_docstrings = true
+        check_private = true
+        +validate_param_types = true  # Enable parameter type validation
+        ```
+        
+        `config.py` - `GlobalConfig` dataclass:
+        ```python
+        @dataclass(frozen=True)
+        class GlobalConfig:
+            allow_undefined_sections: bool = False
+            require_docstrings: bool = True
+            check_private: bool = False
+            validate_param_types: bool = True  # New parameter: Enable parameter type validation
+        ```
+        
+        `config.py` - `_parse_global_config()` function:
+        ```python
+        return GlobalConfig(
+            allow_undefined_sections=tool_config.get("allow_undefined_sections", False),
+            require_docstrings=tool_config.get("require_docstrings", True),
+            check_private=tool_config.get("check_private", False),
+            validate_param_types=tool_config.get(
+                "validate_param_types", True
+            ),  # New parameter: Enable parameter type validation
+        )
+        ```
+        
+        `cli.py` - Configuration example display:
+        ```toml
+        allow_undefined_sections = false
+        require_docstrings = true
+        check_private = true
+        validate_param_types = true  # New parameter: Enable parameter type validation
+        ```
+        
+        
+        **Configuration Behaviour:**
+        
+        - **Default**: `True` (validation enabled by default)
+        - **Rationale**: Type consistency is critical for API reliability; opt-out model ensures maximum benefit
+        - **Override**: Set to `false` in `pyproject.toml` to disable validation
+        - **Scope**: Applies globally to all checked Python files when enabled
+        
+        
+        #### Core Implementation
+        
+        Implement type validation through five specialised methods integrated into the existing validation pipeline.
+        
+        
+        **Files Modified:**
+        - `src/docstring_format_checker/core.py` (+190 lines)
+        
+        
+        ##### Method 1: `_extract_param_types()`
+        
+        Extract parameter type annotations from function AST nodes using Python's `ast` module.
+        
+        
+        **Purpose:** Parse function signature to obtain ground truth type information.
+        
+        
+        **Implementation Highlights:**
+        ```python
+        def _extract_param_types(
+            self,
+            node: Union[ast.FunctionDef, ast.AsyncFunctionDef],
+        ) -> dict[str, str]:
+            """
+            Extract parameter names and their type annotations from function signature.
+            """
+
+            param_types: dict[str, str] = {}
+
+            for arg in node.args.args:
+                # Skip 'self' and 'cls' parameters
+                if arg.arg in ("self", "cls"):
+                    continue
+
+                # Extract type annotation if present
+                if arg.annotation:
+                    type_str: str = ast.unparse(arg.annotation)
+                    param_types[arg.arg] = type_str
+
+            return param_types
+        ```
+        
+        
+        **Key Features:**
+        
+        - **AST Traversal**: Iterate through function argument nodes
+        - **Type Unparsing**: Convert annotation AST back to string representation
+        - **Special Parameters**: Automatically skip `self` and `cls` (method context parameters)
+        - **Missing Annotations**: Omit parameters without type hints from result dictionary
+        - **Complex Types**: Handle `Optional`, `Union`, `list[T]`, `dict[K, V]`, and nested generics
+        
+        
+        **Example Output:**
+        ```python
+        # For: def func(self, name: str, items: list[int], flag: bool = True):
+        {"name": "str", "items": "list[int]", "flag": "bool"}
+        # Note: 'self' excluded, all annotations preserved exactly
+        ```
+        
+        
+        ##### Method 2: `_extract_param_types_from_docstring()`
+        
+        Parse parameter types from docstring Params sections using regex pattern matching.
+        
+        
+        **Purpose:** Extract documented type information to compare against signature.
+        
+        
+        **Key Features:**
+        
+        - **Section Detection**: Locate Params section within docstring structure
+        - **Regex Parsing**: Match `name (type):` pattern for parameter declarations
+        - **Section Boundaries**: Stop parsing when encountering next section (Returns, Raises, etc.)
+        - **Whitespace Handling**: Accommodate various indentation levels
+        - **Complex Types**: Preserve parentheses and brackets in type strings (`Optional[str]`, `Union[int, float]`)
+        
+        
+        **Pattern Matching Examples:**
+        ```python
+        # Matches:
+        "param1 (str):"  # → ("param1", "str")
+        "param2 (Optional[int]):"  # → ("param2", "Optional[int]")
+        "data (list[dict[str, Any]]):"  # → ("data", "list[dict[str, Any]]")
+
+        # Does not match (invalid format):
+        "param1: str"  # Missing parentheses
+        "param1 str:"  # Missing parentheses
+        ```
+        
+        
+        ##### Method 3: `_normalize_type_string()`
+        
+        Standardise type string representations for consistent comparison.
+        
+        
+        **Purpose:** Remove formatting variations that don't affect semantic type equality.
+        
+        
+        **Normalisation Operations:**
+        
+        - **Whitespace Removal**: Eliminate spaces around brackets, commas
+          - `list[ int ]` → `list[int]`
+          - `Union[str , int]` → `Union[str,int]`
+        - **Case Preservation**: Maintain original capitalisation for complex types
+          - `Optional[str]` remains `Optional[str]` (not `optional[str]`)
+          - Allows case-insensitive comparison separately
+        
+        
+        **Rationale:**
+        
+        - **Formatting Independence**: Accept equivalent types regardless of spacing conventions
+        - **Complex Type Safety**: Preserve capitalisation needed for typing module classes
+        - **Comparison Reliability**: Consistent normalisation ensures accurate matching
+        
+        
+        ##### Method 4: `_compare_param_types()`
+        
+        Compare normalised type strings between signature and docstring, identifying mismatches.
+        
+        
+        **Purpose:** Detect parameters where documented types differ from actual implementation.
+        
+        
+        **Comparison Logic:**
+        
+        1. **Iterate Signature Types**: Check each parameter with type annotation
+        2. **Skip Undocumented**: Ignore parameters not in docstring (separate validation)
+        3. **Normalise Both Sides**: Apply consistent formatting transformations
+        4. **Case-Insensitive**: Allow `str` to match `Str`, `int` to match `Int`
+        5. **Collect Mismatches**: Record parameter name and both type representations
+        
+        
+        **Example Mismatch Detection:**
+        ```python
+        # Signature:   def func(name: str, count: int, items: list[str])
+        # Docstring:   name (str), count (float), items (List[str])
+
+        # Mismatches returned:
+        [
+            ("count", "int", "float"),  # Different types
+            ("items", "list[str]", "List[str]"),  # Different capitalisation
+        ]
+        ```
+        
+        
+        ##### Method 5: `_validate_param_types()`
+        
+        Orchestrate complete validation workflow and generate detailed error messages.
+        
+        
+        **Purpose:** Coordinate type extraction, comparison, and error reporting.
+        
+        
+        **Validation Workflow:**
+        
+        1. **Extract Types**: Obtain types from signature and docstring
+        2. **Check Coverage Bidirectional**:
+           - **Docstring → Signature**: Flag parameters documented with types but missing signature annotations
+           - **Signature → Docstring**: Flag parameters with annotations but missing docstring types
+        3. **Compare Matching**: For parameters with both types, detect mismatches
+        4. **Generate Errors**: Produce descriptive messages identifying specific problems
+        
+        
+        **Error Message Examples:**
+        ```python
+        # Missing signature annotation:
+        "Parameter 'count' has type in docstring but no type annotation in signature"
+
+        # Missing docstring type:
+        "Parameter 'name' has type annotation 'str' in signature but no type in docstring"
+
+        # Type mismatch:
+        "Parameter type mismatch: 'count': signature has 'int', docstring has 'float'"
+        ```
+        
+        
+        #### Integration Point
+        
+        Integrate type validation into existing params section validation workflow.
+        
+        
+        **Files Modified:**
+        - `src/docstring_format_checker/core.py`
+        
+        
+        **Method:** `_validate_list_name_and_type_section()`
+        
+        
+        **Integration Logic:**
+        ```python
+        def _validate_list_name_and_type_section(
+            self,
+            item: DocstringItem,
+            section: SectionConfig,
+        ) -> Optional[str]:
+            """
+            Validate list_name_and_type sections like Params.
+            """
+
+            docstring: str = item.docstring
+            section_name: str = section.name.lower()
+
+            if section_name == "params" and isinstance(
+                item.node, (ast.FunctionDef, ast.AsyncFunctionDef)
+            ):
+                # Check params section exists and is properly formatted
+                if not self._check_params_section(docstring, item.node):
+                    return "Missing or invalid Params section"
+
+                # If validate_param_types is enabled, validate type annotations match
+                if self.config.global_config.validate_param_types:
+                    type_error: Optional[str] = self._validate_param_types(docstring, item.node)
+                    if type_error:
+                        return type_error
+
+            # ... rest of validation
+        ```
+        
+        
+        **Execution Flow:**
+        
+        1. **Format Validation First**: Ensure params section exists and follows formatting rules
+        2. **Type Validation Second**: If format valid and flag enabled, check type consistency
+        3. **Early Return**: Report first error encountered (format error OR type error)
+        4. **Configuration Gating**: Skip type validation entirely if `validate_param_types = false`
+        
+        
+        **Benefits:**
+        
+        - **Layered Validation**: Format errors caught before type errors (clearer priorities)
+        - **Configuration Control**: Users opt-in to stricter validation requirements
+        - **Consistent Reporting**: Type errors formatted same as other validation failures
+        - **Performance**: Skip expensive type comparison when flag disabled
+        
+        
+        #### Test Coverage
+        
+        Add comprehensive test suite validating all aspects of parameter type validation.
+        
+        
+        **Files Modified:**
+        - `src/tests/test_core.py` (+908 lines)
+        
+        
+        **Test Class:** `TestParameterTypeValidation`
+        
+        
+        **Test Coverage:** 23 test cases covering:
+        
+        1. **Exact Matches:**
+           - `test_param_types_match_exactly()` - All types identical
+           - `test_param_types_all_match_no_mismatches()` - Multiple parameters, all correct
+        
+        2. **Type Mismatches:**
+           - `test_param_types_mismatch()` - Single parameter type difference
+           - `test_param_multiple_mismatches_in_function()` - Multiple mismatches simultaneously
+        
+        3. **Complex Types:**
+           - `test_param_types_with_optional()` - `Optional[T]` handling
+           - `test_param_types_with_union()` - `Union[T1, T2]` handling
+           - `test_param_types_with_list()` - `list[T]` generic types
+           - `test_param_types_with_dict()` - `dict[K, V]` generic types
+           - `test_param_types_with_complex_nested_types()` - `dict[str, list[int]]` etc
+        
+        4. **Missing Annotations:**
+           - `test_param_missing_type_annotation()` - Parameter lacks signature type
+           - `test_param_has_signature_type_but_no_docstring_type()` - Signature type but no docstring type
+        
+        5. **Edge Cases:**
+           - `test_param_types_with_self_parameter()` - Ignore `self` in methods
+           - `test_param_types_case_insensitive_match()` - `str` matches `Str`
+           - `test_param_types_no_params_section()` - Function without Params section
+           - `test_param_validation_disabled()` - Flag disabled, no validation
+        
+        6. **Direct Method Tests:**
+           - `test_direct_extract_param_types_no_params_section()` - Empty result when no Params
+           - `test_direct_extract_param_types_with_section_break()` - Stop at next section
+           - `test_direct_compare_param_types_with_missing_docstring()` - Undocumented parameters
+           - `test_direct_validate_param_types_missing_docstring_type()` - Signature without docstring
+           - Plus 4 additional direct method tests for comprehensive coverage
+        
+        
+        **Test Statistics:**
+        
+        - **Total Tests Added**: 23 new test methods
+        - **Line Coverage**: 100% of new code covered
+        - **Scenario Coverage**: All validation paths exercised
+        - **Edge Case Coverage**: Special parameters, missing sections, complex types
+        
+        
+        **Testing Approach:**
+        
+        Each test creates temporary Python files with specific docstring/signature combinations, runs validation, and asserts expected error messages or success. Direct method tests additionally invoke helper methods in isolation to ensure line-level coverage of all code paths.
+        
+        
+        #### Error Detection Examples
+        
+        
+        **Example 1: Type Mismatch**
+        
+        ```python
+        def calculate_total(price: float, quantity: int) -> float:
+            """
+            Calculate total cost.
+
+            Params:
+                price (int): Item price.          # ❌ Wrong type (float vs int)
+                quantity (float): Item quantity.  # ❌ Wrong type (int vs float)
+
+            Returns:
+                (float): Total cost.
+            """
+            return price * quantity
+        ```
+        
+        **Error Reported:**
+        ```
+        Parameter type mismatch: 'price': signature has 'float', docstring has 'int', 'quantity': signature has 'int', docstring has 'float'
+        ```
+        
+        
+        **Example 2: Missing Signature Annotation**
+        
+        ```python
+        def process_items(items, threshold: int = 10) -> list[str]:
+            """
+            Process items above threshold.
+
+            Params:
+                items (list[dict]): Items to process.  # ❌ No signature annotation
+                threshold (int): Minimum threshold.
+
+            Returns:
+                (list[str]): Processed item IDs.
+            """
+            ...
+        ```
+        
+        **Error Reported:**
+        ```
+        Parameter 'items' has type in docstring but no type annotation in signature
+        ```
+        
+        
+        **Example 3: Missing Docstring Type**
+        
+        ```python
+        def validate_config(config: dict[str, Any], strict: bool = False) -> bool:
+            """
+            Validate configuration dictionary.
+
+            Params:
+                config: Configuration to validate.  # ❌ Missing type documentation
+                strict (bool): Enable strict validation.
+
+            Returns:
+                (bool): Validation result.
+            """
+            ...
+        ```
+        
+        **Error Reported:**
+        ```
+        Parameter 'config' has type annotation 'dict[str, Any]' in signature but no type in docstring
+        ```
+        
+        
+        #### Benefits
+        
+        
+        **For API Consumers:**
+        
+        - **Accurate Documentation**: Docstrings reflect actual implementation types
+        - **IntelliSense Reliability**: IDE hints match function behaviour
+        - **Runtime Predictability**: Know expected parameter types before calling functions
+        - **Example Accuracy**: Documentation examples use correct types
+        
+        
+        **For Developers:**
+        
+        - **Refactoring Safety**: Type changes automatically flag outdated docstrings
+        - **Maintenance Efficiency**: Automated detection reduces manual review burden
+        - **Consistency Enforcement**: All parameters documented with matching types
+        - **Error Prevention**: Catch documentation drift before merge
+        
+        
+        **For Code Quality:**
+        
+        - **Type Consistency**: Signatures and docstrings remain synchronised
+        - **Documentation Hygiene**: Proactive detection prevents accumulation of drift
+        - **CI/CD Integration**: Automated checks in pull request validation
+        - **Quality Standards**: Maintain high documentation accuracy standards
+        
+        
+        #### Usage
+        
+        
+        **Enable Validation** (default in v1.6.0):
+        ```toml
+        # pyproject.toml
+        [tool.docstring_format_checker.global]
+        validate_param_types = true
+        ```
+        
+        
+        **Run Validation:**
+        ```bash
+        # Check specific file
+        dfc path/to/file.py
+        
+        # Check entire directory
+        dfc src/
+        
+        # CI/CD integration
+        dfc src/ --check  # Exit code 1 if errors found
+        ```
+        
+        
+        **Disable for Legacy Code:**
+        ```toml
+        # pyproject.toml
+        [tool.docstring_format_checker.global]
+        validate_param_types = false  # Opt-out for gradual adoption
+        ```
+        
+        
+        ### 📊 Quality Metrics
+        
+        
+        #### Test Coverage
+        
+        **Total Tests:** 206 (up from 183 in v1.5.1)
+        - Added 23 new test methods for parameter type validation
+        - All tests passing with 100% coverage
+        - Coverage increased from 834 to 897 statements
+        
+        
+        **Coverage Results:**
+        ```
+        Name                                           Stmts   Miss  Cover
+        ------------------------------------------------------------------
+        src/docstring_format_checker/__init__.py           9      0   100%
+        src/docstring_format_checker/cli.py              193      0   100%
+        src/docstring_format_checker/config.py           125      0   100%
+        src/docstring_format_checker/core.py             552      0   100%
+        src/docstring_format_checker/utils/__init__.py     0      0   100%
+        src/docstring_format_checker/utils/exceptions.py  18      0   100%
+        ------------------------------------------------------------------
+        TOTAL                                            897      0   100%
+        ```
+        
+        **Achievement:** 100% code coverage maintained across all modules
+        
+        
+        #### Code Quality
+        
+        - **Pylint Score:** 10.00/10 (perfect score maintained)
+        - **MyPy:** All type checks passing, no errors
+        - **Complexity:** All functions ≤13 cognitive complexity
+        - **Black:** All code formatted consistently
+        - **isort:** All imports sorted correctly
+        
+        
+        #### Performance
+        
+        - **Test Execution:** ~9 seconds (206 tests)
+        - **Coverage Generation:** <1 second
+        - **Validation Overhead:** Minimal impact on check performance
+        
+        
+        ### 🎯 Impact Analysis
+        
+        
+        #### Breaking Changes
+        
+        **None** - All changes are backwards compatible:
+        - `validate_param_types` defaults to `True` but can be disabled
+        - Existing code without type annotations continues working
+        - No API changes or removals
+        - All existing tests pass
+        
+        
+        #### Migration Path
+        
+        **For Existing Codebases:**
+        
+        1. **Immediate Adoption** (Recommended):
+           ```toml
+           # pyproject.toml - Keep default
+           [tool.docstring_format_checker.global]
+           validate_param_types = true
+           ```
+           - Fix any reported type mismatches
+           - Update docstrings to match signatures
+        
+        2. **Gradual Adoption** (Legacy Code):
+           ```toml
+           # pyproject.toml - Opt out temporarily
+           [tool.docstring_format_checker.global]
+           validate_param_types = false
+           ```
+           - Enable validation after completing type annotation migration
+           - Fix type mismatches incrementally over time
+        
+        
+        #### Expected User Experience
+        
+        **Developers will appreciate:**
+        - ✅ Automatic detection of type documentation drift
+        - ✅ Clear error messages identifying specific mismatches
+        - ✅ Reduced manual review burden for docstring accuracy
+        - ✅ Consistency enforcement across codebase
+        
+        **Potential friction points:**
+        - ⚠️ Initial errors in codebases with existing type mismatches (one-time fix)
+        - ⚠️ Need to update docstrings when refactoring signatures (intended behaviour)
+        
+        
+        ### 🔄 Workflow Integration
+        
+        
+        #### Local Development
+        
+        ```bash
+        # Run docstring validation with type checking
+        dfc src/docstring_format_checker/
+        
+        # Check specific file
+        dfc src/docstring_format_checker/core.py
+        
+        # CI/CD integration mode (exit code 1 on errors)
+        dfc --check src/
+        ```
+        
+        
+        #### CI/CD Pipeline
+        
+        ```yaml
+        # GitHub Actions example
+        - name: Validate Docstrings
+          run: |
+            source .venv/bin/activate
+            dfc --check src/
+        ```
+        
+        
+        #### Pre-commit Hook (Optional)
+        
+        ```bash
+        # .git/hooks/pre-commit
+        #!/bin/bash
+        source .venv/bin/activate
+        dfc --check src/ || exit 1
+        ```
+        
+        
+        ### 📚 Documentation Updates
+        
+        
+        #### Configuration Documentation
+        
+        Update example configuration in `cli.py` to include new `validate_param_types` flag, ensuring users discover feature when viewing configuration examples.
+        
+        
+        #### Inline Documentation
+        
+        - Add comprehensive docstrings to all 5 new validation methods
+        - Document parameter type validation logic and error messages
+        - Include detailed explanations of type normalisation and comparison
+        
+        
+        ### 🎓 Summary
+        
+        This release enhances docstring validation with comprehensive parameter type checking to ensure consistency between function signatures and documentation. The parameter type validation feature proactively detects inconsistencies where type annotations differ from documented types, preventing type information drift that can mislead API consumers and cause runtime errors. This strengthens code quality enforcement and maintains high documentation accuracy standards across the codebase.
+        
+        
+        ### 💪 Pull Requests
+        
+        * Introduce Parameter Type Validation by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/21
+        
+        
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.5.1...v1.6.0
+        
+        [`v1.6.0`]: https://github.com/your/repo/releases/tag/v1.6.0
+        
+
+    ??? abstract "Updates"
+
+        * [`40ac06c`](https://github.com/data-science-extensions/docstring-format-checker/commit/40ac06cdc5489585623462aa917ca4414823a4e1): Handle None values in stdout and stderr streams<br>
+            - Prevents `TypeError` when concatenating `stdout` or `stderr` if either stream is `None`<br>
+            - Uses empty string fallback with `or ""` operator to ensure string concatenation always succeeds<br>
+            - Improves robustness of error detection logic in `run_blacken_docs()` function
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`1ffc4b8`](https://github.com/data-science-extensions/docstring-format-checker/commit/1ffc4b8130b2cdca1a2afba228437dff03ad44f8): Fix typos
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`d201e98`](https://github.com/data-science-extensions/docstring-format-checker/commit/d201e984fbb9b4a456a5c5f96dafc9d385e474ac): Add type hints to test function signature<br>
+            - Enhances test function signature with type annotations for parameters and return type<br>
+            - Adds `str` type hint for `param1` parameter in `detailed_function()` function<br>
+            - Adds `int` type hint for `param2` parameter in `detailed_function()` function<br>
+            - Adds `bool` return type annotation to `detailed_function()` function<br>
+            - Improves test case clarity and type safety for docstring checker validation
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`9fb7fb9`](https://github.com/data-science-extensions/docstring-format-checker/commit/9fb7fb94f4c436921f9ad320446881fce6d2a9bc): Add parameter type validation feature to ensure docstring parameter types match function signature annotations<br>
+            - Introduce `validate_param_types` configuration option to enable/disable type checking between function signatures and docstring parameter declarations<br>
+            - Add `._extract_param_types()` method to parse type annotations from function AST nodes<br>
+            - Add `._extract_param_types_from_docstring()` method to parse parameter types from docstring Params sections<br>
+            - Add `._normalize_type_string()` method to standardise type strings for comparison<br>
+            - Add `._compare_param_types()` method to identify mismatches between signature and docstring types<br>
+            - Add `._validate_param_types()` method to orchestrate validation and generate error messages<br>
+            - Support complex type annotations including `Optional`, `Union`, `list`, and `dict` types<br>
+            - Implement case-insensitive type comparison to handle variations like `str` vs `Str`<br>
+            - Automatically skip `self` and `cls` parameters in validation<br>
+            - Report detailed error messages indicating which parameters have type mismatches and what the differences are<br>
+            - Include comprehensive test coverage with 20+ test cases validating various scenarios including nested types, missing annotations, and edge cases
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`e6f0de2`](https://github.com/data-science-extensions/docstring-format-checker/commit/e6f0de2b5973fc1fe595d0e7380eb628ac5509e8): Enhance `run_blacken_docs()` function with retry logic and parsing error detection<br>
+            - Implement automatic re-runs (up to 3 attempts) when files are rewritten to ensure formatting stability<br>
+            - Add explicit detection for parsing errors (exit code 2 or "cannot parse" messages) that halt execution immediately<br>
+            - Include detailed console output with attempt numbers and status indicators<br>
+            - Prevent infinite loops by limiting attempts and raising errors if formatting doesn't stabilise<br>
+            - Add comprehensive docstring explaining the retry behaviour
+            (by [chrimaho](https://github.com/chrimaho))
+
+
 !!! info "v1.5.1"
 
     ## **v1.5.1 - Stricter Code Quality Standards**
