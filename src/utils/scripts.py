@@ -65,7 +65,61 @@ def run_black() -> None:
 
 
 def run_blacken_docs() -> None:
-    run("blacken-docs", *get_all_files(".md", ".py", ".ipynb"))
+    """
+    !!! note "Summary"
+        Run blacken-docs on all markdown, Python, and notebook files.
+
+    !!! note "Behaviour"
+        Automatically re-run if files are rewritten to ensure formatting is stable.
+        Only halt if there's a parsing error (cannot parse error message).
+    """
+
+    max_attempts: int = 3
+    attempt: int = 0
+
+    while attempt < max_attempts:
+
+        attempt += 1
+        files: list[str] = get_all_files(".md", ".py", ".ipynb")
+        _command: list[str] = ["blacken-docs", *files]
+
+        print(f"\n{'Attempt ' + str(attempt) + ': ' if attempt > 1 else ''}{' '.join(_command)}", flush=True)
+
+        result = subprocess.run(_command, check=False, encoding="utf-8", capture_output=True)
+
+        # Print stdout and stderr
+        if result.stdout:
+            print(result.stdout, end="", flush=True)
+        if result.stderr:
+            print(result.stderr, end="", file=sys.stderr, flush=True)
+
+        # Check for parsing errors (exit code 2 or "cannot parse" message)
+        # These should halt execution immediately
+        output_combined: str = (result.stdout + result.stderr).lower()
+        if result.returncode == 2 or "cannot parse" in output_combined or "parse error" in output_combined:
+            print(f"\n❌ blacken-docs encountered a parsing error. Halting.", file=sys.stderr, flush=True)
+            raise subprocess.CalledProcessError(result.returncode, _command, result.stdout, result.stderr)
+
+        # If exit code is 0, formatting is stable - success!
+        if result.returncode == 0:
+            if attempt > 1:
+                print(f"✅ blacken-docs formatting stabilised after {attempt} attempts.", flush=True)
+            return
+
+        # Exit code 1 typically means files were rewritten
+        # Re-run to ensure formatting is stable
+        if attempt < max_attempts:
+            print(
+                f"⚠️  Files were rewritten. Re-running blacken-docs (attempt {attempt + 1}/{max_attempts})...",
+                flush=True,
+            )
+        else:
+            print(
+                f"⚠️  blacken-docs still making changes after {max_attempts} attempts. This may indicate an issue.",
+                file=sys.stderr,
+                flush=True,
+            )
+            raise subprocess.CalledProcessError(result.returncode, _command, result.stdout, result.stderr)
 
 
 def run_isort() -> None:
@@ -101,7 +155,13 @@ def check_blacken_docs() -> None:
 
 
 def check_mypy() -> None:
-    run(f"mypy --install-types --non-interactive --config-file=pyproject.toml ./src/{DIRECTORY_NAME}")
+    run(
+        "mypy",
+        "--install-types",
+        "--non-interactive",
+        "--config-file=pyproject.toml",
+        f"./src/{DIRECTORY_NAME}",
+    )
 
 
 def check_isort() -> None:
