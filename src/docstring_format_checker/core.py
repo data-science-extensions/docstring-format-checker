@@ -582,6 +582,29 @@ class DocstringChecker:
                 item_type=item.item_type,
             )
 
+    def _is_params_section_required(self, item: FunctionAndClassDetails) -> bool:
+        """
+        !!! note "Summary"
+            Check if params section is required for this item.
+
+        Params:
+            item (FunctionAndClassDetails):
+                The function or class details.
+
+        Returns:
+            (bool):
+                True if params section is required, False otherwise.
+        """
+
+        # For classes, params section not required (attributes handled differently)
+        if isinstance(item.node, ast.ClassDef):
+            return False
+
+        # For functions, only required if function has parameters (excluding self/cls)
+        # item.node is guaranteed to be FunctionDef or AsyncFunctionDef due to type constraints
+        params = [arg.arg for arg in item.node.args.args if arg.arg not in ("self", "cls")]
+        return len(params) > 0
+
     def _validate_all_required_sections(self, docstring: str, item: FunctionAndClassDetails) -> list[str]:
         """
         !!! note "Summary"
@@ -602,18 +625,12 @@ class DocstringChecker:
         for section in self.required_sections:
             # Special handling for params section - only required if function/class has parameters
             if section.name.lower() == "params":
-                if isinstance(item.node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    params = [arg.arg for arg in item.node.args.args if arg.arg not in ("self", "cls")]
-                    if not params:
-                        # No parameters, so params section not required
-                        continue
-                elif isinstance(item.node, ast.ClassDef):
-                    # For classes, params section not required (attributes handled differently)
+                if not self._is_params_section_required(item):
                     continue
 
             # Only check if the section exists, don't validate content yet
             if not self._section_exists(docstring, section):
-                errors.append(f"Missing required section: {section.name.capitalize()}")
+                errors.append(f"Missing required section: {section.name}")
         return errors
 
     def _validate_all_existing_sections(self, docstring: str, item: FunctionAndClassDetails) -> list[str]:
@@ -698,35 +715,14 @@ class DocstringChecker:
                 Error message if validation fails, None otherwise.
         """
 
-        if section.type == "free_text":
-            # Free text sections don't need content validation beyond existence
-            return None
-        elif section.type == "list_name_and_type":
+        if section.type == "list_name_and_type":
             return self._validate_list_name_and_type_section(docstring, section, item)
-        elif section.type == "list_type":
-            return self._validate_list_type_section(docstring, section)
-        elif section.type == "list_name":
+
+        if section.type == "list_name":
             return self._validate_list_name_section(docstring, section)
-        return None
 
-    def _validate_free_text_section(self, docstring: str, section: SectionConfig) -> Optional[str]:
-        """
-        !!! note "Summary"
-            Validate free text sections content.
-
-        Params:
-            docstring (str):
-                The docstring to validate.
-            section (SectionConfig):
-                The section configuration.
-
-        Returns:
-            (Optional[str]):
-                Error message if section content is invalid, None otherwise.
-        """
-
-        # For free text sections, no specific content validation needed
-        # Just verify it exists (which it should since we only call this for existing sections)
+        # For `section.type in ("free_text", "list_type")`
+        # these sections do not need content validation beyond existence
         return None
 
     def _validate_list_name_and_type_section(
@@ -762,36 +758,8 @@ class DocstringChecker:
                 if type_error:
                     return type_error
 
-        elif section_name in ["returns", "return"]:
-            if not self._check_returns_section(docstring):
-                return "Missing or invalid Returns section"
-
-        return None
-
-    def _validate_list_type_section(self, docstring: str, section: SectionConfig) -> Optional[str]:
-        """
-        !!! note "Summary"
-            Validate list_type sections (raises, yields).
-
-        Params:
-            docstring (str):
-                The docstring to validate.
-            section (SectionConfig):
-                The section configuration.
-
-        Returns:
-            (Optional[str]):
-                Error message if section is invalid, None otherwise.
-        """
-
-        section_name: str = section.name.lower()
-
-        if section_name in ["raises", "raise"]:
-            if not self._check_raises_section(docstring):
-                return "Missing or invalid Raises section"
-        elif section_name in ["yields", "yield"]:
-            if not self._check_yields_section(docstring):
-                return "Missing or invalid Yields section"
+        # For returns/return sections, no additional validation beyond existence
+        # The _section_exists check already verified the section is present
 
         return None
 
@@ -810,8 +778,8 @@ class DocstringChecker:
             (Optional[str]):
                 Error message if section is missing, None otherwise.
         """
-        if not self._check_simple_section(docstring, section.name):
-            return f"Missing required section: {section.name}"
+        # No additional validation beyond existence
+        # The _section_exists check already verified the section is present
         return None
 
     def _perform_comprehensive_validation(self, docstring: str) -> list[str]:
@@ -1146,38 +1114,6 @@ class DocstringChecker:
 
         return None
 
-    def _check_returns_section(self, docstring: str) -> bool:
-        """
-        !!! note "Summary"
-            Check if the Returns section exists.
-
-        Params:
-            docstring (str):
-                The docstring to check.
-
-        Returns:
-            (bool):
-                `True` if the section exists, `False` otherwise.
-        """
-
-        return bool(re.search(r"Returns:", docstring))
-
-    def _check_raises_section(self, docstring: str) -> bool:
-        """
-        !!! note "Summary"
-            Check if the Raises section exists.
-
-        Params:
-            docstring (str):
-                The docstring to check.
-
-        Returns:
-            (bool):
-                `True` if the section exists, `False` otherwise.
-        """
-
-        return bool(re.search(r"Raises:", docstring))
-
     def _has_both_returns_and_yields(self, docstring: str) -> bool:
         """
         !!! note "Summary"
@@ -1321,41 +1257,6 @@ class DocstringChecker:
                 pass
 
         return errors
-
-    def _check_yields_section(self, docstring: str) -> bool:
-        """
-        !!! note "Summary"
-            Check if the Yields section exists.
-
-        Params:
-            docstring (str):
-                The docstring to check.
-
-        Returns:
-            (bool):
-                `True` if the section exists, `False` otherwise.
-        """
-
-        return bool(re.search(r"Yields:", docstring))
-
-    def _check_simple_section(self, docstring: str, section_name: str) -> bool:
-        """
-        !!! note "Summary"
-            Check if a simple named section exists.
-
-        Params:
-            docstring (str):
-                The docstring to check.
-            section_name (str):
-                The name of the section to check for.
-
-        Returns:
-            (bool):
-                `True` if the section exists, `False` otherwise.
-        """
-
-        pattern: str = rf"{re.escape(section_name)}:"
-        return bool(re.search(pattern, docstring, re.IGNORECASE))
 
     def _normalize_section_name(self, section_name: str) -> str:
         """
