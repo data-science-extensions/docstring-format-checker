@@ -269,6 +269,7 @@ def _show_config_example_callback() -> None:
         [blue]allow_undefined_sections = false[/blue]
         [blue]require_docstrings = true[/blue]
         [blue]check_private = true[/blue]
+        [blue]validate_param_types = true[/blue]
         [blue]sections = [[/blue]
             [blue]{ order = 1, name = "summary",  type = "free_text",          required = true, admonition = "note", prefix = "!!!" },[/blue]
             [blue]{ order = 2, name = "details",  type = "free_text",          required = false, admonition = "abstract", prefix = "???+" },[/blue]
