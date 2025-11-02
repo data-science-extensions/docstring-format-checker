@@ -9,16 +9,22 @@
 ##  Imports                                                                 ####
 ## --------------------------------------------------------------------------- #
 
-
 # ## Python StdLib Imports ----
+import sys
 import tempfile
 from pathlib import Path
 from textwrap import dedent
 from unittest import TestCase
 
 # ## Local First Party Imports ----
-from docstring_format_checker.config import Config, GlobalConfig, SectionConfig
+from docstring_format_checker.config import (
+    Config,
+    GlobalConfig,
+    SectionConfig,
+    load_config,
+)
 from docstring_format_checker.core import DocstringChecker
+from docstring_format_checker.utils.exceptions import DocstringError
 
 
 # ---------------------------------------------------------------------------- #
@@ -29,12 +35,16 @@ from docstring_format_checker.core import DocstringChecker
 
 
 class TestGlobalConfigFeatures(TestCase):
-    """Test the new global configuration flags."""
+    """
+    Test the new global configuration flags.
+    """
 
     def test_load_global_config_from_toml(self) -> None:
-        """Test loading global config flags from TOML file."""
+        """
+        Test loading global config flags from TOML file.
+        """
 
-        toml_content = dedent(
+        toml_content: str = dedent(
             """
             [tool.dfc]
             allow_undefined_sections = true
@@ -46,27 +56,23 @@ class TestGlobalConfigFeatures(TestCase):
             name = "summary"
             type = "free_text"
             required = true
-        """
+            """
         ).strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(toml_content)
             f.flush()
-            temp_file = f.name
+            temp_file: str = f.name
 
         try:
             # Force module reload to avoid potential caching issues
             # ## Python StdLib Imports ----
             import importlib
-            import sys
 
             if "docstring_format_checker.config" in sys.modules:
                 importlib.reload(sys.modules["docstring_format_checker.config"])
 
-            # ## Local First Party Imports ----
-            from docstring_format_checker.config import load_config
-
-            config = load_config(temp_file)
+            config: Config = load_config(temp_file)
 
             # Verify global config was loaded correctly
             assert config.global_config.allow_undefined_sections is True
@@ -81,9 +87,11 @@ class TestGlobalConfigFeatures(TestCase):
             Path(temp_file).unlink(missing_ok=True)
 
     def test_load_default_global_config_values(self) -> None:
-        """Test that default global config values are used when not specified in TOML."""
+        """
+        Test that default global config values are used when not specified in TOML.
+        """
 
-        toml_content = dedent(
+        toml_content: str = dedent(
             """
             [tool.dfc]
 
@@ -92,19 +100,17 @@ class TestGlobalConfigFeatures(TestCase):
             name = "summary"
             type = "free_text"
             required = true
-        """
+            """
         ).strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(toml_content)
             f.flush()
-            temp_file = f.name
+            temp_file: str = f.name
 
         try:
-            # ## Local First Party Imports ----
-            from docstring_format_checker.config import load_config
 
-            config = load_config(temp_file)
+            config: Config = load_config(temp_file)
 
             # Verify default global config values
             assert config.global_config.allow_undefined_sections is False
@@ -115,9 +121,11 @@ class TestGlobalConfigFeatures(TestCase):
             Path(temp_file).unlink(missing_ok=True)
 
     def test_allow_undefined_sections_false(self) -> None:
-        """Test that undefined sections raise errors when allow_undefined_sections=False."""
+        """
+        Test that undefined sections raise errors when allow_undefined_sections=False.
+        """
 
-        sections = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True),
         ]
 
@@ -126,7 +134,7 @@ class TestGlobalConfigFeatures(TestCase):
         checker = DocstringChecker(config)
 
         # Create a Python file with an undefined section
-        python_content = dedent(
+        python_content: str = dedent(
             '''
             def test_function():
                 """
@@ -137,7 +145,7 @@ class TestGlobalConfigFeatures(TestCase):
                     This section is not defined in config.
                 """
                 pass
-        '''
+            '''
         ).strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
@@ -146,18 +154,21 @@ class TestGlobalConfigFeatures(TestCase):
             temp_file = f.name
 
         try:
-            errors = checker.check_file(temp_file)
+            errors: list[DocstringError] = checker.check_file(temp_file)
             # Should have an error about the undefined section
             assert len(errors) > 0
-            error_messages = [e.message for e in errors]
+            error_messages: list[str] = [e.message for e in errors]
             assert any("undefined_section" in msg.lower() for msg in error_messages)
+
         finally:
             Path(temp_file).unlink(missing_ok=True)
 
     def test_allow_undefined_sections_true(self) -> None:
-        """Test that undefined sections are ignored when allow_undefined_sections=True."""
+        """
+        Test that undefined sections are ignored when allow_undefined_sections=True.
+        """
 
-        sections = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True),
         ]
 
@@ -166,7 +177,7 @@ class TestGlobalConfigFeatures(TestCase):
         checker = DocstringChecker(config)
 
         # Create a Python file with an undefined section
-        python_content = dedent(
+        python_content: str = dedent(
             '''
             def test_function():
                 """
@@ -177,26 +188,29 @@ class TestGlobalConfigFeatures(TestCase):
                     This section is not defined in config.
                 """
                 pass
-        '''
+            '''
         ).strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(python_content)
             f.flush()
-            temp_file = f.name
+            temp_file: str = f.name
 
         try:
-            errors = checker.check_file(temp_file)
+            errors: list[DocstringError] = checker.check_file(temp_file)
             # Should NOT have errors about undefined sections
-            error_messages = [e.message for e in errors]
+            error_messages: list[str] = [e.message for e in errors]
             assert not any("undefined_section" in msg.lower() for msg in error_messages)
+
         finally:
             Path(temp_file).unlink(missing_ok=True)
 
     def test_require_docstrings_true(self) -> None:
-        """Test that missing docstrings raise errors when require_docstrings=True."""
+        """
+        Test that missing docstrings raise errors when require_docstrings=True.
+        """
 
-        sections = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True),
         ]
 
@@ -205,11 +219,11 @@ class TestGlobalConfigFeatures(TestCase):
         checker = DocstringChecker(config)
 
         # Create a Python file with a function missing docstring
-        python_content = dedent(
+        python_content: str = dedent(
             """
             def test_function():
                 pass
-        """
+            """
         ).strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
@@ -218,18 +232,21 @@ class TestGlobalConfigFeatures(TestCase):
             temp_file = f.name
 
         try:
-            errors = checker.check_file(temp_file)
+            errors: list[DocstringError] = checker.check_file(temp_file)
             # Should have an error about missing docstring
             assert len(errors) > 0
-            error_messages = [e.message for e in errors]
+            error_messages: list[str] = [e.message for e in errors]
             assert any("missing docstring" in msg.lower() for msg in error_messages)
+
         finally:
             Path(temp_file).unlink(missing_ok=True)
 
     def test_require_docstrings_false(self) -> None:
-        """Test that missing docstrings are ignored when require_docstrings=False."""
+        """
+        Test that missing docstrings are ignored when require_docstrings=False.
+        """
 
-        sections = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True),
         ]
 
@@ -238,30 +255,33 @@ class TestGlobalConfigFeatures(TestCase):
         checker = DocstringChecker(config)
 
         # Create a Python file with a function missing docstring
-        python_content = dedent(
+        python_content: str = dedent(
             """
             def test_function():
                 pass
-        """
+            """
         ).strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(python_content)
             f.flush()
-            temp_file = f.name
+            temp_file: str = f.name
 
         try:
-            errors = checker.check_file(temp_file)
+            errors: list[DocstringError] = checker.check_file(temp_file)
             # Should NOT have errors about missing docstrings
-            error_messages = [e.message for e in errors]
+            error_messages: list[str] = [e.message for e in errors]
             assert not any("missing docstring" in msg.lower() for msg in error_messages)
+
         finally:
             Path(temp_file).unlink(missing_ok=True)
 
     def test_check_private_false(self) -> None:
-        """Test that private functions are ignored when check_private=False."""
+        """
+        Test that private functions are ignored when check_private=False.
+        """
 
-        sections = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True),
         ]
 
@@ -270,14 +290,14 @@ class TestGlobalConfigFeatures(TestCase):
         checker = DocstringChecker(config)
 
         # Create a Python file with private functions missing docstrings
-        python_content = dedent(
+        python_content: str = dedent(
             """
             def _private_function():
                 pass
 
             def __dunder_function__():
                 pass
-        """
+            """
         ).strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
@@ -286,16 +306,19 @@ class TestGlobalConfigFeatures(TestCase):
             temp_file = f.name
 
         try:
-            errors = checker.check_file(temp_file)
+            errors: list[DocstringError] = checker.check_file(temp_file)
             # Should have NO errors since private functions are ignored
             assert len(errors) == 0
+
         finally:
             Path(temp_file).unlink(missing_ok=True)
 
     def test_check_private_true(self) -> None:
-        """Test that private functions are checked when check_private=True."""
+        """
+        Test that private functions are checked when check_private=True.
+        """
 
-        sections = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True),
         ]
 
@@ -304,14 +327,14 @@ class TestGlobalConfigFeatures(TestCase):
         checker = DocstringChecker(config)
 
         # Create a Python file with private functions missing docstrings
-        python_content = dedent(
+        python_content: str = dedent(
             """
             def _private_function():
                 pass
 
             def __dunder_function__():
                 pass
-        """
+            """
         ).strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
@@ -325,13 +348,16 @@ class TestGlobalConfigFeatures(TestCase):
             assert len(errors) > 0
             error_messages = [e.message for e in errors]
             assert any("missing docstring" in msg.lower() for msg in error_messages)
+
         finally:
             Path(temp_file).unlink(missing_ok=True)
 
     def test_combined_config_flags(self) -> None:
-        """Test multiple config flags working together."""
+        """
+        Test multiple config flags working together.
+        """
 
-        sections = [
+        sections: list[SectionConfig] = [
             SectionConfig(order=1, name="summary", type="free_text", required=True, admonition="note", prefix="!!!"),
         ]
 
@@ -357,21 +383,22 @@ class TestGlobalConfigFeatures(TestCase):
 
             def public_function_no_docstring():
                 pass
-        '''
+            '''
         ).strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(python_content)
             f.flush()
-            temp_file = f.name
+            temp_file: str = f.name
 
         try:
-            errors = checker.check_file(temp_file)
+            errors: list[DocstringError] = checker.check_file(temp_file)
 
             # Should have NO errors:
             # - Private function is checked but has docstring (no missing docstring error)
             # - Undefined section is allowed (no undefined section error)
             # - Public function without docstring is allowed (require_docstrings=False)
             assert len(errors) == 0
+
         finally:
             Path(temp_file).unlink(missing_ok=True)

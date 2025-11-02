@@ -32,7 +32,7 @@ from docstring_format_checker.cli import (
     app,
     entry_point,
 )
-from docstring_format_checker.core import DocstringChecker, DocstringError
+from docstring_format_checker.core import DocstringChecker
 from docstring_format_checker.utils.exceptions import DocstringError
 from tests.setup import clean
 
@@ -1480,7 +1480,7 @@ class TestClass:
 
             # In quiet mode with success, should show minimal output (might be empty or just warnings)
             # The important thing is that it doesn't show detailed errors
-            output = clean(result.output)
+            output: str = clean(result.output)
             # Should not contain detailed error information
             assert "Missing required section" not in output
 

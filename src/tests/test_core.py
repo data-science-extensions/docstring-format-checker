@@ -9,7 +9,6 @@
 ##  Imports                                                                 ####
 ## --------------------------------------------------------------------------- #
 
-
 # ## Python StdLib Imports ----
 import ast
 import subprocess
@@ -1657,8 +1656,6 @@ class TestDocstringChecker(TestCase):
         """
         Test the _is_overload_function helper method directly.
         """
-        # ## Python StdLib Imports ----
-        import ast
 
         checker: DocstringChecker = simple_checker()
 
