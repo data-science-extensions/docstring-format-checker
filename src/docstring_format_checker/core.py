@@ -1105,7 +1105,9 @@ class DocstringChecker:
             # List output will add additional indentation via CLI formatting
             mismatch_blocks: list[str] = []
             for name, sig_type, doc_type in mismatches:
-                param_block = f"""'{name}':\n    - signature: '{sig_type.replace("\'",'"')}'\n    - docstring: '{doc_type.replace("\'",'"')}' """
+                sig_type: str = sig_type.replace("'", '"')
+                doc_type: str = doc_type.replace("'", '"')
+                param_block: str = f"""'{name}':\n    - signature: '{sig_type}'\n    - docstring: '{doc_type}' """
                 mismatch_blocks.append(param_block)
 
             # Join all parameter blocks with proper indentation
