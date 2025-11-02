@@ -4566,7 +4566,7 @@ class TestParameterTypeValidation(TestCase):
 
     def test_94_is_params_section_required_for_property(self) -> None:
         """
-        Test _is_params_section_required returns True for non-function/class items.
+        Test _is_params_section_required returns False for properties that have a self parameter.
         """
 
         config = Config(
