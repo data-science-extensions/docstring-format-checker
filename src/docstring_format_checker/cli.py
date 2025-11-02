@@ -543,8 +543,19 @@ def _format_error_output(error: DocstringError) -> list[str]:
     """
     lines: list[str] = [_create_error_header(error)]
     individual_errors: list[str] = _split_error_messages(error.message)
+
     for individual_error in individual_errors:
-        lines.append(f"    - {individual_error}")
+        # Check if this error has multi-line content (e.g., parameter type mismatches)
+        if "\n" in individual_error:
+            # Split by newlines and add 4 spaces of extra indentation to each line
+            error_lines = individual_error.split("\n")
+            lines.append(f"    - {error_lines[0]}")  # First line gets the bullet
+            for sub_line in error_lines[1:]:
+                if sub_line.strip():  # Only add non-empty lines
+                    lines.append(f"    {sub_line}")  # Continuation lines get 4 spaces
+        else:
+            lines.append(f"    - {individual_error}")
+
     return lines
 
 

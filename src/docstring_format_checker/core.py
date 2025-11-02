@@ -559,9 +559,13 @@ class DocstringChecker:
 
         errors: list[str] = []
 
-        # Validate required sections
+        # Validate required sections are present
         required_section_errors: list[str] = self._validate_all_required_sections(docstring, item)
         errors.extend(required_section_errors)
+
+        # Validate all existing sections (required or not)
+        existing_section_errors: list[str] = self._validate_all_existing_sections(docstring, item)
+        errors.extend(existing_section_errors)
 
         # Perform comprehensive validation checks
         comprehensive_errors: list[str] = self._perform_comprehensive_validation(docstring)
@@ -581,7 +585,7 @@ class DocstringChecker:
     def _validate_all_required_sections(self, docstring: str, item: FunctionAndClassDetails) -> list[str]:
         """
         !!! note "Summary"
-            Validate all required sections are present and valid.
+            Validate all required sections are present.
 
         Params:
             docstring (str):
@@ -591,22 +595,95 @@ class DocstringChecker:
 
         Returns:
             (list[str]):
-                List of validation error messages.
+                List of validation error messages for missing required sections.
         """
 
         errors: list[str] = []
         for section in self.required_sections:
-            section_error = self._validate_single_required_section(docstring, section, item)
-            if section_error:
-                errors.append(section_error)
+            # Special handling for params section - only required if function/class has parameters
+            if section.name.lower() == "params":
+                if isinstance(item.node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    params = [arg.arg for arg in item.node.args.args if arg.arg not in ("self", "cls")]
+                    if not params:
+                        # No parameters, so params section not required
+                        continue
+                elif isinstance(item.node, ast.ClassDef):
+                    # For classes, params section not required (attributes handled differently)
+                    continue
+
+            # Only check if the section exists, don't validate content yet
+            if not self._section_exists(docstring, section):
+                errors.append(f"Missing required section: {section.name.capitalize()}")
         return errors
 
-    def _validate_single_required_section(
+    def _validate_all_existing_sections(self, docstring: str, item: FunctionAndClassDetails) -> list[str]:
+        """
+        !!! note "Summary"
+            Validate content of all existing sections (required or not).
+
+        Params:
+            docstring (str):
+                The docstring to validate.
+            item (FunctionAndClassDetails):
+                The function or class details.
+
+        Returns:
+            (list[str]):
+                List of validation error messages for invalid section content.
+        """
+
+        errors: list[str] = []
+        for section in self.config.sections:
+            # Only validate if the section actually exists in the docstring
+            if self._section_exists(docstring, section):
+                section_error = self._validate_single_section_content(docstring, section, item)
+                if section_error:
+                    errors.append(section_error)
+        return errors
+
+    def _section_exists(self, docstring: str, section: SectionConfig) -> bool:
+        """
+        !!! note "Summary"
+            Check if a section exists in the docstring.
+
+        Params:
+            docstring (str):
+                The docstring to check.
+            section (SectionConfig):
+                The section configuration.
+
+        Returns:
+            (bool):
+                `True` if section exists, `False` otherwise.
+        """
+
+        section_name: str = section.name.lower()
+
+        # For free text sections, use the existing logic from _check_free_text_section
+        if section.type == "free_text":
+            return self._check_free_text_section(docstring, section)
+
+        # Check for admonition style sections (for non-free-text types)
+        if section.admonition and isinstance(section.admonition, str):
+            if section.prefix and isinstance(section.prefix, str):
+                # e.g., "!!! note" or "???+ abstract"
+                pattern: str = rf"{re.escape(section.prefix)}\s+{re.escape(section.admonition)}"
+                if re.search(pattern, docstring, re.IGNORECASE):
+                    return True
+
+        # Check for standard sections with colons (e.g., "Params:", "Returns:")
+        pattern = rf"^[ \t]*{re.escape(section_name)}:[ \t]*$"
+        if re.search(pattern, docstring, re.IGNORECASE | re.MULTILINE):
+            return True
+
+        return False
+
+    def _validate_single_section_content(
         self, docstring: str, section: SectionConfig, item: FunctionAndClassDetails
     ) -> Optional[str]:
         """
         !!! note "Summary"
-            Validate a single required section based on its type.
+            Validate the content of a single section based on its type.
 
         Params:
             docstring (str):
@@ -622,7 +699,8 @@ class DocstringChecker:
         """
 
         if section.type == "free_text":
-            return self._validate_free_text_section(docstring, section)
+            # Free text sections don't need content validation beyond existence
+            return None
         elif section.type == "list_name_and_type":
             return self._validate_list_name_and_type_section(docstring, section, item)
         elif section.type == "list_type":
@@ -634,7 +712,7 @@ class DocstringChecker:
     def _validate_free_text_section(self, docstring: str, section: SectionConfig) -> Optional[str]:
         """
         !!! note "Summary"
-            Validate free text sections.
+            Validate free text sections content.
 
         Params:
             docstring (str):
@@ -644,11 +722,11 @@ class DocstringChecker:
 
         Returns:
             (Optional[str]):
-                Error message if section is missing, None otherwise.
+                Error message if section content is invalid, None otherwise.
         """
 
-        if not self._check_free_text_section(docstring, section):
-            return f"Missing required section: {section.name}"
+        # For free text sections, no specific content validation needed
+        # Just verify it exists (which it should since we only call this for existing sections)
         return None
 
     def _validate_list_name_and_type_section(
@@ -1053,11 +1131,18 @@ class DocstringChecker:
         mismatches: list[tuple[str, str, str]] = self._compare_param_types(signature_types, docstring_types)
 
         if mismatches:
-            mismatch_details: list[str] = [
-                f"'{name}': signature has '{sig_type}', docstring has '{doc_type}'"
-                for name, sig_type, doc_type in mismatches
-            ]
-            return f"Parameter type mismatch: {'; '.join(mismatch_details)}"
+            # Format each mismatch with parameter name on one line, signature and docstring indented below
+            # Use 2 spaces for params, 4 for sig/doc (suitable for table output)
+            # List output will add additional indentation via CLI formatting
+            mismatch_blocks: list[str] = []
+            for name, sig_type, doc_type in mismatches:
+                param_block = f"""'{name}':\n    - signature: '{sig_type.replace("\'",'"')}'\n    - docstring: '{doc_type.replace("\'",'"')}' """
+                mismatch_blocks.append(param_block)
+
+            # Join all parameter blocks with proper indentation
+            formatted_details: str = "\n  - ".join([""] + mismatch_blocks)
+
+            return f"Parameter type mismatch:{formatted_details}"
 
         return None
 
