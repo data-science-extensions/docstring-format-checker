@@ -4830,3 +4830,411 @@ class TestParameterTypeValidation(TestCase):
 
         finally:
             temp_path.unlink()
+
+    def test_101_param_mismatch_missing_in_docstring(self) -> None:
+        """
+        Test detailed error when parameter exists in signature but not in docstring.
+        """
+        python_content: str = dedent(
+            """
+            def example_function(name: str, age: int, city: str) -> None:
+                '''
+                Example function with parameters.
+
+                Params:
+                    name (str):
+                        The name parameter.
+                    age (int):
+                        The age parameter.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True)
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 1
+            assert "Parameter mismatch" in errors[0].message
+            assert "In signature but not in docstring: 'city'" in errors[0].message
+
+        finally:
+            temp_path.unlink()
+
+    def test_102_param_mismatch_extra_in_docstring(self) -> None:
+        """
+        Test detailed error when parameter exists in docstring but not in signature.
+        """
+        python_content: str = dedent(
+            """
+            def example_function(name: str, age: int) -> None:
+                '''
+                Example function with parameters.
+
+                Params:
+                    name (str):
+                        The name parameter.
+                    age (int):
+                        The age parameter.
+                    city (str):
+                        The city parameter - DOES NOT EXIST IN SIGNATURE.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True)
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 1
+            assert "Parameter mismatch" in errors[0].message
+            assert "In docstring but not in signature: 'city'" in errors[0].message
+
+        finally:
+            temp_path.unlink()
+
+    def test_103_param_mismatch_both_directions(self) -> None:
+        """
+        Test detailed error when parameters mismatch in both directions.
+        """
+        python_content: str = dedent(
+            """
+            def example_function(name: str, age: int, email: str) -> None:
+                '''
+                Example function with parameters.
+
+                Params:
+                    name (str):
+                        The name parameter.
+                    age (int):
+                        The age parameter.
+                    city (str):
+                        The city parameter - DOES NOT EXIST IN SIGNATURE.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True)
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 1
+            assert "Parameter mismatch" in errors[0].message
+            assert "In signature but not in docstring: 'email'" in errors[0].message
+            assert "In docstring but not in signature: 'city'" in errors[0].message
+
+        finally:
+            temp_path.unlink()
+
+    def test_104_param_mismatch_multiple_missing_in_docstring(self) -> None:
+        """
+        Test detailed error when multiple parameters missing in docstring.
+        """
+        python_content: str = dedent(
+            """
+            def example_function(name: str, age: int, city: str, country: str) -> None:
+                '''
+                Example function with parameters.
+
+                Params:
+                    name (str):
+                        The name parameter.
+                    age (int):
+                        The age parameter.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True)
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 1
+            assert "Parameter mismatch" in errors[0].message
+            assert "'city'" in errors[0].message
+            assert "'country'" in errors[0].message
+            assert "In signature but not in docstring" in errors[0].message
+
+        finally:
+            temp_path.unlink()
+
+    def test_105_param_mismatch_typo_in_parameter_name(self) -> None:
+        """
+        Test detailed error helps identify typos in parameter names.
+        """
+        python_content: str = dedent(
+            """
+            def example_function(interpolation_nodes: list, values: list) -> None:
+                '''
+                Example function with parameters.
+
+                Params:
+                    interpol_nodes (list):
+                        The interpolation nodes - TYPO IN NAME.
+                    values (list):
+                        The values parameter.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True)
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 1
+            assert "Parameter mismatch" in errors[0].message
+            assert "In signature but not in docstring: 'interpolation_nodes'" in errors[0].message
+            assert "In docstring but not in signature: 'interpol_nodes'" in errors[0].message
+
+        finally:
+            temp_path.unlink()
+
+    def test_106_check_params_section_no_params(self) -> None:
+        """
+        Test _check_params_section returns True when function has no parameters.
+        """
+
+        python_content: str = dedent(
+            """
+            def example_function() -> None:
+                '''
+                Example function with no parameters.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=False),
+        ]
+        config: Config = _create_config(sections, validate_param_types=False)
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            # Parse the file to get the AST
+            with open(temp_path, encoding="utf-8") as f:
+                tree: Module = ast.parse(f.read())
+
+            # Get the function node
+            func_node = tree.body[0]
+            assert isinstance(func_node, ast.FunctionDef)
+
+            # Test the _check_params_section method directly
+            result: bool = checker._check_params_section("Example function with no parameters.", func_node)
+            assert result is True
+
+        finally:
+            temp_path.unlink()
+
+    def test_107_check_params_section_missing_params_section(self) -> None:
+        """
+        Test _check_params_section returns False when Params section is missing.
+        """
+
+        python_content: str = dedent(
+            """
+            def example_function(name: str, age: int) -> None:
+                '''
+                Example function with parameters but no Params section.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=False),
+        ]
+        config: Config = _create_config(sections, validate_param_types=False)
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            # Parse the file to get the AST
+            with open(temp_path, encoding="utf-8") as f:
+                tree: Module = ast.parse(f.read())
+
+            # Get the function node
+            func_node = tree.body[0]
+            assert isinstance(func_node, ast.FunctionDef)
+
+            # Test the _check_params_section method directly
+            result: bool = checker._check_params_section(
+                "Example function with parameters but no Params section.", func_node
+            )
+            assert result is False
+
+        finally:
+            temp_path.unlink()
+
+    def test_108_check_params_section_missing_param_documentation(self) -> None:
+        """
+        Test _check_params_section returns False when a parameter is not documented.
+        """
+
+        python_content: str = dedent(
+            """
+            def example_function(name: str, age: int) -> None:
+                '''
+                Example function with parameters.
+
+                Params:
+                    name (str):
+                        The name parameter.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=False),
+        ]
+        config: Config = _create_config(sections, validate_param_types=False)
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            # Parse the file to get the AST
+            with open(temp_path, encoding="utf-8") as f:
+                tree: Module = ast.parse(f.read())
+
+            # Get the function node
+            func_node = tree.body[0]
+            assert isinstance(func_node, ast.FunctionDef)
+
+            # Test the _check_params_section method directly
+            docstring: str = dedent(
+                """
+                Example function with parameters.
+
+                Params:
+                    name (str):
+                        The name parameter.
+                """
+            )
+            result: bool = checker._check_params_section(docstring, func_node)
+            assert result is False  # age parameter is not documented
+
+        finally:
+            temp_path.unlink()
+
+    def test_109_check_params_section_all_params_documented(self) -> None:
+        """
+        Test _check_params_section returns True when all parameters are documented.
+        """
+
+        python_content: str = dedent(
+            """
+            def example_function(name: str, age: int) -> None:
+                '''
+                Example function with parameters.
+
+                Params:
+                    name (str):
+                        The name parameter.
+                    age (int):
+                        The age parameter.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=False),
+        ]
+        config: Config = _create_config(sections, validate_param_types=False)
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            # Parse the file to get the AST
+            with open(temp_path, encoding="utf-8") as f:
+                tree: Module = ast.parse(f.read())
+
+            # Get the function node
+            func_node = tree.body[0]
+            assert isinstance(func_node, ast.FunctionDef)
+
+            # Test the _check_params_section method directly
+            docstring: str = dedent(
+                """
+                Example function with parameters.
+
+                Params:
+                    name (str):
+                        The name parameter.
+                    age (int):
+                        The age parameter.
+                """
+            )
+            result: bool = checker._check_params_section(docstring, func_node)
+            assert result is True
+
+        finally:
+            temp_path.unlink()
