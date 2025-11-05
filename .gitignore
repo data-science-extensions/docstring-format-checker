@@ -6,6 +6,7 @@ Pipfile.lock
 .vscode/
 .github/copilot-instructions.md
 git_output/
+.github/instructions/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

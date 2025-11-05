@@ -748,9 +748,10 @@ class DocstringChecker:
         section_name: str = section.name.lower()
 
         if section_name == "params" and isinstance(item.node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            # Check params section exists and is properly formatted
-            if not self._check_params_section(docstring, item.node):
-                return "Missing or invalid Params section"
+            # Check params section exists and is properly formatted with detailed error reporting
+            is_valid, error_message = self._check_params_section_detailed(docstring, item.node)
+            if not is_valid:
+                return error_message
 
             # If validate_param_types is enabled, validate type annotations match
             if self.config.global_config.validate_param_types:
@@ -924,6 +925,113 @@ class DocstringChecker:
                 return False
 
         return True
+
+    def _extract_documented_params(self, docstring: str) -> list[str]:
+        """
+        !!! note "Summary"
+            Extract parameter names from the Params section of a docstring.
+
+        Params:
+            docstring (str):
+                The docstring to parse.
+
+        Returns:
+            (list[str]):
+                List of parameter names found in the Params section.
+        """
+        documented_params: list[str] = []
+        param_pattern: str = r"^\s*(\w+)\s*\([^)]+\):"
+        lines: list[str] = docstring.split("\n")
+        in_params_section: bool = False
+
+        for line in lines:
+            # Check if we've entered the Params section
+            if "Params:" in line:
+                in_params_section = True
+                continue
+
+            # Check if we've left the Params section (next section starts)
+            if in_params_section and re.match(r"^[ ]{0,4}[A-Z]\w+:", line):
+                break
+
+            # Extract parameter name
+            if in_params_section:
+                match = re.match(param_pattern, line)
+                if match:
+                    documented_params.append(match.group(1))
+
+        return documented_params
+
+    def _build_param_mismatch_error(self, missing_in_docstring: list[str], extra_in_docstring: list[str]) -> str:
+        """
+        !!! note "Summary"
+            Build detailed error message for parameter mismatches.
+
+        Params:
+            missing_in_docstring (list[str]):
+                Parameters in signature but not in docstring.
+            extra_in_docstring (list[str]):
+                Parameters in docstring but not in signature.
+
+        Returns:
+            (str):
+                Formatted error message.
+        """
+        error_parts: list[str] = []
+
+        if missing_in_docstring:
+            missing_str: str = "', '".join(missing_in_docstring)
+            error_parts.append(f"  - In signature but not in docstring: '{missing_str}'")
+
+        if extra_in_docstring:
+            extra_str: str = "', '".join(extra_in_docstring)
+            error_parts.append(f"  - In docstring but not in signature: '{extra_str}'")
+
+        return "Parameter mismatch:\n" + "\n".join(error_parts)
+
+    def _check_params_section_detailed(
+        self, docstring: str, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]
+    ) -> tuple[bool, Optional[str]]:
+        """
+        !!! note "Summary"
+            Check if the Params section exists and documents all parameters, with detailed error reporting.
+
+        Params:
+            docstring (str):
+                The docstring to check.
+            node (Union[ast.FunctionDef, ast.AsyncFunctionDef]):
+                The function node to check.
+
+        Returns:
+            (tuple[bool, Optional[str]]):
+                Tuple of (is_valid, error_message). If valid, error_message is None.
+        """
+
+        # Get function parameters (excluding 'self' and 'cls' for methods)
+        signature_params: list[str] = [arg.arg for arg in node.args.args if arg.arg not in ("self", "cls")]
+
+        if not signature_params:
+            return (True, None)  # No parameters to document
+
+        # Check if Params section exists
+        if not re.search(r"Params:", docstring):
+            return (False, "Params section not found in docstring")
+
+        # Extract documented parameters from docstring
+        documented_params: list[str] = self._extract_documented_params(docstring)
+
+        # Find parameters in signature but not in docstring
+        missing_in_docstring: list[str] = [p for p in signature_params if p not in documented_params]
+
+        # Find parameters in docstring but not in signature
+        extra_in_docstring: list[str] = [p for p in documented_params if p not in signature_params]
+
+        # Build detailed error message if there are mismatches
+        if missing_in_docstring or extra_in_docstring:
+            error_message: str = self._build_param_mismatch_error(missing_in_docstring, extra_in_docstring)
+            return (False, error_message)
+
+        return (True, None)
 
     def _extract_param_types(self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> dict[str, str]:
         """
