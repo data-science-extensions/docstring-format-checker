@@ -6,6 +6,7 @@
 # ## Python StdLib Imports ----
 import subprocess
 import sys
+from functools import lru_cache
 from pathlib import Path
 from textwrap import dedent
 from typing import Union
@@ -47,6 +48,7 @@ def lint_check() -> None:
     check()
 
 
+@lru_cache
 def get_all_files(*suffixes) -> list[str]:
     return [
         str(p)
