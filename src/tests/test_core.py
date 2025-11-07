@@ -3687,12 +3687,14 @@ class TestParameterTypeValidation(TestCase):
         """
         Set up test banner.
         """
+
         cls.msg: str = "Test Parameter Type Validation"
 
     def test_param_types_match_exactly(self) -> None:
         """
         Test that matching parameter types pass validation.
         """
+
         python_content: str = dedent(
             """
             def example_function(name: str, age: int, active: bool) -> None:
@@ -3734,6 +3736,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test that mismatched parameter types are detected.
         """
+
         python_content: str = dedent(
             """
             def example_function(name: str, age: int) -> None:
@@ -3856,7 +3859,9 @@ class TestParameterTypeValidation(TestCase):
             temp_path.unlink()
 
     def test_param_types_with_list(self) -> None:
-        """Test parameter type validation with list types."""
+        """
+        Test parameter type validation with list types.
+        """
 
         python_content: str = dedent(
             """
@@ -4875,6 +4880,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test detailed error when parameter exists in docstring but not in signature.
         """
+
         python_content: str = dedent(
             """
             def example_function(name: str, age: int) -> None:
@@ -4917,6 +4923,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test detailed error when parameters mismatch in both directions.
         """
+
         python_content: str = dedent(
             """
             def example_function(name: str, age: int, email: str) -> None:
@@ -4960,6 +4967,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test detailed error when multiple parameters missing in docstring.
         """
+
         python_content: str = dedent(
             """
             def example_function(name: str, age: int, city: str, country: str) -> None:
@@ -5002,6 +5010,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test detailed error helps identify typos in parameter names.
         """
+
         python_content: str = dedent(
             """
             def example_function(interpolation_nodes: list, values: list) -> None:
@@ -5235,6 +5244,266 @@ class TestParameterTypeValidation(TestCase):
             )
             result: bool = checker._check_params_section(docstring, func_node)
             assert result is True
+
+        finally:
+            temp_path.unlink()
+
+    def test_param_type_mismatch_list_with_type_param_vs_bare_list(self) -> None:
+        """
+        Test detection when signature has list[str] but docstring only has list.
+
+        This tests the fix for the bracket notation bug where [str] was being hidden
+        in the output and comparisons were failing.
+        """
+
+        python_content: str = dedent(
+            """
+            def process_items(names: list[str], counts: list[int]) -> None:
+                '''
+                Process items with mismatched types.
+
+                Params:
+                    names (list):
+                        List of names - MISSING TYPE PARAMETER.
+                    counts (list):
+                        List of counts - MISSING TYPE PARAMETER.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True)
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+
+            # Should detect mismatches for both parameters
+            assert len(errors) == 1, f"Expected 1 error, got {len(errors)}"
+
+            error_message: str = errors[0].message
+            # Verify the error message contains both parameter names
+            assert "names" in error_message.lower(), "Error should mention 'names' parameter"
+            assert "counts" in error_message.lower(), "Error should mention 'counts' parameter"
+
+            # Verify the error message shows list[str] and list[int] in signature
+            assert "list[str]" in error_message, "Error should show 'list[str]' from signature"
+            assert "list[int]" in error_message, "Error should show 'list[int]' from signature"
+
+            # Verify the error message shows bare 'list' in docstring
+            assert (
+                "'list'" in error_message or '"list"' in error_message
+            ), "Error should show bare 'list' from docstring"
+
+        finally:
+            temp_path.unlink()
+
+    def test_param_type_mismatch_dict_with_type_params_vs_bare_dict(self) -> None:
+        """
+        Test detection when signature has dict[str, int] but docstring only has dict.
+        """
+
+        python_content: str = dedent(
+            """
+            def configure_system(settings: dict[str, int]) -> None:
+                '''
+                Configure system with settings.
+
+                Params:
+                    settings (dict):
+                        System settings - MISSING TYPE PARAMETERS.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True)
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+
+            # Should detect type mismatch
+            assert len(errors) == 1, f"Expected 1 error, got {len(errors)}"
+
+            error_message = errors[0].message
+            # Verify the error message shows dict[str, int] in signature
+            assert "dict[str, int]" in error_message, "Error should show 'dict[str, int]' from signature"
+
+            # Verify the error message shows bare 'dict' in docstring
+            assert (
+                "'dict'" in error_message or '"dict"' in error_message
+            ), "Error should show bare 'dict' from docstring"
+
+        finally:
+            temp_path.unlink()
+
+    def test_param_type_mismatch_nested_generics_missing_inner_type(self) -> None:
+        """
+        Test detection when signature has nested generics like list[dict[str, int]]
+        but docstring has list[dict] (missing inner type parameters).
+        """
+
+        python_content: str = dedent(
+            """
+            from typing import Literal
+
+            def process_data(items: list[dict[str, int]]) -> None:
+                '''
+                Process data items.
+
+                Params:
+                    items (list[dict]):
+                        Data items - MISSING INNER TYPE PARAMETERS.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True)
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+
+            # Should detect type mismatch
+            assert len(errors) == 1, f"Expected 1 error, got {len(errors)}"
+
+            error_message = errors[0].message
+            # Verify the error message shows the full nested type from signature
+            assert "list[dict[str, int]]" in error_message, "Error should show 'list[dict[str, int]]' from signature"
+
+            # Verify the error message shows incomplete type from docstring
+            assert "list[dict]" in error_message, "Error should show 'list[dict]' from docstring"
+
+        finally:
+            temp_path.unlink()
+
+    def test_param_type_mismatch_complex_nested_with_literal(self) -> None:
+        """
+        Test detection with complex nested types including Literal.
+
+        This is similar to the time_series.py example that exposed the original bug:
+        signature has list[dict[Literal["coeff", "ts"], list[number]]]
+        but docstring has list[dict[Literal["coeff", "ts"], list]]
+        """
+
+        python_content: str = dedent(
+            """
+            from typing import Literal, Union
+
+            number = Union[float, int]
+
+            def generate_series(
+                exogenous: list[dict[Literal["coeff", "ts"], list[number]]] | None
+            ) -> None:
+                '''
+                Generate a time series.
+
+                Params:
+                    exogenous (list[dict[Literal["coeff", "ts"], list]] | None):
+                        Exogenous variables - MISSING [number] TYPE PARAMETER.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True)
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+
+            # Should detect type mismatch
+            assert len(errors) == 1, f"Expected 1 error, got {len(errors)}"
+
+            error_message = errors[0].message
+            # Verify the error message shows list[number] in the signature
+            assert "list[number]" in error_message, "Error should show 'list[number]' from signature"
+
+            # Verify the full nested structure is preserved in the error message
+            assert (
+                'Literal["coeff", "ts"]' in error_message or "Literal['coeff', 'ts']" in error_message
+            ), "Error should show Literal type"
+
+            # Verify that the bracket notation [number] is not being hidden
+            # (this was the original bug - Rich markup was interpreting [number] as a tag)
+            assert "[number]" in error_message, "The [number] bracket notation must be visible in output"
+
+        finally:
+            temp_path.unlink()
+
+    def test_param_type_correct_list_with_type_params(self) -> None:
+        """
+        Test that no error is raised when both signature and docstring have list[str].
+
+        This confirms the fix doesn't create false positives.
+        """
+
+        python_content: str = dedent(
+            """
+            def process_names(names: list[str], ids: list[int]) -> None:
+                '''
+                Process names and IDs.
+
+                Params:
+                    names (list[str]):
+                        List of names.
+                    ids (list[int]):
+                        List of IDs.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True)
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+
+            # Should have no errors - types match perfectly
+            assert len(errors) == 0, f"Expected no errors when types match, got {errors}"
 
         finally:
             temp_path.unlink()

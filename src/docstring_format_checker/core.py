@@ -1124,8 +1124,13 @@ class DocstringChecker:
             (str):
                 Normalized type string.
         """
+
         # Remove whitespace
         normalized: str = re.sub(r"\s+", "", type_str)
+
+        # Normalize quotes: ast.unparse() uses single quotes but docstrings typically use double quotes
+        # Convert all quotes to single quotes for consistent comparison
+        normalized = normalized.replace('"', "'")
 
         # Make case-insensitive for basic types
         # But preserve case for complex types to avoid breaking things like Optional
@@ -1215,7 +1220,7 @@ class DocstringChecker:
             for name, sig_type, doc_type in mismatches:
                 sig_type: str = sig_type.replace("'", '"')
                 doc_type: str = doc_type.replace("'", '"')
-                param_block: str = f"""'{name}':\n    - signature: '{sig_type}'\n    - docstring: '{doc_type}' """
+                param_block: str = f"""'{name}':\n    - signature: '{sig_type}'\n    - docstring: '{doc_type}'"""
                 mismatch_blocks.append(param_block)
 
             # Join all parameter blocks with proper indentation

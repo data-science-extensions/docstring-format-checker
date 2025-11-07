@@ -52,6 +52,7 @@ from typing import Optional
 # ## Python Third Party Imports ----
 import pyfiglet
 from rich.console import Console
+from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 from typer import Argument, CallbackParam, Context, Exit, Option, Typer, echo
@@ -356,6 +357,9 @@ def _format_error_messages(error_message: str) -> str:
         (str):
             Formatted error message with each error prefixed with "- " and separated by ";\n"
     """
+    # Escape square brackets for Rich markup using Rich's escape function
+    error_message = escape(error_message)
+
     if "; " in error_message:
         # Split by semicolon and rejoin with proper formatting
         errors: list[str] = error_message.split("; ")
@@ -485,7 +489,7 @@ def _display_table_output(results: dict[str, list[DocstringError]]) -> None:
                 str(error.line_number) if error.line_number > 0 else "",
                 error.item_name,
                 error.item_type,
-                formatted_error_message,
+                f"[red]{formatted_error_message}[/red]",
             )
     console.print(table)
 
@@ -545,10 +549,13 @@ def _format_error_output(error: DocstringError) -> list[str]:
     individual_errors: list[str] = _split_error_messages(error.message)
 
     for individual_error in individual_errors:
+        # Escape square brackets for Rich markup using Rich's escape function
+        individual_error: str = escape(individual_error)
+
         # Check if this error has multi-line content (e.g., parameter type mismatches)
         if "\n" in individual_error:
             # Split by newlines and add 4 spaces of extra indentation to each line
-            error_lines = individual_error.split("\n")
+            error_lines: list[str] = individual_error.split("\n")
             lines.append(f"    - {error_lines[0]}")  # First line gets the bullet
             for sub_line in error_lines[1:]:
                 if sub_line.strip():  # Only add non-empty lines
