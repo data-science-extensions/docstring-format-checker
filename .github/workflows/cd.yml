@@ -3,7 +3,10 @@ name: CD
 on:
   # Only trigger when a new release is published
   release:
-    types: [published]
+    types:
+      # - published  #<-- Trigger when new release is published, regardless of status of pre-release flag
+      # - prereleased  #<-- Trigger when release is published and the pre-release flag is checked
+      - released  #<-- Trigger when release is published and the pre-release flag is not checked
   # Allows you to run workflow manually from the Actions tab
   # workflow_dispatch:
 
