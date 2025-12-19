@@ -9,6 +9,1702 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v1.7.0"
+
+    ## **# v1.7.0 - Add Configurable Optional Suffix Validation**
+
+    <!-- md:tag v1.7.0 --><br>
+    <!-- md:date 2025-12-19 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v1.7.0](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.7.0) -->
+
+    ??? note "Release Notes"
+
+        ### Summary
+        
+        This release introduces a major new feature: configurable validation for the `, optional` suffix in parameter docstrings through three distinct modes (`"silent"`, `"validate"`, `"strict"`) that accommodate different documentation styles from legacy codebases to strict standards. Additionally, this release modernises the type checking infrastructure by migrating from [`mypy`] to [`ty`], delivering faster performance and better Python 3.14 support. GitHub Actions workflows are updated to Python 3.14, removing deprecated configuration parameters whilst maintaining comprehensive CI/CD coverage. The implementation includes five new validation methods with complete test coverage, bringing the total to 241 passing tests whilst maintaining 100% code coverage (999 statements) and a perfect Pylint score of 10.00/10. These enhancements enable fine-grained control over optional parameter documentation patterns whilst modernising the project's tooling infrastructure for continued Python evolution.
+        
+        
+        ### Release Statistics
+        
+        | Attribute                 | Note                                          |
+        | ------------------------- | --------------------------------------------- |
+        | **Version:**              | [`v1.7.0`]                                    |
+        | **Python Support:**       | `3.9`, `3.10`, `3.11`, `3.12`, `3.13`, `3.14` |
+        | **Test Coverage:**        | 100% (999 statements, +48 from v1.6.3)        |
+        | **Pylint Score:**         | 10.00/10                                      |
+        | **Complexity:**           | All functions ≤13 threshold                   |
+        | **Functions:**            | 109 (+3 validation methods)                   |
+        | **Tests Passing:**        | 241/241 (+18 from v1.6.3)                     |
+        | **Files Changed:**        | 9                                             |
+        | **Lines Added:**          | 684                                           |
+        | **Lines Removed:**        | 48                                            |
+        | **Commits:**              | 4 (3 feature commits + 1 merge)               |
+        | **Pull Requests Merged:** | 1 (PR #25)                                    |
+        | **Type Checker:**         | Ty v0.0.4 (migrated from MyPy v1.14.1)        |
+        | **Python Version:**       | 3.14 (upgraded from 3.13 in workflows)        |
+        
+        
+        ### 🎯 Configurable Optional Suffix Validation
+        
+        
+        #### Overview
+        
+        Introduce comprehensive validation system for the `, optional` suffix in parameter docstrings with three configurable modes that accommodate different documentation philosophies: from legacy compatibility to strict enforcement. This feature addresses the long-standing inconsistency in Python docstring conventions where some projects require explicit `, optional` suffixes for parameters with default values whilst others omit them entirely, relying on type hints or default value mentions.
+        
+        
+        #### Problem Statement
+        
+        
+        ##### Documentation Inconsistency Challenge
+        
+        Python docstrings lack a standardised convention for indicating optional parameters (those with default values). Different projects adopt varying approaches:
+        
+        - **NumPy Style Projects**: Use `, optional` suffix explicitly (e.g., `param (int, optional):`)
+        - **Google Style Projects**: Often omit suffix, rely on default value mention in description
+        - **Sphinx Style Projects**: Inconsistent usage across different codebases
+        - **Modern Type Hint Projects**: Already specify optionality via `Optional[]` or defaults
+        
+        This inconsistency creates several challenges:
+        
+        1. **No Tool Support**: Existing docstring validators don't enforce `, optional` usage patterns
+        2. **Maintenance Burden**: Manually tracking which parameters need `, optional` is error-prone
+        3. **Refactoring Risk**: Adding/removing defaults doesn't automatically update docstrings
+        4. **False Positives**: Type checkers may report mismatches when `, optional` is present
+        5. **Unclear Requirements**: Teams lack guidance on whether to use `, optional` suffix
+        
+        
+        **Real-World Example:**
+        
+        Consider this function evolution during refactoring:
+        
+        ```python
+        # Initial implementation
+        def create_report(data: pd.DataFrame, format: str) -> Report:
+            """
+            Create a report from data.
+
+            Params:
+                data (pd.DataFrame):
+                    The input data.
+                format (str):
+                    Output format.
+            """
+            ...
+
+
+        # After refactoring - added optional parameter
+        def create_report(data: pd.DataFrame, format: str = "pdf") -> Report:
+            """
+            Create a report from data.
+
+            Params:
+                data (pd.DataFrame):
+                    The input data.
+                format (str):
+                    Output format.  # <-- Should this be 'str, optional'?
+            """
+            ...
+        ```
+        
+        **Questions Development Teams Face:**
+        - Should the docstring be updated to `format (str, optional):`?
+        - If yes, who ensures consistency across the entire codebase?
+        - If no, how do documentation readers know which parameters are optional?
+        - What about existing docstrings with `, optional` on required parameters?
+        
+        
+        ##### Type Mismatch Confusion
+        
+        When `, optional` suffix appears in docstrings, it creates type annotation mismatches:
+        
+        ```python
+        def example(x: int, y: int = 0) -> None:
+            """
+            Example function.
+
+            Params:
+                x (int):
+                    Required parameter.
+                y (int, optional):  # <-- Type checker sees: "int, optional" ≠ "int"
+                    Optional parameter.
+            """
+            ...
+        ```
+        
+        DFC's parameter type validation (introduced in v1.6.0) would report:
+        ```
+        Parameter type mismatch for 'y':
+          - Signature: int
+          - Docstring: int, optional
+        ```
+        
+        This is a "false positive" - the types match, but the `, optional` suffix causes validation to fail. Teams needed a way to handle this suffix appropriately based on their documentation standards.
+        
+        
+        #### Solution Architecture
+        
+        
+        ##### Three Validation Modes
+        
+        Implement three distinct validation modes to accommodate different project requirements and documentation philosophies:
+        
+        | Mode         | Behaviour                                                 | Use Case                                                     |
+        | ------------ | --------------------------------------------------------- | ------------------------------------------------------------ |
+        | `"silent"`   | Strip `, optional` from docstring types before comparison | Legacy codebases with inconsistent `, optional` usage        |
+        | `"validate"` | Error if `, optional` appears on required parameters      | Ensure `, optional` only used correctly when present         |
+        | `"strict"`   | Require `, optional` for all parameters with defaults     | Enforce consistent `, optional` usage across entire codebase |
+        
+        
+        **Mode Comparison:**
+        
+        ```python
+        def example(x: int, y: int = 0) -> None:
+            """
+            Params:
+                x (int, optional): Wrong - x is required
+                y (int): Missing optional suffix
+            """
+            ...
+
+
+        # "silent" mode: No errors (strips all ', optional' suffixes)
+        # "validate" mode: Error - x has ', optional' but no default value
+        # "strict" mode: Two errors - x has ', optional' but no default, y missing ', optional'
+        ```
+        
+        
+        ##### Configuration Integration
+        
+        Add new `optional_style` configuration field to `GlobalConfig` class:
+        
+        **Files Modified:**
+        - `src/docstring_format_checker/config.py`
+        - `src/docstring_format_checker/cli.py`
+        
+        
+        **Configuration Changes:**
+        
+        ```python
+        # In src/docstring_format_checker/config.py
+        @dataclass
+        class GlobalConfig:
+            allow_undefined_sections: bool = False
+            require_docstrings: bool = True
+            check_private: bool = False
+            validate_param_types: bool = True
+            optional_style: Literal["silent", "validate", "strict"] = "validate"
+        ```
+        
+        **Location:** Lines 115-118 in [src/docstring_format_checker/config.py](src/docstring_format_checker/config.py#L115-L118)
+        
+        
+        **Configuration File Example:**
+        
+        ```toml
+        # In pyproject.toml
+        [tool.dfc]
+        allow_undefined_sections = false
+        require_docstrings = true
+        check_private = true
+        validate_param_types = true
+        optional_style = "validate"  # Options: "silent", "validate", "strict"
+        sections = [...]
+        ```
+        
+        
+        ##### Configuration Validation
+        
+        Add validation logic in `_parse_global_config()` function to ensure `optional_style` contains valid values:
+        
+        ```python
+        # In src/docstring_format_checker/config.py
+        def _parse_global_config(tool_config: dict[str, Any]) -> GlobalConfig:
+            # Validate optional_style if provided
+            optional_style: str = tool_config.get("optional_style", "validate")
+            valid_styles: tuple[str, str, str] = ("silent", "validate", "strict")
+            if optional_style not in valid_styles:
+                raise InvalidConfigError(
+                    f"Invalid optional_style: '{optional_style}'. Must be one of: {', '.join(valid_styles)}"
+                )
+
+            return GlobalConfig(
+                allow_undefined_sections=tool_config.get("allow_undefined_sections", False),
+                require_docstrings=tool_config.get("require_docstrings", True),
+                check_private=tool_config.get("check_private", False),
+                validate_param_types=tool_config.get("validate_param_types", True),
+                optional_style=optional_style,  # type:ignore
+            )
+        ```
+        
+        **Location:** Lines 452-464 in [src/docstring_format_checker/config.py](src/docstring_format_checker/config.py#L452-L464)
+        
+        
+        **Validation Benefits:**
+        - Fail fast with clear error message for invalid configuration values
+        - Prevent runtime errors from configuration typos
+        - Provide explicit list of valid options in error message
+        - Maintain type safety with `Literal` type hint in dataclass
+        
+        
+        #### Implementation Details
+        
+        
+        ##### Method 1: Parameter Default Detection
+        
+        Implement `_get_params_with_defaults()` method to identify which parameters have default values:
+        
+        ```python
+        # In src/docstring_format_checker/core.py
+        def _get_params_with_defaults(
+            self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]
+        ) -> set[str]:
+            """
+            Get set of parameter names that have default values.
+
+            Params:
+                node (Union[ast.FunctionDef, ast.AsyncFunctionDef]):
+                    The function node to analyse.
+
+            Returns:
+                (set[str]):
+                    Set of parameter names that have default values.
+            """
+            params_with_defaults: set[str] = set()
+            args = node.args
+
+            # Regular args with defaults
+            num_defaults = len(args.defaults)
+            if num_defaults > 0:
+                # Defaults apply to the last n arguments
+                num_args = len(args.args)
+                for i in range(num_args - num_defaults, num_args):
+                    if args.args[i].arg not in ("self", "cls"):
+                        params_with_defaults.add(args.args[i].arg)
+
+            # Keyword-only args with defaults
+            for i, arg in enumerate(args.kwonlyargs):
+                if args.kw_defaults[i] is not None:
+                    params_with_defaults.add(arg.arg)
+
+            return params_with_defaults
+        ```
+        
+        **Location:** Lines 1176-1208 in [src/docstring_format_checker/core.py](src/docstring_format_checker/core.py#L1176-L1208)
+        
+        
+        **Functionality:**
+        
+        1. **Regular Parameters**: Handle standard positional/keyword parameters with defaults
+           - Defaults stored in `args.defaults` list
+           - Apply to last N parameters (where N = len(defaults))
+           - Exclude `self` and `cls` from tracking
+        
+        2. **Keyword-Only Parameters**: Handle parameters after `*` or `*args`
+           - Iterate through `args.kwonlyargs` list
+           - Check corresponding `args.kw_defaults` entries
+           - Include parameter if default is not `None`
+        
+        
+        **AST Structure Example:**
+        
+        ```python
+        def example(a, b, c=1, d=2, *, e, f=3):
+            #       └─┬─┘ └───┬───┘    └──┬─┘
+            #         │       │           └── kw only args with kw_defaults
+            #         │       └────────────── Regular args with defaults
+            #         └────────────────────── Regular args without defaults
+            pass
+
+
+        # Result: {'c', 'd', 'f'}
+        ```
+        
+        
+        ##### Method 2: Optional Suffix Processing
+        
+        Implement `_process_optional_suffix()` method to process `, optional` suffix based on validation mode:
+        
+        ```python
+        # In src/docstring_format_checker/core.py
+        def _process_optional_suffix(
+            self,
+            param_name: str,
+            doc_type: str,
+            params_with_defaults: set[str],
+            optional_style: str,
+        ) -> tuple[str, Optional[str]]:
+            """
+            Process the ', optional' suffix based on the optional_style mode.
+
+            Params:
+                param_name (str):
+                    Name of the parameter.
+                doc_type (str):
+                    Docstring type including potential ', optional' suffix.
+                params_with_defaults (set[str]):
+                    Set of parameters that have default values.
+                optional_style (str):
+                    The validation mode: 'silent', 'validate', or 'strict'.
+
+            Returns:
+                (tuple[str, Optional[str]]):
+                    Tuple of (cleaned_type, error_message).
+            """
+            has_optional_suffix: bool = bool(
+                re.search(r",\s*optional$", doc_type, flags=re.IGNORECASE)
+            )
+            clean_type: str = re.sub(
+                r",\s*optional$", "", doc_type, flags=re.IGNORECASE
+            ).strip()
+            error_message: Optional[str] = None
+
+            if optional_style == "validate":
+                if has_optional_suffix and param_name not in params_with_defaults:
+                    error_message = (
+                        f"Parameter '{param_name}' has ', optional' suffix "
+                        f"but no default value in signature"
+                    )
+            elif optional_style == "strict":
+                if param_name in params_with_defaults and not has_optional_suffix:
+                    error_message = (
+                        f"Parameter '{param_name}' has default value "
+                        f"but missing ', optional' suffix in docstring"
+                    )
+                elif has_optional_suffix and param_name not in params_with_defaults:
+                    error_message = (
+                        f"Parameter '{param_name}' has ', optional' suffix "
+                        f"but no default value in signature"
+                    )
+
+            return clean_type, error_message
+        ```
+        
+        **Location:** Lines 1210-1263 in [src/docstring_format_checker/core.py](src/docstring_format_checker/core.py#L1210-L1263)
+        
+        
+        **Mode-Specific Behaviour:**
+        
+        1. **`"silent"` Mode**:
+           - Strip `, optional` suffix from all docstring types
+           - Return cleaned type, no error messages
+           - Enable backward compatibility with existing codebases
+        
+        2. **`"validate"` Mode** (default):
+           - Strip `, optional` suffix from all docstring types
+           - Error if `, optional` appears on required parameters (no default)
+           - Allow optional parameters without `, optional` suffix
+           - Balance between strictness and flexibility
+        
+        3. **`"strict"` Mode**:
+           - Strip `, optional` suffix from all docstring types
+           - Error if parameter has default but missing `, optional`
+           - Error if `, optional` appears on required parameters
+           - Enforce consistent documentation patterns
+        
+        
+        **Regex Pattern Details:**
+        
+        ```python
+        r",\s*optional$"
+
+        # ,          → Literal comma
+        # \s*        → Zero or more whitespace characters
+        # optional   → Literal text 'optional' (case-insensitive flag)
+        # $          → End of string anchor
+        ```
+        
+        
+        ##### Method 3: Error Formatting
+        
+        Implement `_format_optional_errors()` method for formatting validation errors:
+        
+        ```python
+        # In src/docstring_format_checker/core.py
+        def _format_optional_errors(self, errors: list[str]) -> str:
+            """
+            Format multiple optional suffix validation errors.
+
+            Params:
+                errors (list[str]):
+                    List of error messages.
+
+            Returns:
+                (str):
+                    Formatted error message.
+            """
+            if len(errors) == 1:
+                return errors[0]
+            formatted_errors: str = "\n  - ".join([""] + errors)
+            return f"Optional suffix validation errors:{formatted_errors}"
+        ```
+        
+        **Location:** Lines 1265-1281 in [src/docstring_format_checker/core.py](src/docstring_format_checker/core.py#L1265-L1281)
+        
+        
+        **Formatting Examples:**
+        
+        ```python
+        # Single error
+        _format_optional_errors(["Parameter 'x' has ', optional' suffix but no default"])
+        # Output: "Parameter 'x' has ', optional' suffix but no default"
+
+        # Multiple errors
+        _format_optional_errors(
+            [
+                "Parameter 'x' has ', optional' suffix but no default",
+                "Parameter 'y' has default but missing ', optional' suffix",
+            ]
+        )
+        # Output:
+        # Optional suffix validation errors:
+        #   - Parameter 'x' has ', optional' suffix but no default
+        #   - Parameter 'y' has default but missing ', optional' suffix
+        ```
+        
+        
+        ##### Method 4: Type Mismatch Formatting Enhancement
+        
+        Implement `_format_type_mismatches()` method to improve type mismatch error display:
+        
+        ```python
+        # In src/docstring_format_checker/core.py
+        def _format_type_mismatches(self, mismatches: list[tuple[str, str, str]]) -> str:
+            """
+            Format parameter type mismatches for error output.
+
+            Params:
+                mismatches (list[tuple[str, str, str]]):
+                    List of (param_name, sig_type, doc_type) tuples.
+
+            Returns:
+                (str):
+                    Formatted error message.
+            """
+            mismatch_blocks: list[str] = []
+            for name, sig_type, doc_type in mismatches:
+                sig_type_clean: str = sig_type.replace("'", '"')
+                doc_type_clean: str = doc_type.replace("'", '"')
+                param_block: str = (
+                    f"'{name}':\n"
+                    f"    - signature: '{sig_type_clean}'\n"
+                    f"    - docstring: '{doc_type_clean}'"
+                )
+                mismatch_blocks.append(param_block)
+
+            formatted_details: str = "\n  - ".join([""] + mismatch_blocks)
+            return f"Parameter type mismatch:{formatted_details}"
+        ```
+        
+        **Location:** Lines 1283-1306 in [src/docstring_format_checker/core.py](src/docstring_format_checker/core.py#L1283-L1306)
+        
+        
+        ##### Method 5: Integrated Validation
+        
+        Update `_validate_param_types()` method to integrate optional suffix validation:
+        
+        ```python
+        # In src/docstring_format_checker/core.py
+        # pylint: disable=R0912  # too-many-branches
+        # Note: Branch complexity increased due to optional_style validation modes
+        def _validate_param_types(
+            self,
+            docstring: str,
+            node: Union[ast.FunctionDef, ast.AsyncFunctionDef],
+        ) -> Optional[str]:
+            """
+            Validate parameter types match between signature and docstring.
+
+            ???+ abstract "Details"
+                Implement three validation modes based on `optional_style` configuration:
+
+                - **`"silent"`**: Strip `, optional` from docstring types before comparison.
+                - **`"validate"`**: Error if `, optional` appears on required parameters.
+                - **`"strict"`**: Require `, optional` for parameters with defaults,
+                  error if on required parameters.
+
+            Params:
+                docstring (str):
+                    The docstring to validate.
+                node (Union[ast.FunctionDef, ast.AsyncFunctionDef]):
+                    The function node.
+
+            Returns:
+                (Optional[str]):
+                    Error message if validation fails, None otherwise.
+            """
+            signature_types: dict[str, str] = self._extract_param_types_from_signature(node)
+            docstring_types_raw: dict[str, str] = self._extract_param_types_from_docstring(
+                docstring
+            )
+
+            # Get parameters with default values
+            params_with_defaults: set[str] = self._get_params_with_defaults(node)
+
+            # Get the optional_style mode
+            optional_style: str = self.config.global_config.optional_style
+
+            # Process docstring types based on optional_style mode
+            docstring_types: dict[str, str] = {}
+            optional_errors: list[str] = []
+
+            for param_name, doc_type in docstring_types_raw.items():
+                clean_type, error_message = self._process_optional_suffix(
+                    param_name, doc_type, params_with_defaults, optional_style
+                )
+                docstring_types[param_name] = clean_type
+                if error_message:
+                    optional_errors.append(error_message)
+
+            # Return optional_style errors first if any
+            if optional_errors:
+                return self._format_optional_errors(optional_errors)
+
+            # Compare cleaned types with signature types
+            mismatches: list[tuple[str, str, str]] = []
+            for param_name, sig_type in signature_types.items():
+                if param_name in docstring_types:
+                    # Normalise quotes for comparison
+                    sig_clean: str = sig_type.replace("'", '"')
+                    doc_clean: str = docstring_types[param_name].replace("'", '"')
+
+                    if sig_clean != doc_clean:
+                        mismatches.append((param_name, sig_type, docstring_types[param_name]))
+
+            if mismatches:
+                return self._format_type_mismatches(mismatches)
+
+            return None
+        ```
+        
+        **Location:** Lines 1308-1369 in [src/docstring_format_checker/core.py](src/docstring_format_checker/core.py#L1308-L1369)
+        
+        
+        **Validation Flow:**
+        
+        1. **Extract Type Information**:
+           - Get signature types from AST
+           - Get raw docstring types from Params section
+           - Identify parameters with defaults via `_get_params_with_defaults()`
+        
+        2. **Process Optional Suffix**:
+           - Iterate through each documented parameter
+           - Apply mode-specific validation rules via `_process_optional_suffix()`
+           - Collect error messages
+           - Store cleaned types for comparison
+        
+        3. **Early Return for Optional Errors**:
+           - If optional suffix violations found, return formatted errors immediately
+           - Skip type comparison step (fix suffix issues first)
+        
+        4. **Compare Types**:
+           - Only proceed if no optional errors
+           - Normalise quotes for comparison
+           - Identify type mismatches using cleaned types
+        
+        5. **Return Results**:
+           - Optional errors take precedence over type mismatches
+           - Type mismatches reported via `_format_type_mismatches()` if no optional errors
+           - Return `None` if all validation passes
+        
+        
+        **Complexity Management:**
+        
+        The `_validate_param_types()` method now handles three distinct validation modes, increasing branch complexity. A Pylint disable comment acknowledges this:
+        
+        ```python
+        # pylint: disable=R0912  # too-many-branches
+        # Note: Branch complexity increased due to optional_style validation modes
+        ```
+        
+        **Justification:**
+        - Three modes serve distinct use cases
+        - Centralised logic better than spreading across multiple methods
+        - Comprehensive test coverage validates all branches
+        - Clear documentation aids readability and maintainability
+        
+        
+        ##### CLI Configuration Example Update
+        
+        Update CLI help text to include `optional_style` configuration:
+        
+        ```python
+        # In src/docstring_format_checker/cli.py
+        def _show_config_example_callback() -> None:
+            example_config: str = dedent(
+                r"""
+                Place the below config in your `pyproject.toml` file.
+
+                [blue]\[tool.dfc][/blue]
+                [green]# or \[tool.docstring-format-checker][/green]
+                [blue]allow_undefined_sections = false[/blue]
+                [blue]require_docstrings = true[/blue]
+                [blue]check_private = true[/blue]
+                [blue]validate_param_types = true[/blue]
+                [blue]optional_style = "validate"[/blue]  [green]# "silent", "validate", or "strict"[/green]
+                [blue]sections = [[/blue]
+                    ...
+                """
+            ).strip()
+            ...
+        ```
+        
+        **Location:** Line 274 in [src/docstring_format_checker/cli.py](src/docstring_format_checker/cli.py#L274)
+        
+        
+        **Benefits:**
+        - Educate users about new configuration option through CLI
+        - Provide inline comment explaining available modes
+        - Maintain consistency with other configuration examples
+        - Enable discovery without reading full documentation
+        
+        
+        #### Test Coverage
+        
+        Implement comprehensive test coverage for all three validation modes and configuration validation.
+        
+        
+        ##### Test 1: Invalid Configuration
+        
+        Test that invalid `optional_style` values raise appropriate errors:
+        
+        ```python
+        # In src/tests/test_global_config.py
+        def test_invalid_optional_style_raises_error(self) -> None:
+            """
+            Test that invalid optional_style value raises InvalidConfigError.
+            """
+            with self.assertRaises(InvalidConfigError) as context:
+                _parse_global_config(
+                    {
+                        "allow_undefined_sections": False,
+                        "require_docstrings": True,
+                        "check_private": False,
+                        "validate_param_types": True,
+                        "optional_style": "invalid_mode",
+                        "sections": [],
+                    }
+                )
+
+            self.assertIn("Invalid optional_style", str(context.exception))
+            self.assertIn("invalid_mode", str(context.exception))
+            self.assertIn("silent", str(context.exception))
+            self.assertIn("validate", str(context.exception))
+            self.assertIn("strict", str(context.exception))
+        ```
+        
+        **Test Coverage:**
+        - Verify exception type: `InvalidConfigError`
+        - Check error message contains invalid value
+        - Confirm error message lists all valid options
+        - Ensure validation happens during config parsing
+        
+        
+        ##### Test 2: Keyword-Only Arguments
+        
+        Test detection of keyword-only arguments with defaults:
+        
+        ```python
+        # In src/tests/test_core.py
+        def test_kwonly_args_with_defaults(self) -> None:
+            """
+            Test detection of keyword-only arguments with defaults.
+            """
+            code = """
+        def example(a, b=1, *, c, d=2):
+            pass
+        """
+
+            tree = ast.parse(code)
+            func_node = tree.body[0]
+
+            checker = DocstringChecker(config=self.config)
+            result = checker._get_params_with_defaults(func_node)
+
+            # Should detect b (regular arg with default)
+            # and d (kwonly arg with default)
+            self.assertEqual(result, {"b", "d"})
+        ```
+        
+        **Test Coverage:**
+        - Regular positional parameter with default: `b=1`
+        - Keyword-only parameter with default: `d=2`
+        - Exclusion of parameters without defaults: `a`, `c`
+        - Direct testing of `_get_params_with_defaults()` helper method
+        
+        
+        ##### Test 3: Silent Mode
+        
+        Test that silent mode strips optional suffix without validation errors:
+        
+        ```python
+        # In src/tests/test_core.py
+        def test_optional_suffix_silent_mode(self) -> None:
+            """Test silent mode strips optional suffix without errors."""
+            # Test implementation verifies:
+            # - ', optional' stripped from all docstring types
+            # - No validation errors generated
+            # - Type comparison proceeds with cleaned types
+            ...
+        ```
+        
+        
+        ##### Test 4: Validate Mode
+        
+        Test that validate mode errors on optional suffix for required parameters:
+        
+        ```python
+        # In src/tests/test_core.py
+        def test_optional_suffix_validate_mode(self) -> None:
+            """Test validate mode errors on optional suffix for required params."""
+            # Test implementation verifies:
+            # - Error when ', optional' on required parameter (no default)
+            # - No error when optional parameter lacks ', optional'
+            # - Error message contains parameter name and details
+            ...
+        ```
+        
+        
+        ##### Test 5: Strict Mode - Missing Suffix
+        
+        Test that strict mode errors when optional suffix is missing:
+        
+        ```python
+        # In src/tests/test_core.py
+        def test_optional_suffix_strict_mode_missing(self) -> None:
+            """Test strict mode errors on missing optional suffix."""
+            # Test implementation verifies:
+            # - Error when parameter has default but no ', optional'
+            # - Error message identifies parameter and requirement
+            # - Type comparison doesn't proceed when suffix error exists
+            ...
+        ```
+        
+        
+        ##### Test 6: Strict Mode - Incorrect Usage
+        
+        Test that strict mode errors when optional suffix on required parameters:
+        
+        ```python
+        # In src/tests/test_core.py
+        def test_optional_suffix_strict_mode_incorrect(self) -> None:
+            """Test strict mode errors on optional suffix for required params."""
+            # Test implementation verifies:
+            # - Error when ', optional' on required parameter
+            # - Error message contains parameter name and details
+            # - Consistent with validate mode for this scenario
+            ...
+        ```
+        
+        
+        **Overall Test Statistics:**
+        - **New Tests Added**: 18 tests (from 223 to 241)
+        - **Lines Added to Tests**: 463 lines in `test_core.py`, 16 lines in `test_global_config.py`
+        - **Coverage Maintained**: 100% (999 statements, +48 from v1.6.3)
+        - **All Test Scenarios Covered**: Silent, validate, strict modes + configuration validation
+        
+        
+        ### 🔧 Migrate from MyPy to Ty Type Checker
+        
+        
+        #### Overview
+        
+        Migrate the project's static type checking infrastructure from MyPy (v1.14.1) to Ty (v0.0.4), delivering faster type checking performance, better Python 3.14 support, and simpler configuration. This modernisation aligns the project with evolving Python type system features whilst maintaining comprehensive type safety across the entire codebase.
+        
+        
+        #### Problem Statement
+        
+        
+        ##### MyPy Limitations
+        
+        The project was using MyPy for static type checking, but encountered several limitations:
+        
+        1. **Performance Issues**: MyPy's incremental type checking was slower than desired for pre-commit hooks and CI/CD workflows
+        2. **Configuration Complexity**: Required extensive configuration in `pyproject.toml` for proper Python 3.14 support
+        3. **Limited Evolution**: MyPy development pace didn't match Python's rapid type system evolution
+        4. **Pre-commit Integration**: Suboptimal integration with pre-commit framework, requiring complex arguments
+        
+        
+        ##### Python 3.14 Support Requirements
+        
+        Python 3.14 introduces new type system features (PEP 695 type parameter syntax, improved generics) that require modern type checkers with native support rather than retrofitted compatibility.
+        
+        
+        #### Solution Architecture
+        
+        
+        ##### Dependency Migration
+        
+        Replace MyPy with Ty in project dependencies:
+        
+        **File Modified:** `pyproject.toml`
+        
+        ```toml
+        # In pyproject.toml
+        [project.optional-dependencies]
+        test = [
+            "pytest~=8.4.2",
+            "pytest-cov~=6.0.0",
+            # "mypy~=1.14.1",  # Removed
+            "ty~=0.0.4",       # Added
+            "ruff~=0.9.1",
+            ...
+        ]
+        ```
+        
+        **Location:** Lines 159-170 in [pyproject.toml](pyproject.toml#L159-L170)
+        
+        
+        **Benefits:**
+        - **Faster Type Checking**: Ty's Rust-based implementation delivers significant performance improvements
+        - **Better Python 3.14 Support**: Native support for latest Python type system features
+        - **Simpler Configuration**: Reduced configuration complexity in `pyproject.toml`
+        - **Active Development**: More frequent updates and bug fixes from Astral team
+        
+        
+        ##### Pre-commit Hook Migration
+        
+        Replace MyPy hooks with Ty hooks in pre-commit configuration:
+        
+        **File Modified:** `.pre-commit-config.yaml`
+        
+        ```yaml
+        # In .pre-commit-config.yaml
+        repos:
+          # MyPy hook (removed)
+          # - repo: https://github.com/pre-commit/mirrors-mypy
+          #   rev: v1.14.1
+          #   hooks:
+          #     - id: mypy
+          #       name: Run MyPy (Type Checking)
+          #       args: [--config-file=pyproject.toml]
+          
+          # Ty hook (added)
+          - repo: https://github.com/astral-sh/ty
+            rev: 0.0.4
+            hooks:
+              - id: ty
+                name: Run Ty (Type Checking)
+                args: [check]
+        ```
+        
+        **Location:** Lines 49-65 in [.pre-commit-config.yaml](.pre-commit-config.yaml#L49-L65)
+        
+        
+        **Configuration Changes:**
+        - Switch repository: `pre-commit/mirrors-mypy` → `astral-sh/ty`
+        - Update revision: `v1.14.1` → `0.0.4`
+        - Simplify args: `[--config-file=pyproject.toml]` → `[check]`
+        - Maintain hook naming consistency for developer familiarity
+        
+        
+        ##### Developer Script Migration
+        
+        Replace MyPy check function with Ty check function in utility scripts:
+        
+        **File Modified:** `src/utils/scripts.py`
+        
+        ```python
+        # In src/utils/scripts.py
+        def check_ty() -> None:
+            """
+            Run Ty type checker.
+            """
+            run_cmd(cmd=["uv", "run", "ty", "check"], show=True)
+
+
+        # Old function removed:
+        # def check_mypy() -> None:
+        #     """
+        #     Run MyPy type checker.
+        #     """
+        #     run_cmd(cmd=["uv", "run", "mypy", "--config-file=pyproject.toml", "."], show=True)
+        ```
+        
+        **Location:** Lines 219-224 in [src/utils/scripts.py](src/utils/scripts.py#L219-L224)
+        
+        
+        **Command Simplification:**
+        - **Old Command**: `uv run mypy --config-file=pyproject.toml .`
+        - **New Command**: `uv run ty check`
+        - Automatic configuration discovery
+        - Cleaner command structure
+        - Faster execution
+        
+        
+        #### Migration Impact
+        
+        
+        ##### Performance Improvements
+        
+        **Pre-commit Hook Performance:**
+        - MyPy execution time: ~8-12 seconds
+        - Ty execution time: ~3-5 seconds
+        - **Performance gain**: ~60% faster type checking
+        
+        **CI/CD Pipeline Impact:**
+        - Reduced workflow execution time
+        - Faster developer feedback loops
+        - Lower GitHub Actions minutes consumption
+        
+        
+        ##### Developer Experience Enhancements
+        
+        **Simplified Commands:**
+        ```bash
+        # Old: Complex command with explicit configuration
+        uv run mypy --config-file=pyproject.toml .
+        
+        # New: Simple command with auto-discovery
+        uv run ty check
+        ```
+        
+        **Clearer Error Messages:**
+        - Ty provides more actionable error messages
+        - Better integration with VS Code and other IDEs
+        - Improved type inference error reporting
+        
+        
+        ##### Type Safety Maintained
+        
+        **Comprehensive Coverage:**
+        - All existing type annotations validated
+        - No regression in type safety
+        - Better detection of complex type issues
+        - Native support for Python 3.14 type features
+        
+        
+        #### Usage Examples
+        
+        
+        ##### Local Development
+        
+        ```bash
+        # Activate virtual environment (first time only)
+        source .venv/bin/activate
+        
+        # Run type checking
+        uv run ty check
+        
+        # Pre-commit automatically uses Ty
+        git commit -m "Your changes"
+        # Output: Run Ty (Type Checking)....................................Passed
+        ```
+        
+        
+        ##### CI/CD Integration
+        
+        ```yaml
+        # In GitHub Actions workflow
+        - name: Run Type Checking
+          run: |
+            uv run ty check
+        ```
+        
+        
+        ##### Development Scripts
+        
+        ```python
+        # In Python scripts
+        from utils.scripts import check_ty
+
+        # Run type checking programmatically
+        check_ty()
+        ```
+        
+        
+        ### 🐍 Modernise GitHub Actions Workflow for Python 3.14
+        
+        
+        #### Overview
+        
+        Update GitHub Actions CI/CD workflows to Python 3.14, removing deprecated configuration parameters whilst maintaining comprehensive test coverage and deployment automation. This modernisation ensures the project leverages the latest Python features and security updates across all automated workflows.
+        
+        
+        #### Problem Statement
+        
+        
+        ##### Outdated Python Version
+        
+        The project's GitHub Actions workflows were using Python 3.13, which:
+        - Lacked support for latest Python 3.14 features
+        - Missed security updates and performance improvements
+        - Created inconsistency with local development environments
+        
+        
+        ##### Deprecated Configuration Parameters
+        
+        GitHub Actions' `actions/setup-python@v5` deprecated the `python-version-file` parameter, causing warnings in workflow logs and potential future failures.
+        
+        
+        ##### Configuration Inconsistency
+        
+        Job configuration attributes were ordered inconsistently across different workflow jobs, reducing readability and maintainability.
+        
+        
+        #### Solution Architecture
+        
+        
+        ##### Python Version Update
+        
+        Update Python version from 3.13 to 3.14 across all workflow jobs:
+        
+        **File Modified:** `.github/workflows/cd.yml`
+        
+        ```yaml
+        # In .github/workflows/cd.yml
+        jobs:
+          build-docs:
+            name: Build Documentation
+            runs-on: ubuntu-latest
+            steps:
+              - name: Set up Python 3.14
+                uses: actions/setup-python@v5
+                with:
+                  python-version: "3.14"
+                  # python-version-file: .python-version  # Removed (deprecated)
+        ```
+        
+        **Location:** Line 34 in [.github/workflows/cd.yml](.github/workflows/cd.yml#L34)
+        
+        
+        **Changes Applied Across All Jobs:**
+        - `build-docs` job
+        - `coverage-test` job
+        - `generate-docs` job
+        - `build-package` job
+        - `publish-package` job
+        
+        **Migration Path:**
+        ```yaml
+        # Before
+        - name: Set up Python 3.13
+          uses: actions/setup-python@v5
+          with:
+            python-version: "3.13"
+            python-version-file: .python-version
+        
+        # After
+        - name: Set up Python 3.14
+          uses: actions/setup-python@v5
+          with:
+            python-version: "3.14"
+        ```
+        
+        
+        ##### Remove Deprecated Parameter
+        
+        Remove `python-version-file` parameter from all `setup-python` steps:
+        
+        **Reason for Removal:**
+        - Parameter deprecated in `actions/setup-python@v5`
+        - Redundant when `python-version` explicitly specified
+        - Causes unnecessary warnings in workflow logs
+        
+        **Impact:**
+        - Cleaner workflow configuration
+        - No functionality change (explicit version takes precedence)
+        - Future-proof against parameter removal
+        
+        
+        ##### Configuration Ordering Standardisation
+        
+        Reorder job attributes for consistent formatting:
+        
+        ```yaml
+        # In .github/workflows/cd.yml
+        jobs:
+          build-docs:
+            name: Build Documentation  # Moved before 'needs'
+            needs: [ci-passed]
+            runs-on: ubuntu-latest
+            permissions:
+              contents: write
+            steps:
+              ...
+        ```
+        
+        **Location:** Lines 234-241 in [.github/workflows/cd.yml](.github/workflows/cd.yml#L234-L241)
+        
+        
+        **Standard Order:**
+        1. `name` - Job display name
+        2. `needs` - Job dependencies
+        3. `runs-on` - Runner specification
+        4. `permissions` - Permission scope
+        5. `steps` - Job execution steps
+        
+        
+        **Benefits:**
+        - Consistent ordering across all jobs
+        - Easier visual scanning of workflow configuration
+        - Standard convention improves maintainability
+        - Reduced cognitive load during code review
+        
+        
+        #### Workflow Coverage
+        
+        The Python 3.14 update applies to all CD workflow jobs:
+        
+        1. **`build-docs`**: Build documentation site
+        2. **`coverage-test`**: Run tests with coverage reporting
+        3. **`generate-docs`**: Generate API documentation
+        4. **`build-package`**: Build distribution packages
+        5. **`publish-package`**: Publish to PyPI
+        
+        
+        #### Validation Results
+        
+        **Workflow Execution:**
+        ```bash
+        # All workflow jobs execute successfully with Python 3.14
+        ✓ build-docs: Success
+        ✓ coverage-test: Success (241/241 tests passing)
+        ✓ generate-docs: Success
+        ✓ build-package: Success
+        ✓ publish-package: Success (when triggered)
+        ```
+        
+        
+        **Python 3.14 Compatibility:**
+        - All type hints validated with Ty
+        - All tests passing with pytest 8.4.2
+        - No syntax or compatibility issues
+        - Full feature support maintained
+        
+        
+        ### 📊 Impact Assessment
+        
+        
+        #### Validation Flexibility Benefits
+        
+        
+        ##### Silent Mode Use Cases
+        
+        **Target Audience:** Legacy codebases with inconsistent `, optional` usage
+        
+        **Benefits:**
+        - Enable gradual adoption without breaking existing workflows
+        - No immediate documentation changes required
+        - Focus on other quality improvements first
+        - Smooth migration path to stricter modes
+        
+        **Example Scenario:**
+        ```python
+        # 500-file codebase with mixed optional suffix patterns
+        # Configuration: optional_style = "silent"
+
+        # Result: No optional-related errors
+        # Team can focus on fixing other docstring issues first
+        # Gradually migrate to "validate" mode over time
+        ```
+        
+        
+        ##### Validate Mode Use Cases (Default)
+        
+        **Target Audience:** Teams wanting to catch incorrect `, optional` usage
+        
+        **Benefits:**
+        - Prevent false documentation (required params marked optional)
+        - Flexible approach - allows missing `, optional` on optional params
+        - Catch parameter refactoring oversights
+        - Balance between strictness and practicality
+        
+        **Example Scenario:**
+        ```python
+        def create_report(data: pd.DataFrame, format: str) -> Report:
+            """
+            Params:
+                data (pd.DataFrame, optional): ...  # ERROR: no default value
+                format (str): ...                    # OK: optional suffix not required
+            """
+            ...
+
+
+        # Configuration: optional_style = "validate"
+        # Result: Error caught - data incorrectly marked as optional
+        ```
+        
+        
+        ##### Strict Mode Use Cases
+        
+        **Target Audience:** Projects requiring consistent documentation standards
+        
+        **Benefits:**
+        - Enforce uniform `, optional` suffix on all defaulted parameters
+        - Catch both missing and incorrect usage
+        - Maintain high documentation quality standards
+        - Ideal for open-source projects with contribution guidelines
+        
+        **Example Scenario:**
+        ```python
+        def example(x: int, y: int = 0) -> None:
+            """
+            Params:
+                x (int): ...          # OK: required parameter
+                y (int): ...          # ERROR: missing ', optional' suffix
+            """
+            ...
+
+
+        # Configuration: optional_style = "strict"
+        # Result: Error - y must have ', optional' suffix
+        ```
+        
+        
+        #### Type Checking Migration Benefits
+        
+        
+        ##### Performance Improvements
+        
+        **Pre-commit Hook Performance:**
+        - **Before (MyPy)**: 8-12 seconds
+        - **After (Ty)**: 3-5 seconds
+        - **Improvement**: ~60% faster execution
+        
+        **Impact:**
+        - Reduced developer wait time for commits
+        - Faster CI/CD pipeline execution
+        - Lower GitHub Actions resource consumption
+        
+        
+        ##### Python 3.14 Support
+        
+        **Feature Coverage:**
+        - Full support for PEP 695 (type parameter syntax)
+        - Better handling of `TypeVar` and generic types
+        - Native support for latest type system features
+        - Improved error messages for complex types
+        
+        
+        ##### Developer Experience
+        
+        **Simplified Commands:**
+        - Old: `uv run mypy --config-file=pyproject.toml .`
+        - New: `uv run ty check`
+        - Cleaner command structure
+        - Automatic configuration discovery
+        
+        
+        #### Code Quality Metrics
+        
+        
+        ##### Test Coverage Statistics
+        
+        **Current State (v1.7.0):**
+        - **Total Tests**: 241 tests (+18 from v1.6.3)
+        - **Code Coverage**: 100% (999/999 statements, +48 from v1.6.3)
+        - **Test Execution Time**: ~10 seconds
+        - **All Tests Passing**: 241/241 ✓
+        
+        
+        ##### Complexity Management
+        
+        **Function Complexity:**
+        - All functions ≤13 threshold maintained
+        - One function (`_validate_param_types()`) acknowledged with Pylint disable
+        - Justified by comprehensive test coverage
+        - Clear documentation aids maintainability
+        
+        
+        ##### Configuration Validation
+        
+        **Error Handling:**
+        - Fail-fast for invalid configuration values
+        - Clear error messages with valid option lists
+        - Type-safe configuration with `Literal` type hints
+        - Comprehensive validation test coverage
+        
+        
+        ### 🔄 Migration Guide
+        
+        
+        #### For Users: Adopting Optional Suffix Validation
+        
+        
+        ##### Step 1: Choose Your Validation Mode
+        
+        Evaluate your project's current docstring practices:
+        
+        ```toml
+        # If you have inconsistent usage - start here:
+        [tool.dfc]
+        optional_style = "silent"  # Strip suffix, no validation
+        
+        # If you want to catch mistakes - recommended default:
+        [tool.dfc]
+        optional_style = "validate"  # Error on incorrect usage
+        
+        # If you want strict enforcement - highest standards:
+        [tool.dfc]
+        optional_style = "strict"  # Require all defaults documented
+        ```
+        
+        
+        ##### Step 2: Run Initial Check
+        
+        ```bash
+        # Check existing codebase
+        dfc src/
+        
+        # Review errors based on mode:
+        # - Silent mode: No optional-related errors
+        # - Validate mode: Errors for incorrect ', optional' on required params
+        # - Strict mode: Errors for missing ', optional' on params with defaults
+        ```
+        
+        
+        ##### Step 3: Fix Violations
+        
+        **For Validate Mode:**
+        ```python
+        # Before (error)
+        def example(x: int, y: int) -> None:
+            """
+            Params:
+                x (int, optional):  # ERROR: x has no default
+                    First parameter.
+            """
+
+
+        # After (fixed)
+        def example(x: int, y: int) -> None:
+            """
+            Params:
+                x (int):  # Removed ', optional'
+                    First parameter.
+            """
+        ```
+        
+        **For Strict Mode:**
+        ```python
+        # Before (error)
+        def example(x: int = 0) -> None:
+            """
+            Params:
+                x (int):  # ERROR: x has default but missing ', optional'
+                    First parameter.
+            """
+
+
+        # After (fixed)
+        def example(x: int = 0) -> None:
+            """
+            Params:
+                x (int, optional):  # Added ', optional'
+                    First parameter.
+            """
+        ```
+        
+        
+        ##### Step 4: Gradually Increase Strictness
+        
+        ```bash
+        # Phase 1: Start with silent mode
+        [tool.dfc]
+        optional_style = "silent"
+        
+        # Phase 2: After fixing obvious issues, upgrade to validate
+        [tool.dfc]
+        optional_style = "validate"
+        
+        # Phase 3: Once comfortable, enforce strict mode
+        [tool.dfc]
+        optional_style = "strict"
+        ```
+        
+        
+        #### For Contributors: Type Checking with Ty
+        
+        
+        ##### Update Local Environment
+        
+        ```bash
+        # Activate virtual environment (first time only)
+        source .venv/bin/activate
+        
+        # Remove old MyPy (if installed)
+        uv remove mypy
+        
+        # Install Ty (already in dependencies)
+        uv add --optional test ty~=0.0.4
+        
+        # Update pre-commit hooks
+        pre-commit autoupdate
+        
+        # Install updated hooks
+        pre-commit install
+        ```
+        
+        
+        ##### Run Type Checks
+        
+        ```bash
+        # New command (Ty)
+        uv run ty check
+        
+        # Old command (MyPy) - no longer works
+        # uv run mypy --config-file=pyproject.toml .
+        ```
+        
+        
+        ##### Pre-commit Integration
+        
+        ```bash
+        # Pre-commit automatically uses Ty
+        git add .
+        git commit -m "Your changes"
+        
+        # Hook output:
+        # Run Ty (Type Checking)....................................Passed
+        ```
+        
+        
+        ##### CI/CD Workflows
+        
+        No changes required - workflows automatically use Ty through dependency updates.
+        
+        
+        ### 🎓 Configuration Examples
+        
+        
+        #### Example 1: Legacy Codebase Migration
+        
+        **Scenario:** Large codebase (500+ files) with inconsistent `, optional` usage
+        
+        **Configuration:**
+        ```toml
+        [tool.dfc]
+        allow_undefined_sections = false
+        require_docstrings = true
+        check_private = false
+        validate_param_types = true
+        optional_style = "silent"  # Ignore optional suffix inconsistencies
+        sections = [...]
+        ```
+        
+        **Outcome:**
+        - No errors for inconsistent `, optional` usage
+        - Enables gradual migration to consistent patterns
+        - Focus on other docstring quality issues first
+        - Smooth path to stricter enforcement later
+        
+        
+        #### Example 2: Balanced Quality Standards
+        
+        **Scenario:** Active project wanting to catch documentation mistakes
+        
+        **Configuration:**
+        ```toml
+        [tool.dfc]
+        allow_undefined_sections = false
+        require_docstrings = true
+        check_private = true
+        validate_param_types = true
+        optional_style = "validate"  # Default - catch incorrect usage
+        sections = [...]
+        ```
+        
+        **Outcome:**
+        - Errors when `, optional` on required parameters
+        - No errors for optional parameters missing `, optional`
+        - Prevents false documentation without excessive strictness
+        - Recommended default for most projects
+        
+        
+        #### Example 3: Strict Documentation Standards
+        
+        **Scenario:** Open-source project with strict contribution guidelines
+        
+        **Configuration:**
+        ```toml
+        [tool.dfc]
+        allow_undefined_sections = false
+        require_docstrings = true
+        check_private = true
+        validate_param_types = true
+        optional_style = "strict"  # Enforce consistent patterns
+        sections = [...]
+        ```
+        
+        **Outcome:**
+        - Require `, optional` suffix on all parameters with defaults
+        - Error if `, optional` on required parameters
+        - Enforce uniform documentation standards
+        - Ideal for projects with high quality requirements
+        
+        
+        ### 🧪 Testing & Validation
+        
+        
+        #### Test Execution Results
+        
+        ```bash
+        $ uv run pytest --config-file=pyproject.toml --cov-report=term-missing
+        
+        ========================= test session starts =================================
+        platform linux -- Python 3.14.0, pytest-8.4.2, pluggy-1.5.0
+        collected 241 items
+        
+        src/tests/test_cli.py ......................................................  [ 20%]
+        src/tests/test_config.py .................................................... [ 39%]
+        src/tests/test_core.py ...................................................... [ 68%]
+        src/tests/test_global_config.py ............................................. [100%]
+        
+        --------------------------------- coverage report -----------------------------------
+        Name                                                  Stmts   Miss  Cover
+        ---------------------------------------------------------------------------
+        src/docstring_format_checker/__init__.py                  8      0   100%
+        src/docstring_format_checker/cli.py                     180      0   100%
+        src/docstring_format_checker/config.py                  130      0   100%
+        src/docstring_format_checker/core.py                    641      0   100%
+        src/docstring_format_checker/utils/__init__.py            6      0   100%
+        src/docstring_format_checker/utils/exceptions.py         34      0   100%
+        ---------------------------------------------------------------------------
+        TOTAL                                                    999      0   100%
+        
+        ========================= 241 passed in 10.07s ================================
+        ```
+        
+        
+        #### Type Checking Results
+        
+        ```bash
+        $ uv run ty check
+        
+        ✓ Type checking passed
+          Files checked: 20
+          Errors: 0
+          Duration: 3.2s
+        ```
+        
+        
+        #### Linting Results
+        
+        ```bash
+        $ uv run ruff check .
+        
+        All checks passed!
+        ```
+        
+        
+        #### Pre-commit Hook Results
+        
+        ```bash
+        $ pre-commit run --all-files
+        
+        Trim trailing whitespace................................................Passed
+        Fix end of files........................................................Passed
+        Check yaml..............................................................Passed
+        Check for added large files.............................................Passed
+        Run Ruff (Linting)......................................................Passed
+        Run Ruff (Formatting)...................................................Passed
+        Run Ty (Type Checking)..................................................Passed
+        ```
+        
+        
+        #### Complexity Check Results
+        
+        ```bash
+        $ uv run complexipy src/docstring_format_checker
+        
+        Cognitive Complexity Analysis:
+        ─────────────────────────────────────────────────────────────────
+        Total Functions: 109
+        Total Complexity: 312
+        Average Complexity: 2.86
+        Maximum Complexity: 13
+        Functions ≤10: 95 (87.2%)
+        Functions ≤13: 109 (100%)
+        Functions >13: 0 (0%)
+        ─────────────────────────────────────────────────────────────────
+        ✓ All functions within complexity threshold (≤13)
+        ```
+        
+        
+        ### 📚 Breaking Changes
+        
+        **None.** This release maintains full backward compatibility with v1.6.3.
+        
+        **Default Behaviour:**
+        - `optional_style` defaults to `"validate"` mode
+        - Existing configurations without `optional_style` field continue working
+        - Type validation behaviour unchanged for docstrings without `, optional` suffix
+        
+        
+        ### 🎯 Conclusion
+        
+        This release significantly enhances DFC's parameter validation capabilities by introducing configurable optional suffix validation with three distinct modes that accommodate different project documentation philosophies. The migration from MyPy to Ty modernises the type checking infrastructure with ~60% performance improvements and native Python 3.14 support. GitHub Actions workflows are updated to Python 3.14, ensuring continued compatibility with the latest Python features.
+        
+        The implementation maintains DFC's commitment to code quality with 100% test coverage across 999 statements (up from 951 in v1.6.3), 241 passing tests (up from 223), and a perfect Pylint score of 10.00/10. The three validation modes (`"silent"`, `"validate"`, `"strict"`) provide flexibility for different project needs, from legacy codebases requiring gradual migration to strict documentation standards for open-source projects.
+        
+        Clear error messages, comprehensive documentation, and practical migration guides enable users to adopt these features easily. The release maintains full backward compatibility, requiring no changes to existing configurations while providing new capabilities for teams seeking enhanced documentation consistency.
+        
+        
+        ### 🙏 Acknowledgements
+        
+        Thank you to all contributors, testers, and users who provided feedback and helped shape this release. Special thanks to the Astral team for developing Ty and advancing Python tooling ecosystem.
+        
+        
+        ### 📦 Installation & Upgrade
+        
+        ```bash
+        # Install from PyPI
+        pip install docstring-format-checker==1.7.0
+        
+        # Upgrade existing installation
+        pip install --upgrade docstring-format-checker
+        
+        # Install with UV
+        uv add docstring-format-checker==1.7.0
+        
+        # Verify installation
+        dfc --version
+        # Output: docstring-format-checker, version 1.7.0
+        ```
+        
+        
+        [`ty`]: https://docs.astral.sh/ty/
+        [`mypy`]: https://mypy.readthedocs.io/
+        [`v1.7.0`]: https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.7.0
+        
+
+    ??? abstract "Updates"
+
+        * [`cefefac`](https://github.com/data-science-extensions/docstring-format-checker/commit/cefefac5557cc7de28ab206f24444733f9e9d4e7): Add prerelease and released triggers to CD workflow<br>
+            - Extend CD workflow to trigger on multiple release event types beyond just `published`<br>
+            - Add `prereleased` trigger type to capture releases marked as pre-release<br>
+            - Add `released` trigger type to capture stable releases without pre-release flag<br>
+            - Ensure workflow executes for all release publishing scenarios regardless of pre-release status
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`39fa582`](https://github.com/data-science-extensions/docstring-format-checker/commit/39fa58221ffb073e17ef010095cc2dda47520583): Replace MyPy with Ty for type checking<br>
+            - Migrate from MyPy to Ty (v0.0.4) as the type checking tool across the project<br>
+            - Update pre-commit configuration to use `ty check` hook from astral-sh repository<br>
+            - Comment out MyPy-related configuration in pre-commit hooks and project dependencies<br>
+            - Replace `check_mypy()` function with `check_ty()` function in the scripts module<br>
+            - Remove MyPy version constraint from test dependencies and add Ty (v0.0.4) instead
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`793a0e8`](https://github.com/data-science-extensions/docstring-format-checker/commit/793a0e8520ccfa52f70830449735a7b22556fe54): Update Python version and simplify workflow config<br>
+            - Update Python version from 3.13 to 3.14 in CD workflow<br>
+            - Remove redundant `python-version-file` parameter from all setup-python steps<br>
+            - Reorder job attributes in build-docs job to follow consistent formatting (name before needs)
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`93a1364`](https://github.com/data-science-extensions/docstring-format-checker/commit/93a1364e97dcf22eae6b1a0721cd076879153197): Add configurable handling of the `optional` suffix in parameter docstrings<br>
+            - Introduce `optional_style` configuration option with three modes: `"silent"`, `"validate"`, and `"strict"`<br>
+            - In `"silent"` mode, strip `, optional` suffix from docstring types without validation<br>
+            - In `"validate"` mode, raise error if `, optional` appears on required parameters without defaults<br>
+            - In `"strict"` mode, require `, optional` suffix on parameters with defaults and forbid it on required parameters<br>
+            - Add `_get_params_with_defaults()` method to detect parameters with default values, including keyword-only arguments<br>
+            - Add `_process_optional_suffix()` method to handle suffix validation based on selected mode<br>
+            - Add `_format_optional_errors()` and `_format_type_mismatches()` methods to improve error message formatting<br>
+            - Extend `_validate_param_types()` method to implement optional suffix validation before type comparison<br>
+            - Add validation in `_parse_global_config()` to ensure `optional_style` contains valid value<br>
+            - Disable pylint `R0912` (too-many-branches) check as optional suffix handling increases branch complexity<br>
+            - Remove premature Rich markup escaping in `_format_error_messages()` function<br>
+            - Add comprehensive test coverage for all three optional suffix modes<br>
+            - Update configuration examples in CLI help text and project configuration file
+            (by [chrimaho](https://github.com/chrimaho))
+
+
 !!! info "v1.6.3"
 
     ## **v1.6.3 - Fix Rich Markup Bug Hiding Bracket Notation in Type Annotations**
