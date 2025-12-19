@@ -115,6 +115,7 @@ class GlobalConfig:
     require_docstrings: bool = True
     check_private: bool = False
     validate_param_types: bool = True
+    optional_style: Literal["silent", "validate", "strict"] = "validate"
 
 
 ## --------------------------------------------------------------------------- #
@@ -447,11 +448,20 @@ def _parse_global_config(tool_config: dict[str, Any]) -> GlobalConfig:
         (GlobalConfig):
             Parsed global configuration object.
     """
+    # Validate optional_style if provided
+    optional_style: str = tool_config.get("optional_style", "validate")
+    valid_styles: tuple[str, str, str] = ("silent", "validate", "strict")
+    if optional_style not in valid_styles:
+        raise InvalidConfigError(
+            f"Invalid optional_style: '{optional_style}'. Must be one of: {', '.join(valid_styles)}"
+        )
+
     return GlobalConfig(
         allow_undefined_sections=tool_config.get("allow_undefined_sections", False),
         require_docstrings=tool_config.get("require_docstrings", True),
         check_private=tool_config.get("check_private", False),
         validate_param_types=tool_config.get("validate_param_types", True),
+        optional_style=optional_style,  # type:ignore
     )
 
 

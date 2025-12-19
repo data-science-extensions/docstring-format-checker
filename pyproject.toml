@@ -75,7 +75,8 @@ docs = [
     "pygithub==2.*",
 ]
 test = [
-    "mypy==1.*,!=1.17.*",
+    "ty==0.*",
+    # "mypy==1.*,!=1.17.*",
     "parameterized==0.*",
     "pytest==8.*",
     "pytest-clarity==1.*",
@@ -154,6 +155,7 @@ disable = [
     "C0103",  # invalid-name
     "C0301",  # line-too-long
     "C0302",  # too-many-lines
+    "R0912",  # too-many-branches
     "R0913",  # too-many-arguments
     "R0914",  # too-many-locals
     "R0915",  # too-many-statements
@@ -188,6 +190,7 @@ allow_undefined_sections = false
 require_docstrings = true
 check_private = true
 validate_param_types = true
+optional_style = "silent"  #<-- optional: "silent", "validate", or "strict"
 sections = [
     { order=1, name="summary",  type="free_text",          required=true,  admonition="note",     prefix="!!!" },
     { order=2, name="details",  type="free_text",          required=false, admonition="abstract", prefix="???+" },

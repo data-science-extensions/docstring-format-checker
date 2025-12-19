@@ -31,7 +31,7 @@ env:
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   REPOSITORY_NAME: data-science-extensions/docstring-format-checker
   GIT_BRANCH: ${{ github.event.release.target_commitish }}
-  PYTHON_VERSION: '3.13'
+  PYTHON_VERSION: '3.14'
   PYTHONIOENCODING: utf-8
 
 jobs:
@@ -59,7 +59,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          python-version-file: pyproject.toml
 
       - name: Install Dependencies
         id: install-dependencies
@@ -112,7 +111,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          python-version-file: pyproject.toml
 
       - name: Check VERSION
         id: check-version
@@ -188,7 +186,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          python-version-file: pyproject.toml
 
       - name: Download Artifacts
         id: download-artifacts
@@ -234,11 +231,11 @@ jobs:
 
   build-docs:
 
+    name: Build Docs
     needs:
       - test
       - deploy-package
     if: ${{ always() && needs.test.result == 'success' && needs.deploy-package.result == 'success' }}
-    name: Build Docs
     runs-on: ubuntu-latest
 
     steps:
@@ -258,7 +255,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          python-version-file: pyproject.toml
 
       - name: Install Dependencies
         id: install-dependencies

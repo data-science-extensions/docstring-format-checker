@@ -156,14 +156,18 @@ def check_blacken_docs() -> None:
     run("blacken-docs --check", *get_all_files(".md", ".py", ".ipynb"))
 
 
-def check_mypy() -> None:
-    run(
-        "mypy",
-        "--install-types",
-        "--non-interactive",
-        "--config-file=pyproject.toml",
-        f"./src/{DIRECTORY_NAME}",
-    )
+def check_ty() -> None:
+    run(f"ty check ./src/{DIRECTORY_NAME}")
+
+
+# def check_mypy() -> None:
+#     run(
+#         "mypy",
+#         "--install-types",
+#         "--non-interactive",
+#         "--config-file=pyproject.toml",
+#         f"./src/{DIRECTORY_NAME}",
+#     )
 
 
 def check_isort() -> None:
@@ -216,7 +220,8 @@ def check_complexity() -> None:
 def check() -> None:
     check_black()
     check_blacken_docs()
-    check_mypy()
+    # check_mypy()
+    check_ty()
     check_isort()
     check_codespell()
     check_pycln()
