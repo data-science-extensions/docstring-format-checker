@@ -3217,11 +3217,12 @@ class TestDocstringChecker(TestCase):
         but the description contains bullet points with colons and should not be validated.
         """
         # Create a checker with params section configured
+        # Use 'silent' mode since this test uses ', optional' on params without defaults
         sections = [
             SectionConfig(order=1, name="summary", type="free_text", required=True),
             SectionConfig(order=2, name="params", type="list_name_and_type", required=False),
         ]
-        checker: DocstringChecker = DocstringChecker(_create_config(sections))
+        checker: DocstringChecker = DocstringChecker(_create_config(sections, optional_style="silent"))
 
         python_content: str = dedent(
             '''
@@ -5505,5 +5506,465 @@ class TestParameterTypeValidation(TestCase):
             # Should have no errors - types match perfectly
             assert len(errors) == 0, f"Expected no errors when types match, got {errors}"
 
+        finally:
+            temp_path.unlink()
+
+    def test_optional_style_silent_mode_strips_optional(self) -> None:
+        """
+        Test 'silent' mode: strips ', optional' from docstring without validation.
+        """
+        python_content: str = dedent(
+            """
+            from typing import Optional
+
+            def process_data(name: str, age: Optional[int] = None):
+                '''
+                Process user data.
+
+                Params:
+                    name (str):
+                        The user name.
+                    age (Optional[int], optional):
+                        The user age.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True, optional_style="silent")
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 0, f"Expected no errors in silent mode, got {[e.message for e in errors]}"
+        finally:
+            temp_path.unlink()
+
+    def test_optional_style_silent_allows_optional_on_required_param(self) -> None:
+        """
+        Test 'silent' mode: allows ', optional' on required parameters (strips without error).
+        """
+        python_content: str = dedent(
+            """
+            def fetch_user(user_id: int):
+                '''
+                Fetch user by ID.
+
+                Params:
+                    user_id (int, optional):
+                        The user identifier.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True, optional_style="silent")
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            # Silent mode should not error even though ', optional' is on required param
+            assert len(errors) == 0, f"Expected no errors in silent mode, got {[e.message for e in errors]}"
+        finally:
+            temp_path.unlink()
+
+    def test_optional_style_validate_mode_allows_optional_with_default(self) -> None:
+        """
+        Test 'validate' mode: allows ', optional' on parameters with defaults.
+        """
+        python_content: str = dedent(
+            """
+            from typing import Optional
+
+            def process_data(name: str, age: Optional[int] = None):
+                '''
+                Process user data.
+
+                Params:
+                    name (str):
+                        The user name.
+                    age (Optional[int], optional):
+                        The user age.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True, optional_style="validate")
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 0, f"Expected no errors in validate mode, got {[e.message for e in errors]}"
+        finally:
+            temp_path.unlink()
+
+    def test_optional_style_validate_mode_errors_on_optional_without_default(self) -> None:
+        """
+        Test 'validate' mode: errors when ', optional' appears on required parameter.
+        """
+        python_content: str = dedent(
+            """
+            def fetch_user(user_id: int):
+                '''
+                Fetch user by ID.
+
+                Params:
+                    user_id (int, optional):
+                        The user identifier.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True, optional_style="validate")
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 1
+            assert "has ', optional' suffix but no default value" in errors[0].message
+        finally:
+            temp_path.unlink()
+
+    def test_optional_style_validate_mode_allows_missing_optional_suffix(self) -> None:
+        """
+        Test 'validate' mode: allows missing ', optional' on parameters with defaults.
+        """
+        python_content: str = dedent(
+            """
+            from typing import Optional
+
+            def process_data(name: str, age: Optional[int] = None):
+                '''
+                Process user data.
+
+                Params:
+                    name (str):
+                        The user name.
+                    age (Optional[int]):
+                        The user age.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True, optional_style="validate")
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            # Validate mode allows missing ', optional' - not strict
+            assert len(errors) == 0, f"Expected no errors in validate mode, got {[e.message for e in errors]}"
+        finally:
+            temp_path.unlink()
+
+    def test_optional_style_strict_mode_requires_optional_suffix(self) -> None:
+        """
+        Test 'strict' mode: requires ', optional' for parameters with defaults.
+        """
+        python_content: str = dedent(
+            """
+            from typing import Optional
+
+            def process_data(name: str, age: Optional[int] = None):
+                '''
+                Process user data.
+
+                Params:
+                    name (str):
+                        The user name.
+                    age (Optional[int]):
+                        The user age.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True, optional_style="strict")
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 1
+            assert "has default value but missing ', optional' suffix" in errors[0].message
+        finally:
+            temp_path.unlink()
+
+    def test_optional_style_strict_mode_allows_optional_with_default(self) -> None:
+        """
+        Test 'strict' mode: allows ', optional' when parameter has default.
+        """
+        python_content: str = dedent(
+            """
+            from typing import Optional
+
+            def process_data(name: str, age: Optional[int] = None):
+                '''
+                Process user data.
+
+                Params:
+                    name (str):
+                        The user name.
+                    age (Optional[int], optional):
+                        The user age.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True, optional_style="strict")
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 0, f"Expected no errors in strict mode, got {[e.message for e in errors]}"
+        finally:
+            temp_path.unlink()
+
+    def test_optional_style_strict_mode_errors_on_optional_without_default(self) -> None:
+        """
+        Test 'strict' mode: errors when ', optional' appears on required parameter.
+        """
+        python_content: str = dedent(
+            """
+            def fetch_user(user_id: int):
+                '''
+                Fetch user by ID.
+
+                Params:
+                    user_id (int, optional):
+                        The user identifier.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True, optional_style="strict")
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 1
+            assert "has ', optional' suffix but no default value" in errors[0].message
+        finally:
+            temp_path.unlink()
+
+    def test_optional_style_case_insensitive(self) -> None:
+        """
+        Test that ', OPTIONAL' (uppercase) suffix is handled correctly.
+        """
+        python_content: str = dedent(
+            """
+            from typing import Optional
+
+            def fetch_user(user_id: int, timeout: Optional[float] = None):
+                '''
+                Fetch user by ID.
+
+                Params:
+                    user_id (int):
+                        The user identifier.
+                    timeout (Optional[float], OPTIONAL):
+                        Request timeout in seconds.
+                '''
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True, optional_style="validate")
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert (
+                len(errors) == 0
+            ), f"Expected no errors with case-insensitive handling, got {[e.message for e in errors]}"
+        finally:
+            temp_path.unlink()
+
+    def test_kwonly_args_with_defaults(self) -> None:
+        """
+        Test that _get_params_with_defaults correctly detects keyword-only args with defaults.
+        """
+        # ## Python StdLib Imports ----
+        import ast
+
+        python_content: str = dedent(
+            """
+            def example(a: int, *, b: str = "default", c: int, d: float = 3.14):
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True, optional_style="validate")
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Parse the function
+        tree = ast.parse(python_content)
+        func_node = tree.body[0]
+
+        # Get params with defaults
+        params_with_defaults = checker._get_params_with_defaults(func_node)
+
+        # b and d should be detected (keyword-only with defaults)
+        # a and c should not be in the set
+        assert "b" in params_with_defaults, "Expected 'b' (kwonly with default) to be detected"
+        assert "d" in params_with_defaults, "Expected 'd' (kwonly with default) to be detected"
+        assert "a" not in params_with_defaults, "'a' should not be in params_with_defaults"
+        assert "c" not in params_with_defaults, "'c' should not be in params_with_defaults"
+
+    def test_format_optional_errors_single_error(self) -> None:
+        """
+        Test formatting of optional suffix errors when there's only one error.
+        """
+        python_content: str = dedent(
+            """
+            def test_function(a: int = 5) -> None:
+                '''
+                Test function.
+
+                Params:
+                    a (int):
+                        Missing optional suffix.
+                '''
+                pass
+            """
+        ).strip()
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True, optional_style="strict")
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 1, f"Expected 1 error, got {len(errors)}"
+            # Single error should not have "Optional suffix validation errors:" prefix
+            assert "Optional suffix validation errors:" not in errors[0].message
+            assert "missing ', optional' suffix" in errors[0].message
+        finally:
+            temp_path.unlink()
+
+    def test_format_optional_errors_multiple_errors(self) -> None:
+        """
+        Test formatting of optional suffix errors when there are multiple errors.
+        """
+        python_content: str = dedent(
+            """
+            def test_function(a: int = 5, b: str = "default", c: float = 1.0) -> None:
+                '''
+                Test function.
+
+                Params:
+                    a (int):
+                        Missing optional suffix.
+                    b (str):
+                        Missing optional suffix.
+                    c (float):
+                        Missing optional suffix.
+                '''
+                pass
+            """
+        ).strip()
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True, optional_style="strict")
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 1, f"Expected 1 compound error, got {len(errors)}"
+            # Multiple errors should have "Optional suffix validation errors:" prefix
+            assert "Optional suffix validation errors:" in errors[0].message
+            assert "missing ', optional' suffix" in errors[0].message
         finally:
             temp_path.unlink()

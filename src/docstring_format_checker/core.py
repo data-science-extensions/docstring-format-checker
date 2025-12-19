@@ -1173,12 +1173,136 @@ class DocstringChecker:
 
         return mismatches
 
+    def _get_params_with_defaults(self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> set[str]:
+        """
+        !!! note "Summary"
+            Get set of parameter names that have default values.
+
+        Params:
+            node (Union[ast.FunctionDef, ast.AsyncFunctionDef]):
+                The function node to analyse.
+
+        Returns:
+            (set[str]):
+                Set of parameter names that have default values.
+        """
+        params_with_defaults: set[str] = set()
+        args = node.args
+
+        # Regular args with defaults
+        num_defaults = len(args.defaults)
+        if num_defaults > 0:
+            # Defaults apply to the last n arguments
+            num_args = len(args.args)
+            for i in range(num_args - num_defaults, num_args):
+                if args.args[i].arg not in ("self", "cls"):
+                    params_with_defaults.add(args.args[i].arg)
+
+        # Keyword-only args with defaults
+        for i, arg in enumerate(args.kwonlyargs):
+            if args.kw_defaults[i] is not None:
+                params_with_defaults.add(arg.arg)
+
+        return params_with_defaults
+
+    def _process_optional_suffix(
+        self,
+        param_name: str,
+        doc_type: str,
+        params_with_defaults: set[str],
+        optional_style: str,
+    ) -> tuple[str, Optional[str]]:
+        """
+        !!! note "Summary"
+            Process the ', optional' suffix based on the optional_style mode.
+
+        Params:
+            param_name (str):
+                Name of the parameter.
+            doc_type (str):
+                Docstring type including potential ', optional' suffix.
+            params_with_defaults (set[str]):
+                Set of parameters that have default values.
+            optional_style (str):
+                The validation mode: 'silent', 'validate', or 'strict'.
+
+        Returns:
+            (tuple[str, Optional[str]]):
+                Tuple of (cleaned_type, error_message).
+        """
+        has_optional_suffix: bool = bool(re.search(r",\s*optional$", doc_type, flags=re.IGNORECASE))
+        clean_type: str = re.sub(r",\s*optional$", "", doc_type, flags=re.IGNORECASE).strip()
+        error_message: Optional[str] = None
+
+        if optional_style == "validate":
+            if has_optional_suffix and param_name not in params_with_defaults:
+                error_message = f"Parameter '{param_name}' has ', optional' suffix but no default value in signature"
+        elif optional_style == "strict":
+            if param_name in params_with_defaults and not has_optional_suffix:
+                error_message = (
+                    f"Parameter '{param_name}' has default value but missing ', optional' suffix in docstring"
+                )
+            elif has_optional_suffix and param_name not in params_with_defaults:
+                error_message = f"Parameter '{param_name}' has ', optional' suffix but no default value in signature"
+
+        return clean_type, error_message
+
+    def _format_optional_errors(self, errors: list[str]) -> str:
+        """
+        !!! note "Summary"
+            Format multiple optional suffix validation errors.
+
+        Params:
+            errors (list[str]):
+                List of error messages.
+
+        Returns:
+            (str):
+                Formatted error message.
+        """
+        if len(errors) == 1:
+            return errors[0]
+        formatted_errors: str = "\n  - ".join([""] + errors)
+        return f"Optional suffix validation errors:{formatted_errors}"
+
+    def _format_type_mismatches(self, mismatches: list[tuple[str, str, str]]) -> str:
+        """
+        !!! note "Summary"
+            Format parameter type mismatches for error output.
+
+        Params:
+            mismatches (list[tuple[str, str, str]]):
+                List of (param_name, sig_type, doc_type) tuples.
+
+        Returns:
+            (str):
+                Formatted error message.
+        """
+        mismatch_blocks: list[str] = []
+        for name, sig_type, doc_type in mismatches:
+            sig_type_clean: str = sig_type.replace("'", '"')
+            doc_type_clean: str = doc_type.replace("'", '"')
+            param_block: str = (
+                f"""'{name}':\n    - signature: '{sig_type_clean}'\n    - docstring: '{doc_type_clean}'"""
+            )
+            mismatch_blocks.append(param_block)
+
+        formatted_details: str = "\n  - ".join([""] + mismatch_blocks)
+        return f"Parameter type mismatch:{formatted_details}"
+
     def _validate_param_types(
         self, docstring: str, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]
     ) -> Optional[str]:
         """
         !!! note "Summary"
             Validate that parameter types in docstring match the signature.
+
+        ???+ abstract "Details"
+            Implements three validation modes based on `optional_style` configuration:
+
+            - **`"silent"`**: Strip `, optional` from docstring types before comparison.
+            - **`"validate"`**: Error if `, optional` appears on required parameters.
+            - **`"strict"`**: Require `, optional` for parameters with defaults, error if on required parameters.
 
         Params:
             docstring (str):
@@ -1192,10 +1316,32 @@ class DocstringChecker:
         """
         # Extract types from both sources
         signature_types: dict[str, str] = self._extract_param_types(node)
-        docstring_types: dict[str, str] = self._extract_param_types_from_docstring(docstring)
+        docstring_types_raw: dict[str, str] = self._extract_param_types_from_docstring(docstring)
+
+        # Get parameters with default values
+        params_with_defaults: set[str] = self._get_params_with_defaults(node)
 
         # Get all parameter names (excluding self/cls)
         all_params: list[str] = [arg.arg for arg in node.args.args if arg.arg not in ("self", "cls")]
+
+        # Get the optional_style mode
+        optional_style: str = self.config.global_config.optional_style
+
+        # Process docstring types based on optional_style mode
+        docstring_types: dict[str, str] = {}
+        optional_errors: list[str] = []
+
+        for param_name, doc_type in docstring_types_raw.items():
+            clean_type, error_message = self._process_optional_suffix(
+                param_name, doc_type, params_with_defaults, optional_style
+            )
+            docstring_types[param_name] = clean_type
+            if error_message:
+                optional_errors.append(error_message)
+
+        # Return optional_style errors first if any
+        if optional_errors:
+            return self._format_optional_errors(optional_errors)
 
         # Check for parameters documented with type in docstring but missing annotation in signature
         for param_name in all_params:
@@ -1213,20 +1359,7 @@ class DocstringChecker:
         mismatches: list[tuple[str, str, str]] = self._compare_param_types(signature_types, docstring_types)
 
         if mismatches:
-            # Format each mismatch with parameter name on one line, signature and docstring indented below
-            # Use 2 spaces for params, 4 for sig/doc (suitable for table output)
-            # List output will add additional indentation via CLI formatting
-            mismatch_blocks: list[str] = []
-            for name, sig_type, doc_type in mismatches:
-                sig_type: str = sig_type.replace("'", '"')
-                doc_type: str = doc_type.replace("'", '"')
-                param_block: str = f"""'{name}':\n    - signature: '{sig_type}'\n    - docstring: '{doc_type}'"""
-                mismatch_blocks.append(param_block)
-
-            # Join all parameter blocks with proper indentation
-            formatted_details: str = "\n  - ".join([""] + mismatch_blocks)
-
-            return f"Parameter type mismatch:{formatted_details}"
+            return self._format_type_mismatches(mismatches)
 
         return None
 

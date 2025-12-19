@@ -271,6 +271,7 @@ def _show_config_example_callback() -> None:
         [blue]require_docstrings = true[/blue]
         [blue]check_private = true[/blue]
         [blue]validate_param_types = true[/blue]
+        [blue]optional_style = "validate"[/blue]  [green]# "silent", "validate", or "strict"[/green]
         [blue]sections = [[/blue]
             [blue]{ order = 1, name = "summary",  type = "free_text",          required = true, admonition = "note", prefix = "!!!" },[/blue]
             [blue]{ order = 2, name = "details",  type = "free_text",          required = false, admonition = "abstract", prefix = "???+" },[/blue]
@@ -357,9 +358,6 @@ def _format_error_messages(error_message: str) -> str:
         (str):
             Formatted error message with each error prefixed with "- " and separated by ";\n"
     """
-    # Escape square brackets for Rich markup using Rich's escape function
-    error_message = escape(error_message)
-
     if "; " in error_message:
         # Split by semicolon and rejoin with proper formatting
         errors: list[str] = error_message.split("; ")

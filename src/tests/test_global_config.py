@@ -402,3 +402,19 @@ class TestGlobalConfigFeatures(TestCase):
 
         finally:
             Path(temp_file).unlink(missing_ok=True)
+
+    def test_invalid_optional_style_raises_error(self) -> None:
+        """
+        Test that invalid optional_style value raises InvalidConfigError.
+        """
+        # ## Local First Party Imports ----
+        from docstring_format_checker.config import _parse_global_config
+        from docstring_format_checker.utils.exceptions import InvalidConfigError
+
+        tool_config: dict[str, str] = {"optional_style": "invalid_mode"}
+
+        with self.assertRaises(InvalidConfigError) as context:
+            _parse_global_config(tool_config)
+
+        assert "Invalid optional_style: 'invalid_mode'" in str(context.exception)
+        assert "Must be one of: silent, validate, strict" in str(context.exception)
