@@ -46,16 +46,23 @@ repos:
         additional_dependencies:
           - "black>=23.3"
 
-  # Run MyPy type checks
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.17.1"
-    hooks:
-      - id: mypy
-        files: src/docstring_format_checker
-        args:
-          - "--install-types"
-          - "--config-file=pyproject.toml"
-          - "--allow-redefinition"
+  # - repo: https://github.com/astral-sh/ty
+  #   rev: "v0.0.4"
+  #   hooks:
+  #     - id: ty
+  #       name: ty (python)
+  #       entry: ty check ./src/docstring_format_checker
+
+  # # Run MyPy type checks
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: "v1.17.1"
+  #   hooks:
+  #     - id: mypy
+  #       files: src/docstring_format_checker
+  #       args:
+  #         - "--install-types"
+  #         - "--config-file=pyproject.toml"
+  #         - "--allow-redefinition"
 
   # Reorder Python imports
   - repo: https://github.com/pycqa/isort
@@ -103,9 +110,16 @@ repos:
         # args:
         #   - "--all-groups"
 
-  # # Everything run locally
-  # - repo: local
-  #   hooks:
+  # Everything run locally
+  - repo: local
+    hooks:
+
+    - id: ty
+      name: ty-check
+      entry: uv run ty check ./src/docstring_format_checker
+      language: python
+      types: [python]
+      pass_filenames: true
 
   #     # Run Pylint
   #     - id: pylint
