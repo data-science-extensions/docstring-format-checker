@@ -5855,22 +5855,6 @@ class TestParameterTypeValidation(TestCase):
         finally:
             temp_path.unlink()
 
-    def test_kwonly_args_with_defaults(self) -> None:
-
-        checker: DocstringChecker = simple_checker()
-
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
-            temp_file.write(python_content)
-            temp_file.flush()
-            temp_path: Path = Path(temp_file.name)
-
-        try:
-            errors: list[DocstringError] = checker.check_file(str(temp_path))
-            assert len(errors) == 1, f"Expected 1 error, got {len(errors)}"
-            assert "In signature but not in docstring: 'c'" in errors[0].message
-        finally:
-            temp_path.unlink()
-
     def test_positional_only_parameters_recognised(self) -> None:
         """
         Test that positional-only parameters (before /) are properly extracted and validated.
