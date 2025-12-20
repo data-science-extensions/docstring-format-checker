@@ -5968,3 +5968,277 @@ class TestParameterTypeValidation(TestCase):
             assert "missing ', optional' suffix" in errors[0].message
         finally:
             temp_path.unlink()
+
+    def test_keyword_only_parameters_recognised(self) -> None:
+        """
+        Test that keyword-only parameters (after *) are properly extracted and validated.
+        """
+        python_content: str = dedent(
+            """
+            def test_function(a: int, b: str, *, c: float, d: bool) -> None:
+                '''
+                Test function with keyword-only parameters.
+
+                Params:
+                    a (int):
+                        Regular parameter.
+                    b (str):
+                        Regular parameter.
+                    c (float):
+                        Keyword-only parameter.
+                    d (bool):
+                        Keyword-only parameter.
+                '''
+                pass
+            """
+        ).strip()
+
+        checker: DocstringChecker = simple_checker()
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 0, f"Expected 0 errors for keyword-only params, got {len(errors)}: {errors}"
+        finally:
+            temp_path.unlink()
+
+    def test_keyword_only_parameters_missing_in_docstring(self) -> None:
+        """
+        Test that missing keyword-only parameters in docstring are detected.
+        """
+        python_content: str = dedent(
+            """
+            def test_function(a: int, *, b: str, c: float) -> None:
+                '''
+                Test function with keyword-only parameters.
+
+                Params:
+                    a (int):
+                        Regular parameter.
+                    b (str):
+                        Keyword-only parameter.
+                '''
+                pass
+            """
+        ).strip()
+
+        checker: DocstringChecker = simple_checker()
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 1, f"Expected 1 error, got {len(errors)}"
+            assert "In signature but not in docstring: 'c'" in errors[0].message
+        finally:
+            temp_path.unlink()
+
+    def test_positional_only_parameters_recognised(self) -> None:
+        """
+        Test that positional-only parameters (before /) are properly extracted and validated.
+        """
+        python_content: str = dedent(
+            """
+            def test_function(a: int, b: str, /, c: float) -> None:
+                '''
+                Test function with positional-only parameters.
+
+                Params:
+                    a (int):
+                        Positional-only parameter.
+                    b (str):
+                        Positional-only parameter.
+                    c (float):
+                        Regular parameter.
+                '''
+                pass
+            """
+        ).strip()
+
+        checker: DocstringChecker = simple_checker()
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 0, f"Expected 0 errors for positional-only params, got {len(errors)}: {errors}"
+        finally:
+            temp_path.unlink()
+
+    def test_varargs_recognised(self) -> None:
+        """
+        Test that *args parameters are properly extracted and validated.
+        """
+        python_content: str = dedent(
+            """
+            def test_function(a: int, *args: str) -> None:
+                '''
+                Test function with *args.
+
+                Params:
+                    a (int):
+                        Regular parameter.
+                    args (str):
+                        Variable positional arguments.
+                '''
+                pass
+            """
+        ).strip()
+
+        checker: DocstringChecker = simple_checker()
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 0, f"Expected 0 errors for *args, got {len(errors)}: {errors}"
+        finally:
+            temp_path.unlink()
+
+    def test_kwargs_recognised(self) -> None:
+        """
+        Test that **kwargs parameters are properly extracted and validated.
+        """
+        python_content: str = dedent(
+            """
+            def test_function(a: int, **kwargs: str) -> None:
+                '''
+                Test function with **kwargs.
+
+                Params:
+                    a (int):
+                        Regular parameter.
+                    kwargs (str):
+                        Variable keyword arguments.
+                '''
+                pass
+            """
+        ).strip()
+
+        checker: DocstringChecker = simple_checker()
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 0, f"Expected 0 errors for **kwargs, got {len(errors)}: {errors}"
+        finally:
+            temp_path.unlink()
+
+    def test_all_parameter_types_combined(self) -> None:
+        """
+        Test that all parameter types work together correctly.
+        """
+        python_content: str = dedent(
+            """
+            def test_function(a: int, b: str, /, c: float, *args: int, d: bool, **kwargs: str) -> None:
+                '''
+                Test function with all parameter types.
+
+                Params:
+                    a (int):
+                        Positional-only parameter.
+                    b (str):
+                        Positional-only parameter.
+                    c (float):
+                        Regular parameter.
+                    args (int):
+                        Variable positional arguments.
+                    d (bool):
+                        Keyword-only parameter.
+                    kwargs (str):
+                        Variable keyword arguments.
+                '''
+                pass
+            """
+        ).strip()
+
+        checker: DocstringChecker = simple_checker()
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 0, f"Expected 0 errors for all parameter types, got {len(errors)}: {errors}"
+        finally:
+            temp_path.unlink()
+
+    def test_overload_with_keyword_only_params(self) -> None:
+        """
+        Test that functions with @overload decorator and keyword-only params work correctly.
+
+        This is the original issue - @overload functions have different signatures,
+        but only the final implementation should be checked against the docstring.
+        """
+        python_content: str = dedent(
+            '''
+            from typing import overload, Literal, Optional
+
+            @overload
+            def example_function(message: str, mode: Literal["print"]) -> None: ...
+            @overload
+            def example_function(
+                message: str,
+                mode: Literal["log"],
+                *,
+                logger: str,
+                level: str = "info",
+            ) -> None: ...
+            def example_function(
+                message: str,
+                mode: Literal["print", "log"] = "print",
+                *,
+                logger: Optional[str] = None,
+                level: Optional[str] = None,
+            ) -> None:
+                """
+                Summary:
+                    Example function with overload and keyword-only parameters.
+
+                Params:
+                    message (str):
+                        The message to process.
+                    mode (Literal["print", "log"]):
+                        The processing mode.
+                    logger (Optional[str]):
+                        Logger to use when mode is log.
+                    level (Optional[str]):
+                        Log level when mode is log.
+                """
+                pass
+            '''
+        ).strip()
+
+        checker: DocstringChecker = simple_checker()
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert (
+                len(errors) == 0
+            ), f"Expected 0 errors for overload with keyword-only params, got {len(errors)}: {errors}"
+        finally:
+            temp_path.unlink()
