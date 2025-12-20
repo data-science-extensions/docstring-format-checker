@@ -306,6 +306,66 @@ class DocstringChecker:
                 return True
         return False
 
+    def _extract_all_params(self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> list[str]:
+        """
+        !!! note "Summary"
+            Extract all parameter names from a function signature.
+
+        ???+ abstract "Details"
+            Extract all parameter types including:
+
+            - Positional-only parameters (before `/`)
+            - Regular positional parameters
+            - Keyword-only parameters (after `*`)
+            - Variable positional arguments (`*args`)
+            - Variable keyword arguments (`**kwargs`)
+
+            Exclude `self` and `cls` parameters (method context parameters).
+
+        Params:
+            node (Union[ast.FunctionDef, ast.AsyncFunctionDef]):
+                The function node to extract parameters from.
+
+        Returns:
+            (list[str]):
+                List of all parameter names in the function signature.
+
+        ???+ example "Examples"
+
+            ```python
+            def func(a, b, /, c, *args, d, **kwargs): ...
+
+
+            # Returns: ['a', 'b', 'c', 'args', 'd', 'kwargs']
+            ```
+        """
+        params: list[str] = []
+
+        # Positional-only parameters (before /)
+        for arg in node.args.posonlyargs:
+            if arg.arg not in ("self", "cls"):
+                params.append(arg.arg)
+
+        # Regular positional parameters
+        for arg in node.args.args:
+            if arg.arg not in ("self", "cls"):
+                params.append(arg.arg)
+
+        # Variable positional arguments (*args)
+        if node.args.vararg:
+            params.append(node.args.vararg.arg)
+
+        # Keyword-only parameters (after *)
+        for arg in node.args.kwonlyargs:
+            if arg.arg not in ("self", "cls"):
+                params.append(arg.arg)
+
+        # Variable keyword arguments (**kwargs)
+        if node.args.kwarg:
+            params.append(node.args.kwarg.arg)
+
+        return params
+
     def _extract_items(self, tree: ast.AST) -> list[FunctionAndClassDetails]:
         """
         !!! note "Summary"
@@ -602,7 +662,7 @@ class DocstringChecker:
 
         # For functions, only required if function has parameters (excluding self/cls)
         # item.node is guaranteed to be FunctionDef or AsyncFunctionDef due to type constraints
-        params = [arg.arg for arg in item.node.args.args if arg.arg not in ("self", "cls")]
+        params = self._extract_all_params(item.node)
         return len(params) > 0
 
     def _validate_all_required_sections(self, docstring: str, item: FunctionAndClassDetails) -> list[str]:
@@ -909,7 +969,7 @@ class DocstringChecker:
         """
 
         # Get function parameters (excluding 'self' for methods)
-        params: list[str] = [arg.arg for arg in node.args.args if arg.arg != "self"]
+        params: list[str] = self._extract_all_params(node)
 
         if not params:
             return True  # No parameters to document
@@ -1008,7 +1068,7 @@ class DocstringChecker:
         """
 
         # Get function parameters (excluding 'self' and 'cls' for methods)
-        signature_params: list[str] = [arg.arg for arg in node.args.args if arg.arg not in ("self", "cls")]
+        signature_params: list[str] = self._extract_all_params(node)
 
         if not signature_params:
             return (True, None)  # No parameters to document
@@ -1033,6 +1093,21 @@ class DocstringChecker:
 
         return (True, None)
 
+    def _add_arg_types_to_dict(self, args: list[ast.arg], param_types: dict[str, str]) -> None:
+        """
+        !!! note "Summary"
+            Add type annotations from a list of arguments to the parameter types dictionary.
+
+        Params:
+            args (list[ast.arg]):
+                List of AST argument nodes.
+            param_types (dict[str, str]):
+                Dictionary to add parameter types to.
+        """
+        for arg in args:
+            if arg.arg not in ("self", "cls") and arg.annotation:
+                param_types[arg.arg] = ast.unparse(arg.annotation)
+
     def _extract_param_types(self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> dict[str, str]:
         """
         !!! note "Summary"
@@ -1048,15 +1123,22 @@ class DocstringChecker:
         """
         param_types: dict[str, str] = {}
 
-        for arg in node.args.args:
-            # Skip 'self' and 'cls' parameters
-            if arg.arg in ("self", "cls"):
-                continue
+        # Positional-only parameters (before /)
+        self._add_arg_types_to_dict(node.args.posonlyargs, param_types)
 
-            # Extract type annotation if present
-            if arg.annotation:
-                type_str: str = ast.unparse(arg.annotation)
-                param_types[arg.arg] = type_str
+        # Regular positional parameters
+        self._add_arg_types_to_dict(node.args.args, param_types)
+
+        # Variable positional arguments (*args)
+        if node.args.vararg and node.args.vararg.annotation:
+            param_types[node.args.vararg.arg] = ast.unparse(node.args.vararg.annotation)
+
+        # Keyword-only parameters (after *)
+        self._add_arg_types_to_dict(node.args.kwonlyargs, param_types)
+
+        # Variable keyword arguments (**kwargs)
+        if node.args.kwarg and node.args.kwarg.annotation:
+            param_types[node.args.kwarg.arg] = ast.unparse(node.args.kwarg.annotation)
 
         return param_types
 
@@ -1189,14 +1271,18 @@ class DocstringChecker:
         params_with_defaults: set[str] = set()
         args = node.args
 
-        # Regular args with defaults
+        # Combine positional-only and regular arguments
+        all_positional_args = args.posonlyargs + args.args
+
+        # Check defaults for positional arguments
         num_defaults = len(args.defaults)
         if num_defaults > 0:
-            # Defaults apply to the last n arguments
-            num_args = len(args.args)
+            # Defaults apply to the last n arguments of the combined list
+            num_args = len(all_positional_args)
             for i in range(num_args - num_defaults, num_args):
-                if args.args[i].arg not in ("self", "cls"):
-                    params_with_defaults.add(args.args[i].arg)
+                arg = all_positional_args[i]
+                if arg.arg not in ("self", "cls"):
+                    params_with_defaults.add(arg.arg)
 
         # Keyword-only args with defaults
         for i, arg in enumerate(args.kwonlyargs):
@@ -1322,7 +1408,7 @@ class DocstringChecker:
         params_with_defaults: set[str] = self._get_params_with_defaults(node)
 
         # Get all parameter names (excluding self/cls)
-        all_params: list[str] = [arg.arg for arg in node.args.args if arg.arg not in ("self", "cls")]
+        all_params: list[str] = self._extract_all_params(node)
 
         # Get the optional_style mode
         optional_style: str = self.config.global_config.optional_style
