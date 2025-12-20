@@ -5856,175 +5856,6 @@ class TestParameterTypeValidation(TestCase):
             temp_path.unlink()
 
     def test_kwonly_args_with_defaults(self) -> None:
-        """
-        Test that _get_params_with_defaults correctly detects keyword-only args with defaults.
-        """
-        # ## Python StdLib Imports ----
-        import ast
-
-        python_content: str = dedent(
-            """
-            def example(a: int, *, b: str = "default", c: int, d: float = 3.14):
-                pass
-            """
-        )
-
-        sections: list[SectionConfig] = [
-            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
-        ]
-        config: Config = _create_config(sections, validate_param_types=True, optional_style="validate")
-        checker: DocstringChecker = DocstringChecker(config)
-
-        # Parse the function
-        tree = ast.parse(python_content)
-        func_node = tree.body[0]
-
-        # Get params with defaults
-        params_with_defaults = checker._get_params_with_defaults(func_node)
-
-        # b and d should be detected (keyword-only with defaults)
-        # a and c should not be in the set
-        assert "b" in params_with_defaults, "Expected 'b' (kwonly with default) to be detected"
-        assert "d" in params_with_defaults, "Expected 'd' (kwonly with default) to be detected"
-        assert "a" not in params_with_defaults, "'a' should not be in params_with_defaults"
-        assert "c" not in params_with_defaults, "'c' should not be in params_with_defaults"
-
-    def test_format_optional_errors_single_error(self) -> None:
-        """
-        Test formatting of optional suffix errors when there's only one error.
-        """
-        python_content: str = dedent(
-            """
-            def test_function(a: int = 5) -> None:
-                '''
-                Test function.
-
-                Params:
-                    a (int):
-                        Missing optional suffix.
-                '''
-                pass
-            """
-        ).strip()
-
-        sections: list[SectionConfig] = [
-            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
-        ]
-        config: Config = _create_config(sections, validate_param_types=True, optional_style="strict")
-        checker: DocstringChecker = DocstringChecker(config)
-
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
-            temp_file.write(python_content)
-            temp_file.flush()
-            temp_path: Path = Path(temp_file.name)
-
-        try:
-            errors: list[DocstringError] = checker.check_file(str(temp_path))
-            assert len(errors) == 1, f"Expected 1 error, got {len(errors)}"
-            # Single error should not have "Optional suffix validation errors:" prefix
-            assert "Optional suffix validation errors:" not in errors[0].message
-            assert "missing ', optional' suffix" in errors[0].message
-        finally:
-            temp_path.unlink()
-
-    def test_format_optional_errors_multiple_errors(self) -> None:
-        """
-        Test formatting of optional suffix errors when there are multiple errors.
-        """
-        python_content: str = dedent(
-            """
-            def test_function(a: int = 5, b: str = "default", c: float = 1.0) -> None:
-                '''
-                Test function.
-
-                Params:
-                    a (int):
-                        Missing optional suffix.
-                    b (str):
-                        Missing optional suffix.
-                    c (float):
-                        Missing optional suffix.
-                '''
-                pass
-            """
-        ).strip()
-
-        sections: list[SectionConfig] = [
-            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
-        ]
-        config: Config = _create_config(sections, validate_param_types=True, optional_style="strict")
-        checker: DocstringChecker = DocstringChecker(config)
-
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
-            temp_file.write(python_content)
-            temp_file.flush()
-            temp_path: Path = Path(temp_file.name)
-
-        try:
-            errors: list[DocstringError] = checker.check_file(str(temp_path))
-            assert len(errors) == 1, f"Expected 1 compound error, got {len(errors)}"
-            # Multiple errors should have "Optional suffix validation errors:" prefix
-            assert "Optional suffix validation errors:" in errors[0].message
-            assert "missing ', optional' suffix" in errors[0].message
-        finally:
-            temp_path.unlink()
-
-    def test_keyword_only_parameters_recognised(self) -> None:
-        """
-        Test that keyword-only parameters (after *) are properly extracted and validated.
-        """
-        python_content: str = dedent(
-            """
-            def test_function(a: int, b: str, *, c: float, d: bool) -> None:
-                '''
-                Test function with keyword-only parameters.
-
-                Params:
-                    a (int):
-                        Regular parameter.
-                    b (str):
-                        Regular parameter.
-                    c (float):
-                        Keyword-only parameter.
-                    d (bool):
-                        Keyword-only parameter.
-                '''
-                pass
-            """
-        ).strip()
-
-        checker: DocstringChecker = simple_checker()
-
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
-            temp_file.write(python_content)
-            temp_file.flush()
-            temp_path: Path = Path(temp_file.name)
-
-        try:
-            errors: list[DocstringError] = checker.check_file(str(temp_path))
-            assert len(errors) == 0, f"Expected 0 errors for keyword-only params, got {len(errors)}: {errors}"
-        finally:
-            temp_path.unlink()
-
-    def test_keyword_only_parameters_missing_in_docstring(self) -> None:
-        """
-        Test that missing keyword-only parameters in docstring are detected.
-        """
-        python_content: str = dedent(
-            """
-            def test_function(a: int, *, b: str, c: float) -> None:
-                '''
-                Test function with keyword-only parameters.
-
-                Params:
-                    a (int):
-                        Regular parameter.
-                    b (str):
-                        Keyword-only parameter.
-                '''
-                pass
-            """
-        ).strip()
 
         checker: DocstringChecker = simple_checker()
 
@@ -6240,5 +6071,182 @@ class TestParameterTypeValidation(TestCase):
             assert (
                 len(errors) == 0
             ), f"Expected 0 errors for overload with keyword-only params, got {len(errors)}: {errors}"
+        finally:
+            temp_path.unlink()
+
+    def test_kwonly_args_with_defaults(self) -> None:
+        """
+        Test that _get_params_with_defaults correctly detects keyword-only args with defaults.
+        """
+        # ## Python StdLib Imports ----
+        import ast
+
+        python_content: str = dedent(
+            """
+            def example(a: int, *, b: str = "default", c: int, d: float = 3.14):
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True, optional_style="validate")
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Parse the function
+        tree = ast.parse(python_content)
+        func_node = tree.body[0]
+
+        # Get params with defaults
+        params_with_defaults = checker._get_params_with_defaults(func_node)
+
+        # b and d should be detected (keyword-only with defaults)
+        # a and c should not be in the set
+        assert "b" in params_with_defaults, "Expected 'b' (kwonly with default) to be detected"
+        assert "d" in params_with_defaults, "Expected 'd' (kwonly with default) to be detected"
+        assert "a" not in params_with_defaults, "'a' should not be in params_with_defaults"
+        assert "c" not in params_with_defaults, "'c' should not be in params_with_defaults"
+
+    def test_posonly_args_with_defaults(self) -> None:
+        """
+        Test that _get_params_with_defaults correctly detects positional-only args with defaults.
+        """
+        # ## Python StdLib Imports ----
+        import ast
+
+        python_content: str = dedent(
+            """
+            def example(a: int = 1, /, b: int = 2, *, c: int = 3):
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True, optional_style="validate")
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Parse the function
+        tree = ast.parse(python_content)
+        func_node = tree.body[0]
+
+        # Get params with defaults
+        params_with_defaults = checker._get_params_with_defaults(func_node)
+
+        # All params have defaults
+        assert "a" in params_with_defaults, "Expected 'a' (posonly with default) to be detected"
+        assert "b" in params_with_defaults, "Expected 'b' (regular with default) to be detected"
+        assert "c" in params_with_defaults, "Expected 'c' (kwonly with default) to be detected"
+
+    def test_mixed_args_with_defaults(self) -> None:
+        """
+        Test that _get_params_with_defaults correctly handles mixed arguments with defaults.
+        """
+        # ## Python StdLib Imports ----
+        import ast
+
+        python_content: str = dedent(
+            """
+            def example(x, y=1, /, z=2):
+                pass
+            """
+        )
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True, optional_style="validate")
+        checker: DocstringChecker = DocstringChecker(config)
+
+        # Parse the function
+        tree = ast.parse(python_content)
+        func_node = tree.body[0]
+
+        # Get params with defaults
+        params_with_defaults = checker._get_params_with_defaults(func_node)
+
+        assert "y" in params_with_defaults, "Expected 'y' (posonly with default) to be detected"
+        assert "z" in params_with_defaults, "Expected 'z' (regular with default) to be detected"
+        assert "x" not in params_with_defaults, "'x' should not be in params_with_defaults"
+
+    def test_format_optional_errors_single_error(self) -> None:
+        """
+        Test formatting of optional suffix errors when there's only one error.
+        """
+        python_content: str = dedent(
+            """
+            def test_function(a: int = 5) -> None:
+                '''
+                Test function.
+
+                Params:
+                    a (int):
+                        Missing optional suffix.
+                '''
+                pass
+            """
+        ).strip()
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True, optional_style="strict")
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 1, f"Expected 1 error, got {len(errors)}"
+            # Single error should not have "Optional suffix validation errors:" prefix
+            assert "Optional suffix validation errors:" not in errors[0].message
+            assert "missing ', optional' suffix" in errors[0].message
+        finally:
+            temp_path.unlink()
+
+    def test_format_optional_errors_multiple_errors(self) -> None:
+        """
+        Test formatting of optional suffix errors when there are multiple errors.
+        """
+        python_content: str = dedent(
+            """
+            def test_function(a: int = 5, b: str = "default", c: float = 1.0) -> None:
+                '''
+                Test function.
+
+                Params:
+                    a (int):
+                        Missing optional suffix.
+                    b (str):
+                        Missing optional suffix.
+                    c (float):
+                        Missing optional suffix.
+                '''
+                pass
+            """
+        ).strip()
+
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
+        ]
+        config: Config = _create_config(sections, validate_param_types=True, optional_style="strict")
+        checker: DocstringChecker = DocstringChecker(config)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path: Path = Path(temp_file.name)
+
+        try:
+            errors: list[DocstringError] = checker.check_file(str(temp_path))
+            assert len(errors) == 1, f"Expected 1 compound error, got {len(errors)}"
+            # Multiple errors should have "Optional suffix validation errors:" prefix
+            assert "Optional suffix validation errors:" in errors[0].message
+            assert "missing ', optional' suffix" in errors[0].message
         finally:
             temp_path.unlink()

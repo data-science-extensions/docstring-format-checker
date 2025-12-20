@@ -1271,14 +1271,18 @@ class DocstringChecker:
         params_with_defaults: set[str] = set()
         args = node.args
 
-        # Regular args with defaults
+        # Combine positional-only and regular arguments
+        all_positional_args = args.posonlyargs + args.args
+
+        # Check defaults for positional arguments
         num_defaults = len(args.defaults)
         if num_defaults > 0:
-            # Defaults apply to the last n arguments
-            num_args = len(args.args)
+            # Defaults apply to the last n arguments of the combined list
+            num_args = len(all_positional_args)
             for i in range(num_args - num_defaults, num_args):
-                if args.args[i].arg not in ("self", "cls"):
-                    params_with_defaults.add(args.args[i].arg)
+                arg = all_positional_args[i]
+                if arg.arg not in ("self", "cls"):
+                    params_with_defaults.add(arg.arg)
 
         # Keyword-only args with defaults
         for i, arg in enumerate(args.kwonlyargs):
