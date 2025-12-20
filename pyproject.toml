@@ -76,7 +76,6 @@ docs = [
 ]
 test = [
     "ty==0.*",
-    # "mypy==1.*,!=1.17.*",
     "parameterized==0.*",
     "pytest==8.*",
     "pytest-clarity==1.*",
@@ -160,6 +159,7 @@ disable = [
     "R0914",  # too-many-locals
     "R0915",  # too-many-statements
     "R0917",  # too-many-positional-arguments
+    "R1702",  # too-many-nested-blocks
     "R1705",  # no-else-return
     "R1724",  # no-else-continue
     "W0107",  # unnecessary-pass
