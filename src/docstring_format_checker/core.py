@@ -1000,7 +1000,7 @@ class DocstringChecker:
                 List of parameter names found in the Params section.
         """
         documented_params: list[str] = []
-        param_pattern: str = r"^\s*(\w+)\s*\([^)]+\):"
+        param_pattern: str = r"^\s*(\**\w+)\s*\([^)]+\):"
         lines: list[str] = docstring.split("\n")
         in_params_section: bool = False
 
@@ -1038,6 +1038,18 @@ class DocstringChecker:
                 Formatted error message.
         """
         error_parts: list[str] = []
+
+        # Check for asterisk mismatch
+        # We iterate over a copy of missing_in_docstring to allow modification
+        for missing in list(missing_in_docstring):
+            for extra in list(extra_in_docstring):
+                if extra.lstrip("*") == missing:
+                    error_parts.append(
+                        f"  - Parameter '{missing}' found in docstring as '{extra}'. Please remove the asterisk."
+                    )
+                    missing_in_docstring.remove(missing)
+                    extra_in_docstring.remove(extra)
+                    break
 
         if missing_in_docstring:
             missing_str: str = "', '".join(missing_in_docstring)

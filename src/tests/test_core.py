@@ -26,7 +26,12 @@ import pyfiglet
 import pytest
 
 # ## Local First Party Imports ----
-from docstring_format_checker.config import Config, GlobalConfig, SectionConfig
+from docstring_format_checker.config import (
+    DEFAULT_CONFIG,
+    Config,
+    GlobalConfig,
+    SectionConfig,
+)
 from docstring_format_checker.core import DocstringChecker
 from docstring_format_checker.utils.exceptions import (
     DirectoryNotFoundError,
@@ -6234,3 +6239,67 @@ class TestParameterTypeValidation(TestCase):
             assert "missing ', optional' suffix" in errors[0].message
         finally:
             temp_path.unlink()
+
+
+## --------------------------------------------------------------------------- #
+##  Test Parameter Mismatch                                                 ####
+## --------------------------------------------------------------------------- #
+
+
+class TestParameterMismatch(TestCase):
+    def test_param_mismatch_with_asterisks(self):
+        checker = DocstringChecker(DEFAULT_CONFIG)
+
+        code = """
+            def my_func(*args, **kwargs):
+                \"\"\"
+                !!! note "Summary"
+                    Test function.
+
+                Params:
+                    *args (Any):
+                        Args.
+                    **kwargs (Any):
+                        Kwargs.
+                \"\"\"
+                pass
+        """
+        tree = ast.parse(code)
+        func_node = tree.body[0]
+        docstring = ast.get_docstring(func_node)
+
+        is_valid, error_message = checker._check_params_section_detailed(docstring, func_node)
+
+        self.assertFalse(is_valid)
+        self.assertIn("Parameter 'args' found in docstring as '*args'. Please remove the asterisk.", error_message)
+        self.assertIn("Parameter 'kwargs' found in docstring as '**kwargs'. Please remove the asterisk.", error_message)
+        self.assertNotIn("In signature but not in docstring", error_message)
+        self.assertNotIn("In docstring but not in signature", error_message)
+
+    def test_normal_param_mismatch(self):
+        checker = DocstringChecker(DEFAULT_CONFIG)
+
+        code = """
+            def my_func(a, b):
+                \"\"\"
+                !!! note "Summary"
+                    Test function.
+
+                Params:
+                    a (int):
+                        A.
+                    c (int):
+                        C.
+                \"\"\"
+                pass
+        """
+        tree = ast.parse(code)
+        func_node = tree.body[0]
+        docstring = ast.get_docstring(func_node)
+
+        is_valid, error_message = checker._check_params_section_detailed(docstring, func_node)
+
+        self.assertFalse(is_valid)
+        self.assertIn("In signature but not in docstring: 'b'", error_message)
+        self.assertIn("In docstring but not in signature: 'c'", error_message)
+        self.assertNotIn("Please remove the asterisk", error_message)

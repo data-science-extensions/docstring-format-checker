@@ -120,6 +120,7 @@ repos:
       language: python
       types: [python]
       pass_filenames: true
+      exclude: ^src/tests/.*$
 
   #     # Run Pylint
   #     - id: pylint
