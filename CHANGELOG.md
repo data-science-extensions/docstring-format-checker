@@ -9,9 +9,157 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v1.8.0"
+
+    ## **v1.8.0 - Support All Python Function Parameter Types**
+
+    <!-- md:tag v1.8.0 --><br>
+    <!-- md:date 2025-12-20 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v1.8.0](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.8.0) -->
+
+    ??? note "Release Notes"
+
+        ### Summary
+        
+        This release introduces comprehensive support for all Python function parameter types, ensuring accurate docstring validation for complex function signatures. It adds recognition for positional-only parameters (before `/`), keyword-only parameters (after `*`), variable positional arguments (`*args`), and variable keyword arguments (`**kwargs`). Additionally, this release fixes default value detection for positional-only arguments and updates the package configuration. These enhancements ensure that the docstring format checker correctly identifies and validates parameters across all modern Python function definitions.
+        
+        
+        ### Release Statistics
+        
+        | Attribute                 | Note                                          |
+        | ------------------------- | --------------------------------------------- |
+        | **Version:**              | [`v1.8.0`]                                    |
+        | **Python Support:**       | `3.9`, `3.10`, `3.11`, `3.12`, `3.13`, `3.14` |
+        | **Test Coverage:**        | 100% (1022 statements, +23 from v1.7.0)       |
+        | **Pylint Score:**         | 10.00/10                                      |
+        | **Complexity:**           | All functions ≤13 threshold                   |
+        | **Functions:**            | 106 (-3 from v1.7.0)                          |
+        | **Tests Passing:**        | 248/248 (+7 from v1.7.0)                      |
+        | **Files Changed:**        | 3                                             |
+        | **Lines Added:**          | 2520                                          |
+        | **Lines Removed:**        | 2168                                          |
+        | **Commits:**              | 4                                             |
+        | **Pull Requests Merged:** | 1 (PR #26)                                    |
+        
+        
+        ### 🎯 Enhance Parameter Extraction
+        
+        
+        #### Overview
+        
+        Introduce comprehensive parameter extraction logic to support all five Python parameter types: positional-only, positional-or-keyword, variable positional, keyword-only, and variable keyword arguments. This ensures that the docstring format checker correctly identifies and validates parameters in complex function signatures, including those using `/` and `*` separators.
+        
+        
+        #### Problem Statement
+        
+        
+        ##### Incomplete Parameter Extraction
+        
+        The docstring format checker previously only extracted standard positional parameters (`args.args`) from function signatures. It failed to recognise:
+        
+        1. **Positional-Only Parameters** (before `/`): Parameters that must be passed by position.
+        2. **Keyword-Only Parameters** (after `*`): Parameters that must be passed by name.
+        3. **Variable Positional Arguments** (`*args`): Arbitrary positional arguments.
+        4. **Variable Keyword Arguments** (`**kwargs`): Arbitrary keyword arguments.
+        
+        This limitation caused validation errors or false positives when checking functions that utilised these modern Python features.
+        
+        **Real-World Example:**
+        
+        Consider this function using keyword-only parameters:
+        
+        ```python
+        @overload
+        def print_or_log_output(message: str, print_or_log: Literal["print"]) -> None: ...
+        @overload
+        def print_or_log_output(
+            message: str,
+            print_or_log: Literal["log"],
+            *,
+            log: Logger,
+            log_level: log_levels = "info",
+        ) -> None: ...
+        def print_or_log_output(
+            message: str,
+            print_or_log: Literal["print", "log"] = "print",
+            *,
+            log: Optional[Logger] = None,
+            log_level: log_levels = "info",
+        ) -> None:
+            """
+            Print or log the output.
+
+            Params:
+                message (str): The message to print or log.
+                print_or_log (Literal["print", "log"]): The action to perform.
+                log (Optional[Logger]): The logger to use.
+                log_level (log_levels): The log level to use.
+            """
+            ...
+        ```
+        
+        Previously, the checker would fail to find `log` and `log_level` in the function signature, reporting them as undocumented parameters or extra parameters in the docstring.
+        
+        
+        #### Solution
+        
+        
+        ##### Comprehensive Parameter Extraction
+        
+        Implement a new `._extract_all_params()` method in the `DocstringChecker` class that iterates through all parameter categories in the AST `arguments` node:
+        
+        - `posonlyargs`: Positional-only arguments.
+        - `args`: Positional-or-keyword arguments.
+        - `vararg`: Variable positional arguments (`*args`).
+        - `kwonlyargs`: Keyword-only arguments.
+        - `kwarg`: Variable keyword arguments (`**kwargs`).
+        
+        
+        ##### Enhanced Type Annotation Capture
+        
+        Update the `._extract_param_types()` method to utilise `._extract_all_params()`, ensuring that type annotations are captured for every parameter found. This allows the validator to correctly match docstring types with signature types for all parameter kinds.
+        
+        
+        ##### Improved Validation Logic
+        
+        Refactor `._is_params_section_required()` and `._validate_param_types()` to account for the presence of any parameter type, ensuring that docstrings are required and validated whenever any parameters exist in the signature.
+        
+        
+        ### 💪 Pull Requests
+        
+        * Enhance Parameter Extraction to Support All Python Function Parameter Types by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/26
+        
+        
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.7.0...v1.8.0
+        
+        
+        [`v1.7.0`]: https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.7.0
+        [`v1.8.0`]: https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.8.0
+        
+
+    ??? abstract "Updates"
+
+        * [`4b38e17`](https://github.com/data-science-extensions/docstring-format-checker/commit/4b38e176e6355674bd8d01047a732222f1185842): Update package config
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`795bb4d`](https://github.com/data-science-extensions/docstring-format-checker/commit/795bb4dd33ed927fe658e0e48d5102f6ff3b6b80): Fix duplicated unit test
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`eea2ba2`](https://github.com/data-science-extensions/docstring-format-checker/commit/eea2ba2e7d5ccf04987c142126fba11f70bae7da): Fix default value detection for positional-only arguments<br>
+            - Update `._get_params_with_defaults()` method in `DocstringChecker` class to correctly handle defaults for combined positional-only and regular arguments<br>
+            - Ensure positional-only parameters are recognised as having defaults when iterating over the AST<br>
+            - Add `.test_posonly_args_with_defaults()` method and `.test_mixed_args_with_defaults()` method to verify the fix<br>
+            - Reorganise existing test methods in `src/tests/test_core.py` file to group default value tests
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`85a49f1`](https://github.com/data-science-extensions/docstring-format-checker/commit/85a49f17fd5808e14ff213ba1cca628a5f99aca3): Support comprehensive parameter validation for all argument types (args, kwargs, kwonlyargs, posonlyargs, vararg)<br>
+            - Introduce `._extract_all_params()` method to gather positional-only, keyword-only, and variable arguments from the AST<br>
+            - Update `._extract_param_types()` method to capture type annotations from all argument categories using the new `._add_arg_types_to_dict()` method<br>
+            - Ensure `._is_params_section_required()` method correctly identifies requirements for complex function signatures<br>
+            - Fix validation logic to recognise parameters defined after `*` or before `/` in the `DocstringChecker` class
+            (by [chrimaho](https://github.com/chrimaho))
+
+
 !!! info "v1.7.0"
 
-    ## **# v1.7.0 - Add Configurable Optional Suffix Validation**
+    ## **v1.7.0 - Add Configurable Optional Suffix Validation**
 
     <!-- md:tag v1.7.0 --><br>
     <!-- md:date 2025-12-19 --><br>
