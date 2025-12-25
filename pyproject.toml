@@ -114,6 +114,7 @@ filterwarnings = [
 addopts = [
     "--verbose",
     "--verbose",
+    "--diff-width=120",
     "--cov=src/docstring_format_checker",
     "--cov-report=term",
     "--cov-report=html:cov-report/html",

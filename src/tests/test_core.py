@@ -26,7 +26,12 @@ import pyfiglet
 import pytest
 
 # ## Local First Party Imports ----
-from docstring_format_checker.config import Config, GlobalConfig, SectionConfig
+from docstring_format_checker.config import (
+    DEFAULT_CONFIG,
+    Config,
+    GlobalConfig,
+    SectionConfig,
+)
 from docstring_format_checker.core import DocstringChecker
 from docstring_format_checker.utils.exceptions import (
     DirectoryNotFoundError,
@@ -3162,7 +3167,7 @@ class TestDocstringChecker(TestCase):
         # because "TypeCheckError:" is skipped when no parenthesized type has been found yet
         assert len(errors_3) == 0, f"Expected no errors due to permissive logic, got: {len(errors_3)}"
 
-    def test_83_malformed_type_after_valid_type(self):
+    def test_83_malformed_type_after_valid_type(self) -> None:
         """
         Test that ensures a malformed type definition is caught when it appears
         at the same indentation level as a valid type definition in list_type sections.
@@ -3210,7 +3215,7 @@ class TestDocstringChecker(TestCase):
         finally:
             temp_path.unlink()
 
-    def test_84_list_name_and_type_description_lines_with_colons(self):
+    def test_84_list_name_and_type_description_lines_with_colons(self) -> None:
         """
         Test that description lines in list_name_and_type sections with colons don't trigger parentheses errors.
         This tests the specific scenario where a params section has proper parentheses for parameters,
@@ -3267,7 +3272,7 @@ class TestDocstringChecker(TestCase):
         finally:
             temp_path.unlink()
 
-    def test_85_list_name_and_type_indentation_based_validation(self):
+    def test_85_list_name_and_type_indentation_based_validation(self) -> None:
         """
         Test indentation-based validation in list_name_and_type sections.
         This covers lines 1041 and 1046 in core.py.
@@ -3308,7 +3313,7 @@ class TestDocstringChecker(TestCase):
         finally:
             temp_path.unlink()
 
-    def test_86_list_name_and_type_multiple_words_before_colon(self):
+    def test_86_list_name_and_type_multiple_words_before_colon(self) -> None:
         """
         Test that lines with multiple words before colon are skipped in list_name_and_type sections.
         This covers line 1046 in core.py (the continue statement for multiple words).
@@ -3350,7 +3355,7 @@ class TestDocstringChecker(TestCase):
         finally:
             temp_path.unlink()
 
-    def test_87_list_name_and_type_exactly_multiple_words_at_same_level(self):
+    def test_87_list_name_and_type_exactly_multiple_words_at_same_level(self) -> None:
         """
         Test line 1046 in core.py - the continue statement for multiple words before colon.
         This creates a scenario where we have a line with multiple words before colon
@@ -6234,3 +6239,72 @@ class TestParameterTypeValidation(TestCase):
             assert "missing ', optional' suffix" in errors[0].message
         finally:
             temp_path.unlink()
+
+
+## --------------------------------------------------------------------------- #
+##  Test Parameter Mismatch                                                 ####
+## --------------------------------------------------------------------------- #
+
+
+class TestParameterMismatch(TestCase):
+
+    def test_param_mismatch_with_asterisks(self) -> None:
+        checker = DocstringChecker(DEFAULT_CONFIG)
+
+        code = dedent(
+            """
+            def my_func(*args, **kwargs):
+                '''
+                !!! note "Summary"
+                    Test function.
+
+                Params:
+                    *args (Any):
+                        Args.
+                    **kwargs (Any):
+                        Kwargs.
+                '''
+                pass
+            """
+        )
+        tree = ast.parse(code)
+        func_node = tree.body[0]
+        docstring = ast.get_docstring(func_node)
+
+        is_valid, error_message = checker._check_params_section_detailed(docstring, func_node)
+
+        assert is_valid is False
+        assert "Parameter 'args' found in docstring as '*args'. Please remove the asterisk." in error_message
+        assert "Parameter 'kwargs' found in docstring as '**kwargs'. Please remove the asterisks." in error_message
+        assert "In signature but not in docstring" not in error_message
+        assert "In docstring but not in signature" not in error_message
+
+    def test_normal_param_mismatch(self) -> None:
+        checker = DocstringChecker(DEFAULT_CONFIG)
+
+        code = dedent(
+            """
+            def my_func(a, b):
+                '''
+                !!! note "Summary"
+                    Test function.
+
+                Params:
+                    a (int):
+                        A.
+                    c (int):
+                        C.
+                '''
+                pass
+            """
+        )
+        tree = ast.parse(code)
+        func_node = tree.body[0]
+        docstring = ast.get_docstring(func_node)
+
+        is_valid, error_message = checker._check_params_section_detailed(docstring, func_node)
+
+        assert is_valid is False
+        assert "In signature but not in docstring: 'b'" in error_message
+        assert "In docstring but not in signature: 'c'" in error_message
+        assert "Please remove the asterisk" not in error_message

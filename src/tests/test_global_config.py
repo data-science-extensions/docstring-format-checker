@@ -16,6 +16,9 @@ from pathlib import Path
 from textwrap import dedent
 from unittest import TestCase
 
+# ## Python Third Party Imports ----
+from pytest import raises
+
 # ## Local First Party Imports ----
 from docstring_format_checker.config import (
     Config,
@@ -413,8 +416,8 @@ class TestGlobalConfigFeatures(TestCase):
 
         tool_config: dict[str, str] = {"optional_style": "invalid_mode"}
 
-        with self.assertRaises(InvalidConfigError) as context:
+        with raises(InvalidConfigError) as context:
             _parse_global_config(tool_config)
 
-        assert "Invalid optional_style: 'invalid_mode'" in str(context.exception)
-        assert "Must be one of: silent, validate, strict" in str(context.exception)
+        assert "Invalid optional_style: 'invalid_mode'" in str(context.value)
+        assert "Must be one of: silent, validate, strict" in str(context.value)

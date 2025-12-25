@@ -1000,7 +1000,7 @@ class DocstringChecker:
                 List of parameter names found in the Params section.
         """
         documented_params: list[str] = []
-        param_pattern: str = r"^\s*(\w+)\s*\([^)]+\):"
+        param_pattern: str = r"^\s*(\*{0,2}\w+)\s*\([^)]+\):"
         lines: list[str] = docstring.split("\n")
         in_params_section: bool = False
 
@@ -1039,12 +1039,30 @@ class DocstringChecker:
         """
         error_parts: list[str] = []
 
-        if missing_in_docstring:
-            missing_str: str = "', '".join(missing_in_docstring)
+        # Create copies to avoid mutating inputs
+        missing_copy: list[str] = list(missing_in_docstring)
+        extra_copy: list[str] = list(extra_in_docstring)
+
+        # Check for asterisk mismatch
+        # We iterate over a copy of missing_copy to allow modification
+        for missing in list(missing_copy):
+            for extra in list(extra_copy):
+                if extra.lstrip("*") == missing:
+                    asterisk_count: int = len(extra) - len(extra.lstrip("*"))
+                    asterisk_word: str = "asterisk" if asterisk_count == 1 else "asterisks"
+                    error_parts.append(
+                        f"  - Parameter '{missing}' found in docstring as '{extra}'. Please remove the {asterisk_word}."
+                    )
+                    missing_copy.remove(missing)
+                    extra_copy.remove(extra)
+                    break
+
+        if missing_copy:
+            missing_str: str = "', '".join(missing_copy)
             error_parts.append(f"  - In signature but not in docstring: '{missing_str}'")
 
-        if extra_in_docstring:
-            extra_str: str = "', '".join(extra_in_docstring)
+        if extra_copy:
+            extra_str: str = "', '".join(extra_copy)
             error_parts.append(f"  - In docstring but not in signature: '{extra_str}'")
 
         return "Parameter mismatch:\n" + "\n".join(error_parts)
