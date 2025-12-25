@@ -6273,11 +6273,11 @@ class TestParameterMismatch(TestCase):
 
         is_valid, error_message = checker._check_params_section_detailed(docstring, func_node)
 
-        self.assertFalse(is_valid)
-        self.assertIn("Parameter 'args' found in docstring as '*args'. Please remove the asterisk.", error_message)
-        self.assertIn("Parameter 'kwargs' found in docstring as '**kwargs'. Please remove the asterisk.", error_message)
-        self.assertNotIn("In signature but not in docstring", error_message)
-        self.assertNotIn("In docstring but not in signature", error_message)
+        assert is_valid is False
+        assert "Parameter 'args' found in docstring as '*args'. Please remove the asterisk." in error_message
+        assert "Parameter 'kwargs' found in docstring as '**kwargs'. Please remove the asterisk." in error_message
+        assert "In signature but not in docstring" not in error_message
+        assert "In docstring but not in signature" not in error_message
 
     def test_normal_param_mismatch(self) -> None:
         checker = DocstringChecker(DEFAULT_CONFIG)
@@ -6304,7 +6304,7 @@ class TestParameterMismatch(TestCase):
 
         is_valid, error_message = checker._check_params_section_detailed(docstring, func_node)
 
-        self.assertFalse(is_valid)
-        self.assertIn("In signature but not in docstring: 'b'", error_message)
-        self.assertIn("In docstring but not in signature: 'c'", error_message)
-        self.assertNotIn("Please remove the asterisk", error_message)
+        assert is_valid is False
+        assert "In signature but not in docstring: 'b'" in error_message
+        assert "In docstring but not in signature: 'c'" in error_message
+        assert "Please remove the asterisk" not in error_message
