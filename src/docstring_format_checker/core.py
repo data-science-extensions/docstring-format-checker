@@ -1048,8 +1048,10 @@ class DocstringChecker:
         for missing in list(missing_copy):
             for extra in list(extra_copy):
                 if extra.lstrip("*") == missing:
+                    asterisk_count: int = len(extra) - len(extra.lstrip("*"))
+                    asterisk_word: str = "asterisk" if asterisk_count == 1 else "asterisks"
                     error_parts.append(
-                        f"  - Parameter '{missing}' found in docstring as '{extra}'. Please remove the asterisk."
+                        f"  - Parameter '{missing}' found in docstring as '{extra}'. Please remove the {asterisk_word}."
                     )
                     missing_copy.remove(missing)
                     extra_copy.remove(extra)
