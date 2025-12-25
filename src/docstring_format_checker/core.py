@@ -1000,7 +1000,7 @@ class DocstringChecker:
                 List of parameter names found in the Params section.
         """
         documented_params: list[str] = []
-        param_pattern: str = r"^\s*(\**\w+)\s*\([^)]+\):"
+        param_pattern: str = r"^\s*(\*{0,2}\w+)\s*\([^)]+\):"
         lines: list[str] = docstring.split("\n")
         in_params_section: bool = False
 
