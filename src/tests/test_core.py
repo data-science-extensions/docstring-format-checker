@@ -6275,7 +6275,7 @@ class TestParameterMismatch(TestCase):
 
         assert is_valid is False
         assert "Parameter 'args' found in docstring as '*args'. Please remove the asterisk." in error_message
-        assert "Parameter 'kwargs' found in docstring as '**kwargs'. Please remove the asterisk." in error_message
+        assert "Parameter 'kwargs' found in docstring as '**kwargs'. Please remove the asterisks." in error_message
         assert "In signature but not in docstring" not in error_message
         assert "In docstring but not in signature" not in error_message
 
