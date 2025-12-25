@@ -564,12 +564,14 @@ class TestCLI(TestCase):
             for i in range(2):
                 py_file = temp_path / f"test_{i}.py"
                 py_file.write_text(
-                    """
-def func1(): pass
-def func2(): pass
-class TestClass:
-    def method1(self): pass
-"""
+                    dedent(
+                        """
+                        def func1(): pass
+                        def func2(): pass
+                        class TestClass:
+                            def method1(self): pass
+                        """
+                    )
                 )
 
             result: Result = self.runner.invoke(app, ["--quiet", str(temp_path)])
