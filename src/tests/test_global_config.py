@@ -419,5 +419,5 @@ class TestGlobalConfigFeatures(TestCase):
         with raises(InvalidConfigError) as context:
             _parse_global_config(tool_config)
 
-        assert "Invalid optional_style: 'invalid_mode'" in str(context.exconly)
-        assert "Must be one of: silent, validate, strict" in str(context.exconly)
+        assert "Invalid optional_style: 'invalid_mode'" in str(context.value)
+        assert "Must be one of: silent, validate, strict" in str(context.value)
