@@ -6250,9 +6250,10 @@ class TestParameterMismatch(TestCase):
     def test_param_mismatch_with_asterisks(self):
         checker = DocstringChecker(DEFAULT_CONFIG)
 
-        code = """
+        code = dedent(
+            """
             def my_func(*args, **kwargs):
-                \"\"\"
+                '''
                 !!! note "Summary"
                     Test function.
 
@@ -6261,9 +6262,10 @@ class TestParameterMismatch(TestCase):
                         Args.
                     **kwargs (Any):
                         Kwargs.
-                \"\"\"
+                '''
                 pass
-        """
+            """
+        )
         tree = ast.parse(code)
         func_node = tree.body[0]
         docstring = ast.get_docstring(func_node)
@@ -6279,9 +6281,10 @@ class TestParameterMismatch(TestCase):
     def test_normal_param_mismatch(self):
         checker = DocstringChecker(DEFAULT_CONFIG)
 
-        code = """
+        code = dedent(
+            """
             def my_func(a, b):
-                \"\"\"
+                '''
                 !!! note "Summary"
                     Test function.
 
@@ -6290,9 +6293,10 @@ class TestParameterMismatch(TestCase):
                         A.
                     c (int):
                         C.
-                \"\"\"
+                '''
                 pass
-        """
+            """
+        )
         tree = ast.parse(code)
         func_node = tree.body[0]
         docstring = ast.get_docstring(func_node)
