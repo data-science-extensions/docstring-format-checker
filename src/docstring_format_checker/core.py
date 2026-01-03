@@ -690,7 +690,7 @@ class DocstringChecker:
 
             # Only check if the section exists, don't validate content yet
             if not self._section_exists(docstring, section):
-                errors.append(f"Missing required section: {section.name}")
+                errors.append(f"Missing required section: '{section.name}'")
         return errors
 
     def _validate_all_existing_sections(self, docstring: str, item: FunctionAndClassDetails) -> list[str]:
