@@ -1,3 +1,20 @@
+# ============================================================================ #
+#                                                                              #
+#     Title: Scripts Utility                                                   #
+#     Purpose: Collection of utility functions for scripting tasks such as     #
+#         linting, checking, git operations, and documentation management.     #
+#     Usage:                                                                   #
+#         uv run ./src/utils/scripts.py <command> [args...]                    #
+#     Examples:                                                                #
+#         uv run ./src/utils/scripts.py lint                                   #
+#         uv run ./src/utils/scripts.py check                                  #
+#         uv run ./src/utils/scripts.py lint-check                             #
+#     Notes: This script is designed to be run from the command line with      #
+#         various commands to perform different tasks.                         #
+#                                                                              #
+# ============================================================================ #
+
+
 ## --------------------------------------------------------------------------- #
 ##  Setup                                                                   ####
 ## --------------------------------------------------------------------------- #
@@ -160,16 +177,6 @@ def check_ty() -> None:
     run(f"ty check ./src/{DIRECTORY_NAME}")
 
 
-# def check_mypy() -> None:
-#     run(
-#         "mypy",
-#         "--install-types",
-#         "--non-interactive",
-#         "--config-file=pyproject.toml",
-#         f"./src/{DIRECTORY_NAME}",
-#     )
-
-
 def check_isort() -> None:
     run("isort --check --settings-file=pyproject.toml ./")
 
@@ -247,7 +254,7 @@ def git_refresh_current_branch() -> None:
     run("git remote update")
     run("git fetch --verbose")
     run("git fetch --verbose --tags")
-    run("git pull  --verbose")
+    run("git pull --verbose")
     run("git status --verbose")
     run("git branch --list --verbose")
     run("git tag --list --sort=-creatordate")
@@ -296,15 +303,7 @@ def git_update_version_cli() -> None:
 
 
 def git_fix_tag_reference(version: str) -> None:
-    """
-    Force update the tag to point to the latest commit with correct version number.
-    This also ensures the tag shows the correct version in the `pyproject.toml` file for that tag.
-    """
-
-    ### Force update the tag to point to the current commit ----
     run(f"git tag --force {version}")
-
-    ### Force push the updated tag ----
     run(f"git push --force origin {version}")
 
 
