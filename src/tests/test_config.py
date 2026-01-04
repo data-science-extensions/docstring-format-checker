@@ -541,7 +541,7 @@ class TestConfig(TestCase):
         _validate_config_order(sections)
 
         # Verify sections can be sorted by order
-        sections.sort(key=lambda x: x.order)
+        sections.sort(key=lambda x: x.order if x.order is not None else 0)
         assert sections[0].order == 1
         assert sections[0].name == "summary"
         assert sections[1].order == 2
