@@ -9,6 +9,184 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v1.9.0"
+
+    ## **v1.9.0 - Improve Parameter Mismatch Reporting and Test Robustness**
+
+    <!-- md:tag v1.9.0 --><br>
+    <!-- md:date 2025-12-28 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v1.9.0](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.9.0) -->
+
+    ??? note "Release Notes"
+
+        ### 📝 Summary
+        
+        The focus of this release is on improving the clarity of parameter mismatch error messages and enhancing the robustness of the test suite. Introduce targeted detection for variadic parameters (`*args`, `**kwargs`) documented with leading asterisks in docstrings, and provide actionable guidance to remove them. Refactor test assertions to use native Python `assert` statements, standardise return type annotations in tests, and fix various formatting issues in test data generation. Ensure a more user-friendly experience and a more maintainable codebase through these enhancements.
+        
+        
+        ### 📊 Release Statistics
+        
+        | Attribute                 | Note                                          |
+        | ------------------------- | --------------------------------------------- |
+        | **Version:**              | [`v1.9.0`]                                    |
+        | **Python Support:**       | `3.9`, `3.10`, `3.11`, `3.12`, `3.13`, `3.14` |
+        | **Test Coverage:**        | 100% (1033 statements, +11 from v1.8.0)       |
+        | **Pylint Score:**         | 10.00/10                                      |
+        | **Complexity:**           | All functions ≤13 threshold                   |
+        | **Functions:**            | 106 (unchanged from v1.8.0)                   |
+        | **Tests Passing:**        | 250/250 (+2 from v1.8.0)                      |
+        | **Files Changed:**        | 6                                             |
+        | **Lines Added:**          | 119                                           |
+        | **Lines Removed:**        | 20                                            |
+        | **Commits:**              | 12                                            |
+        | **Pull Requests Merged:** | 1 (PR #27)                                    |
+        
+        
+        ### 🎯 Improve Parameter Mismatch Reporting
+        
+        
+        #### 🔍 Overview
+        
+        Enhance the parameter mismatch error output to provide clearer, more actionable feedback when variadic parameters are documented with leading asterisks. Reduce confusion by identifying that the parameter names match once the asterisks are ignored, rather than reporting them as entirely separate missing and extra parameters.
+        
+        
+        #### ❓ Problem Statement
+        
+        When validating functions with `*args` or `**kwargs`, the tool previously reported a mismatch if the docstring included the asterisks (e.g., `*args (Any):`). This resulted in a confusing error message that listed the parameter as both missing from the docstring (without asterisks) and extra in the docstring (with asterisks).
+        
+        **Example of previous confusing output:**
+        
+        ```
+        Params section mismatch:
+            - In signature but not in docstring: 'args', 'kwargs'
+            - In docstring but not in signature: '*args', '**kwargs'
+        ```
+        
+        
+        #### 💡 Solution
+        
+        Update the mismatch detection logic to recognise when a parameter name in the docstring matches a signature parameter after stripping leading asterisks.
+        
+        
+        ##### Targeted Asterisk Detection
+        
+        Update `._build_param_mismatch_error()` to detect asterisk-only mismatches. When found, the tool now emits a specific message:
+        
+        ```
+        Parameter mismatch:
+          - Parameter 'args' found in docstring as '*args'. Please remove the asterisk.
+          - Parameter 'kwargs' found in docstring as '**kwargs'. Please remove the asterisks.
+        ```
+        
+        
+        ##### Robust Parameter Extraction
+        
+        Strengthen the regex pattern in `._extract_documented_params()` to correctly capture parameters with exactly zero, one, or two leading asterisks using `\*{0,2}`. Ensure that only valid Python parameter prefix patterns are matched.
+        
+        
+        ### 🧪 Enhance Test Suite Robustness
+        
+        
+        #### 🔍 Overview
+        
+        Refactor the test suite to improve readability, maintainability, and alignment with modern Python testing standards. Standardise assertions, improve type safety, and fix formatting issues in test data.
+        
+        
+        #### 🛠️ Key Improvements
+        
+        
+        ##### Standardise Assertions
+        
+        Replace [`unittest`] style assertions (e.g., `.assertIn()`, `.assertFalse()`) with native Python `assert` statements across the test suite. Align the codebase with [`pytest`] conventions and improve the readability of test failures.
+        
+        
+        ##### Improve Type Safety
+        
+        Add explicit `None` return type annotations to various test methods in `src/tests/test_core.py`. Ensure better type checking and consistency across the test suite.
+        
+        
+        ##### Fix Test Data Formatting
+        
+        Utilise `dedent()` for all dynamically generated Python file content in tests. Ensure that leading whitespace is correctly handled, preventing potential parsing issues or incorrect indentation in temporary test files.
+        
+        
+        ##### Resolve Syntax Conflicts
+        
+        Fix nested docstring syntax in test cases by replacing inner triple double quotes with triple single quotes. Prevent syntax errors when parsing code blocks that contain their own docstrings.
+        
+        
+        ### ⚙️ Internal Refactorings
+        
+        
+        #### 🛡️ Avoid Input Mutation
+        
+        Refactor `._build_param_mismatch_error()` to work with local copies of the `missing_in_docstring` and `extra_in_docstring` lists. Prevent unintended side effects on caller functions that might rely on the original lists remaining unchanged.
+        
+        
+        #### 📏 Improve Test Output Visibility
+        
+        Increase the default diff width for test output to `120` characters in `pyproject.toml`. Ensure that long error messages and diffs are clearly visible in the terminal without being prematurely wrapped.
+        
+        
+        ### 💪 Pull Requests
+        
+        * Improve Error Messages for Asterisk Parameter Mismatches by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/27
+        
+        
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.8.0...v1.9.0
+        
+        
+        [`v1.9.0`]: https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.9.0
+        [`unittest`]: https://docs.python.org/3/library/unittest.html
+        [`pytest`]: https://docs.pytest.org/
+
+    ??? abstract "Updates"
+
+        * [`ebda57e`](https://github.com/data-science-extensions/docstring-format-checker/commit/ebda57e6dfbe7832768e8595681e845b83543b24): Update test output width and fix grammar<br>
+            - Increase the diff width for test output to improve visibility of failures.<br>
+            - Correct the pluralisation in error messages for double-starred parameters.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`b0645de`](https://github.com/data-science-extensions/docstring-format-checker/commit/b0645de98d1f63cf65ffd568a95b9f366d7f3100): Make error messages more robust and readable<br>
+            The error message uses the singular "asterisk" but should handle both single (`*args`) and double (`**kwargs`) asterisks. Consider making the message more accurate by using "asterisk(s)" or detecting the number of asterisks and adjusting the message accordingly.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`0654455`](https://github.com/data-science-extensions/docstring-format-checker/commit/0654455353fd6d9fcb067a7b697537d4e4f981ba): Fix exception attribute access in unit tests<br>
+            - Correct the attribute used to access exceptions by switching to the `value` attribute.<br>
+            - Standardise verification of exception messages within the `TestGlobalConfigFeatures()` class.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`0240a3d`](https://github.com/data-science-extensions/docstring-format-checker/commit/0240a3dace818743f68fe3f0b88591b401bc315b): Avoid mutating inputs in parameter mismatch logic<br>
+            - Create local copies of the `missing_in_docstring` list and `extra_in_docstring` list to prevent unintended side effects on caller functions.<br>
+            - Update the matching logic to remove items from these local copies when identifying asterisk mismatches.<br>
+            - Use these local copies instead of the original parameters when constructing the final error message string.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`4c3dee6`](https://github.com/data-science-extensions/docstring-format-checker/commit/4c3dee68d2580b0bc3309790d590b5e330087b54): Strengthen regex syntax<br>
+            The regex pattern uses `\**` which matches zero or more asterisks. This could incorrectly match invalid cases like `***args` (three asterisks) or edge cases with many asterisks. Consider using `\*{0,2}` to match exactly 0, 1, or 2 asterisks, which are the only valid Python parameter prefix patterns.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`e5844b1`](https://github.com/data-science-extensions/docstring-format-checker/commit/e5844b1dc60e3b11ec1618ebd7cae9a2f3229b68): Refactor test assertions to use native assert statements<br>
+            - Replace `unittest` style assertions like `.assertFalse()` and `.assertIn()` with native Python `assert` statements in `src/tests/test_core.py`<br>
+            - Simplify test logic within the `TestParameterMismatch` class to improve readability and align with pytest style conventions
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`76b0165`](https://github.com/data-science-extensions/docstring-format-checker/commit/76b0165952603e09bdefeef296a16ea0763d4bad): Add return type annotations to core test methods<br>
+            - Update various test methods in `src/tests/test_core.py` to explicitly return `None` to improve type safety<br>
+            - Modify the `TestDocstringChecker` class and the `TestParameterMismatch` class to align with strict typing standards<br>
+            - Apply changes to the `.test_83_malformed_type_after_valid_type()` method, the `.test_param_mismatch_with_asterisks()` method, and others
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`34af423`](https://github.com/data-science-extensions/docstring-format-checker/commit/34af42382c79fcf23e09f866c24d5042d70e6ca7): Use `dedent()` for test file content creation<br>
+            - Ensure proper formatting of generated Python files in `TestCLI` by removing leading whitespace from the multiline string.<br>
+            - Prevent potential parsing issues or incorrect indentation in the temporary test files created during execution.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`a4a168f`](https://github.com/data-science-extensions/docstring-format-checker/commit/a4a168fe78096a2b6d335f6cc0d5651a6e908913): Fix nested docstring syntax in test cases<br>
+            - Utilise `dedent()` to ensure correct indentation for dynamically parsed code blocks within tests<br>
+            - Replace inner triple double quotes with triple single quotes to avoid syntax conflicts in the `.test_param_mismatch_with_asterisks()` method<br>
+            - Apply similar quoting and indentation fixes to the `.test_normal_param_mismatch()` method to prevent parsing errors
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`1d8a827`](https://github.com/data-science-extensions/docstring-format-checker/commit/1d8a82756c5c66c7f788e4f0c022035a02184579): Detect asterisk mismatch in docstring parameters<br>
+            - Update parameter parsing regex to capture names with leading asterisks in `_check_params_section_detailed()` method<br>
+            - Detect when variadic arguments are documented with asterisks in `_format_missing_extra_error()` method<br>
+            - Return specific error message advising users to remove asterisks from parameter names in the docstring<br>
+            - Add `TestParameterMismatch` class to verify asterisk mismatch detection works as expected
+            (by [chrimaho](https://github.com/chrimaho))
+
+
 !!! info "v1.8.0"
 
     ## **v1.8.0 - Support All Python Function Parameter Types**
