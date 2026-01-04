@@ -130,9 +130,9 @@ class SectionConfig:
         Configuration for a docstring section.
     """
 
-    order: int
     name: str
     type: Literal["free_text", "list_name", "list_type", "list_name_and_type"]
+    order: Optional[int] = None
     admonition: Union[bool, str] = False
     prefix: str = ""  # Support any prefix string
     required: bool = False
@@ -204,7 +204,7 @@ def _validate_config_order(config_sections: list[SectionConfig]) -> None:
     """
 
     # Validate no duplicate order values
-    order_values: list[int] = [section.order for section in config_sections]
+    order_values: list[int] = [section.order for section in config_sections if section.order is not None]
     seen_orders: set[int] = set()
     duplicate_orders: set[int] = set()
 
