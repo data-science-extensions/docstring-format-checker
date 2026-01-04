@@ -189,6 +189,10 @@ def check_pylint() -> None:
     run(f"pylint --rcfile=pyproject.toml src/{DIRECTORY_NAME}")
 
 
+def check_pyright() -> None:
+    run(f"pyright ./src/{DIRECTORY_NAME}")
+
+
 def check_pycln() -> None:
     run("pycln --check --config=pyproject.toml src/")
 
@@ -227,17 +231,17 @@ def check_complexity() -> None:
 def check() -> None:
     check_black()
     check_blacken_docs()
-    # check_mypy()
     check_ty()
     check_isort()
     check_codespell()
     check_pycln()
     check_pylint()
+    check_pyright()
     check_complexity()
     check_docstrings()
     check_pytest()
-    check_mkdocs()
     check_build()
+    check_mkdocs()
 
 
 ## --------------------------------------------------------------------------- #

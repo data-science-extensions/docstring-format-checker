@@ -6334,6 +6334,7 @@ class TestParameterTypeValidation(TestCase):
         # Parse the function
         tree = ast.parse(python_content)
         func_node = tree.body[0]
+        assert isinstance(func_node, (ast.FunctionDef, ast.AsyncFunctionDef))
 
         # Get params with defaults
         params_with_defaults = checker._get_params_with_defaults(func_node)
@@ -6368,6 +6369,7 @@ class TestParameterTypeValidation(TestCase):
         # Parse the function
         tree = ast.parse(python_content)
         func_node = tree.body[0]
+        assert isinstance(func_node, (ast.FunctionDef, ast.AsyncFunctionDef))
 
         # Get params with defaults
         params_with_defaults = checker._get_params_with_defaults(func_node)
@@ -6400,6 +6402,7 @@ class TestParameterTypeValidation(TestCase):
         # Parse the function
         tree = ast.parse(python_content)
         func_node = tree.body[0]
+        assert isinstance(func_node, (ast.FunctionDef, ast.AsyncFunctionDef))
 
         # Get params with defaults
         params_with_defaults = checker._get_params_with_defaults(func_node)
@@ -6517,9 +6520,12 @@ class TestParameterMismatch(TestCase):
         )
         tree = ast.parse(code)
         func_node = tree.body[0]
+        assert isinstance(func_node, (ast.FunctionDef, ast.AsyncFunctionDef))
         docstring = ast.get_docstring(func_node)
+        assert docstring is not None
 
         is_valid, error_message = checker._check_params_section_detailed(docstring, func_node)
+        assert error_message is not None
 
         assert is_valid is False
         assert "Parameter 'args' found in docstring as '*args'. Please remove the asterisk." in error_message
@@ -6548,9 +6554,12 @@ class TestParameterMismatch(TestCase):
         )
         tree = ast.parse(code)
         func_node = tree.body[0]
+        assert isinstance(func_node, (ast.FunctionDef, ast.AsyncFunctionDef))
         docstring = ast.get_docstring(func_node)
+        assert docstring is not None
 
         is_valid, error_message = checker._check_params_section_detailed(docstring, func_node)
+        assert error_message is not None
 
         assert is_valid is False
         assert "In signature but not in docstring: 'b'" in error_message

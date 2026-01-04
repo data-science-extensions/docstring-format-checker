@@ -506,7 +506,7 @@ def _parse_sections_config(tool_config: dict[str, Any]) -> list[SectionConfig]:
     # Validate and sort sections
     if sections_config:
         _validate_config_order(config_sections=sections_config)
-        sections_config.sort(key=lambda x: x.order)
+        sections_config.sort(key=lambda x: x.order if x.order is not None else float("inf"))
     else:
         sections_config = DEFAULT_SECTIONS
 

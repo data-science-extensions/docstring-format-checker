@@ -1497,7 +1497,10 @@ class DocstringChecker:
         """
         section_patterns: list[tuple[str, str]] = []
         # Sort sections that have an order, then append those that don't
-        ordered_sections = sorted([s for s in self.sections_config if s.order is not None], key=lambda x: x.order)
+        ordered_sections = sorted(
+            [s for s in self.sections_config if s.order is not None],
+            key=lambda x: x.order if x.order is not None else 0,
+        )
         unordered_sections: list[SectionConfig] = [s for s in self.sections_config if s.order is None]
 
         for section in ordered_sections + unordered_sections:
@@ -1570,7 +1573,10 @@ class DocstringChecker:
         """
         expected_order: list[str] = [
             s.name.title()
-            for s in sorted([s for s in self.sections_config if s.order is not None], key=lambda x: x.order)
+            for s in sorted(
+                [s for s in self.sections_config if s.order is not None],
+                key=lambda x: x.order if x.order is not None else 0,
+            )
         ]
         expected_order.extend(
             [
