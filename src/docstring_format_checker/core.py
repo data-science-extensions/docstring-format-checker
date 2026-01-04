@@ -1744,7 +1744,7 @@ class DocstringChecker:
                 Error message if validation fails, None otherwise.
         """
         actual_admonition: str = match.group(1).lower()
-        section_title: str = match.group(2).lower()
+        section_title: str = match.group(2)
 
         # Check if this section is configured with a specific admonition
         if section_title in section_admonitions:
@@ -1810,7 +1810,7 @@ class DocstringChecker:
 
         section_title: str = match.group(1)
         has_colon: bool = section_title.endswith(":")
-        section_title_clean: str = section_title.rstrip(":").lower()
+        section_title_clean: str = section_title.rstrip(":")
 
         # Find config for this section
         section_config: Optional[SectionConfig] = next(
@@ -1871,12 +1871,12 @@ class DocstringChecker:
         if not match:
             return None
 
-        section_name: str = match.group(1).lower()
+        section_name: str = match.group(1)
         has_colon: bool = match.group(2) == ":"
 
         # Find config for this section
         section_config: Optional[SectionConfig] = next(
-            (s for s in self.sections_config if s.name.lower() == section_name), None
+            (s for s in self.sections_config if s.name.lower() == section_name.lower()), None
         )
 
         if section_config and section_config.admonition is False:
@@ -2035,17 +2035,17 @@ class DocstringChecker:
             r"(?:\?\?\?[+]?|!!!)\s+\w+\s+\"([^\"]+)\"", stripped_line, re.IGNORECASE
         )
         if admonition_match:
-            section_name: str = admonition_match.group(1).lower()
+            section_name: str = admonition_match.group(1)
             # Check if it's a known section
-            return any(s.name.lower() == section_name for s in self.sections_config)
+            return any(s.name.lower() == section_name.lower() for s in self.sections_config)
 
         # Non-admonition sections (must not be indented)
         if not full_line.startswith((" ", "\t")):
             simple_section_match: Optional[re.Match[str]] = re.match(r"^(\w+):?$", stripped_line)
             if simple_section_match:
-                section_name: str = simple_section_match.group(1).lower()
+                section_name: str = simple_section_match.group(1)
                 # Check if it's a known section
-                return any(s.name.lower() == section_name for s in self.sections_config)
+                return any(s.name.lower() == section_name.lower() for s in self.sections_config)
 
         return False
 
@@ -2073,20 +2073,20 @@ class DocstringChecker:
             r"(?:\?\?\?[+]?|!!!)\s+\w+\s+\"([^\"]+)\"", stripped_line, re.IGNORECASE
         )
         if admonition_match:
-            section_name: str = admonition_match.group(1).lower()
-            return next((s for s in parentheses_sections if s.name.lower() == section_name), None)
+            section_name: str = admonition_match.group(1)
+            return next((s for s in parentheses_sections if s.name.lower() == section_name.lower()), None)
 
         # Non-admonition sections (must not be indented)
         if not full_line.startswith((" ", "\t")):
             simple_section_match: Optional[re.Match[str]] = re.match(r"^(\w+):?$", stripped_line)
             if simple_section_match:
-                section_name: str = simple_section_match.group(1).lower()
+                section_name: str = simple_section_match.group(1)
                 # Check if it's a known section
                 potential_section: Optional[SectionConfig] = next(
-                    (s for s in self.sections_config if s.name.lower() == section_name), None
+                    (s for s in self.sections_config if s.name.lower() == section_name.lower()), None
                 )
                 if potential_section:
-                    return next((s for s in parentheses_sections if s.name.lower() == section_name), None)
+                    return next((s for s in parentheses_sections if s.name.lower() == section_name.lower()), None)
 
         return None
 
