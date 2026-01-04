@@ -1745,10 +1745,11 @@ class DocstringChecker:
         """
         actual_admonition: str = match.group(1).lower()
         section_title: str = match.group(2)
+        section_title_lower: str = section_title.lower()
 
         # Check if this section is configured with a specific admonition
-        if section_title in section_admonitions:
-            expected_admonition: str = section_admonitions[section_title]
+        if section_title_lower in section_admonitions:
+            expected_admonition: str = section_admonitions[section_title_lower]
             if actual_admonition != expected_admonition:
                 return (
                     f"Section '{section_title}' has incorrect admonition '{actual_admonition}', "
@@ -1757,7 +1758,7 @@ class DocstringChecker:
 
         # Check if section shouldn't have admonition but does
         section_config: Optional[SectionConfig] = next(
-            (s for s in self.sections_config if s.name.lower() == section_title), None
+            (s for s in self.sections_config if s.name.lower() == section_title_lower), None
         )
         if section_config and section_config.admonition is False:
             return f"Section '{section_title}' is configured as non-admonition but found as admonition"
@@ -1811,10 +1812,11 @@ class DocstringChecker:
         section_title: str = match.group(1)
         has_colon: bool = section_title.endswith(":")
         section_title_clean: str = section_title.rstrip(":")
+        section_title_lower: str = section_title_clean.lower()
 
         # Find config for this section
         section_config: Optional[SectionConfig] = next(
-            (s for s in self.sections_config if s.name.lower() == section_title_clean), None
+            (s for s in self.sections_config if s.name.lower() == section_title_lower), None
         )
 
         if section_config and isinstance(section_config.admonition, str) and section_config.admonition:
