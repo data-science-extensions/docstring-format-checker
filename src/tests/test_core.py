@@ -3876,8 +3876,8 @@ class TestUnorderedSections(TestCase):
             """
         ).strip()
         errors: list[DocstringError] = self._check_docstring(checker, docstring)
-        assert (
-            any("Missing required section: 'mandatory unordered'" in err.message for err in errors) == True
+        assert any(
+            "Missing required section: 'mandatory unordered'" in err.message for err in errors
         ), "Expected missing mandatory unordered section error"
 
     def test_unordered_section_case_insensitivity(self) -> None:
@@ -3921,8 +3921,8 @@ class TestUnorderedSections(TestCase):
         ).strip()
         errors: list[DocstringError] = self._check_docstring(checker, docstring)
         # Summary (order 1) appears after Params (order 2)
-        assert (
-            any("Section 'Summary' appears out of order" in err.message for err in errors) == True
+        assert any(
+            "Section 'Summary' appears out of order" in err.message for err in errors
         ), "Expected out of order error for Summary section"
 
 
