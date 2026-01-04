@@ -9,6 +9,90 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v1.11.0"
+
+    ## **v1.11.0 - Flexible Section Ordering and Multi-word Headers**
+
+    <!-- md:tag v1.11.0 --><br>
+    <!-- md:date 2026-01-04 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v1.11.0](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.11.0) -->
+
+    ??? note "Release Notes"
+
+        ### 📃 Overview
+        
+        Introduce support for unordered docstring sections and multi-word section headers to provide greater flexibility in docstring formatting. This release also includes bug fixes for section name validation and improvements to the test suite.
+        
+        
+        ### ✨ New Features
+        
+        
+        #### 🔓 Support Unordered Sections
+        
+        Allow sections to be defined with `order = null` in the configuration. These sections can appear anywhere within a docstring without triggering sequence validation errors. This is particularly useful for sections like `Deprecation Warning` or `Note` that may appear at different positions depending on the context.
+        
+        
+        #### 📝 Support Multi-word Section Headers
+        
+        Update the section detection logic to support headers containing multiple words. This enables the use of descriptive section names such as `Custom List` or `Deprecation Warning` while maintaining strict validation of other rules like colon usage and title casing.
+        
+        
+        ### 🐛 Bug Fixes
+        
+        
+        #### 🐛 Fix Multi-word Section Validation
+        
+        Resolve an issue where multi-word section names were incorrectly triggering "requires parenthesized types" errors. The validation regex now correctly handles spaces within section headers.
+        
+        
+        #### 🛠️ Fix Test Suite Syntax Error
+        
+        Correct a `SyntaxError` in the test helper `_check_docstring()` caused by improper indentation of generated Python content.
+        
+        
+        ### ⚙️ Technical Improvements
+        
+        
+        #### 🧪 Expand Test Coverage
+        
+        Add a comprehensive suite of tests for unordered sections, covering various placements, case-insensitivity, and interaction with required sections. Maintain 100% code coverage across the entire project.
+        
+        
+        #### 📖 Update Documentation
+        
+        Update the `README.md` to include details and examples for the new flexible section ordering feature.
+        
+        ### 💪 Pull Requests
+        
+        * Support Unordered Docstring Sections and Multi-word Names by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/35
+        
+        
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.10.1...v1.11.0
+        
+
+    ??? abstract "Updates"
+
+        * [`b68e1d9`](https://github.com/data-science-extensions/docstring-format-checker/commit/b68e1d95eeb09b84d94a1f14f60b64ba29799ad1): Fix package URLs
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`c9d8628`](https://github.com/data-science-extensions/docstring-format-checker/commit/c9d8628a6afedf6e2fa9ebf8870811c3bbe596c1): Remove redundant boolean checks from Unit Tests
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`ab66c8a`](https://github.com/data-science-extensions/docstring-format-checker/commit/ab66c8a47496f3d511f919f8457a504251e55cb8): Fix typo
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`976bdf6`](https://github.com/data-science-extensions/docstring-format-checker/commit/976bdf678b9b39e4930e348ef4a23f18f94b80ea): Update documentation for optional section ordering<br>
+            - Enhance the `README.md` to reflect support for unordered "floating" sections.<br>
+            - Explain that the `order` attribute is now optional to allow specific sections to appear anywhere.<br>
+            - Provide additional TOML configuration examples to demonstrate different layout options for the `sections` list in `pyproject.toml`.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`1174a7e`](https://github.com/data-science-extensions/docstring-format-checker/commit/1174a7ea1b385d96670f205735af4fb84cb94883): Support unordered sections and multi-word names<br>
+            - Allow the `order` attribute to be `None` in the `SectionConfig` class to support docstring sections that do not require a specific sequence.<br>
+            - Update the `_validate_config_order()` function to ignore sections without an explicit order when checking for duplicate sequence values.<br>
+            - Modify sorting logic in the `._get_section_patterns()` and `._get_expected_order()` methods to prioritise ordered sections while including unordered ones.<br>
+            - Adjust regex patterns in the `DocstringChecker` class to recognise multi-word section names containing spaces.<br>
+            - Ensure whitespace is stripped from matched section names in the `._is_section_header()` and `._get_section_config()` methods to facilitate more robust matching.<br>
+            - Introduce unit tests in the `TestUnorderedSections` class to verify the parsing behaviour of docstrings with unordered sections.
+            (by [chrimaho](https://github.com/chrimaho))
+
+
 !!! info "v1.10.1"
 
     ## **v1.10.1 - Standardise Dependencies and Modernise CI/CD Workflows**
