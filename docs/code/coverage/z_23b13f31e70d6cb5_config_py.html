@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_23b13f31e70d6cb5_core_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.1">coverage.py v7.13.1</a>,
-            created at 2026-01-04 03:08 +0000
+            created at 2026-01-04 23:22 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -588,7 +588,7 @@
     <p class="pln"><span class="n"><a id="t506" href="#t506">506</a></span><span class="t">    <span class="com"># Validate and sort sections</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t507" href="#t507">507</a></span><span class="t">    <span class="key">if</span> <span class="nam">sections_config</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t508" href="#t508">508</a></span><span class="t">        <span class="nam">_validate_config_order</span><span class="op">(</span><span class="nam">config_sections</span><span class="op">=</span><span class="nam">sections_config</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t509" href="#t509">509</a></span><span class="t">        <span class="nam">sections_config</span><span class="op">.</span><span class="nam">sort</span><span class="op">(</span><span class="nam">key</span><span class="op">=</span><span class="key">lambda</span> <span class="nam">x</span><span class="op">:</span> <span class="nam">x</span><span class="op">.</span><span class="nam">order</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t509" href="#t509">509</a></span><span class="t">        <span class="nam">sections_config</span><span class="op">.</span><span class="nam">sort</span><span class="op">(</span><span class="nam">key</span><span class="op">=</span><span class="key">lambda</span> <span class="nam">x</span><span class="op">:</span> <span class="nam">x</span><span class="op">.</span><span class="nam">order</span> <span class="key">if</span> <span class="nam">x</span><span class="op">.</span><span class="nam">order</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span> <span class="key">else</span> <span class="nam">float</span><span class="op">(</span><span class="str">"inf"</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t510" href="#t510">510</a></span><span class="t">    <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t511" href="#t511">511</a></span><span class="t">        <span class="nam">sections_config</span> <span class="op">=</span> <span class="nam">DEFAULT_SECTIONS</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t512" href="#t512">512</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -641,7 +641,7 @@
             <a class="nav" href="z_23b13f31e70d6cb5_core_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.1">coverage.py v7.13.1</a>,
-            created at 2026-01-04 03:08 +0000
+            created at 2026-01-04 23:22 +0000
         </p>
     </div>
 </footer>
