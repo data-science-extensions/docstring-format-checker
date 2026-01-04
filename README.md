@@ -71,11 +71,11 @@ dfc config-example
 
 For reference, these URL's are used:
 
-| Type           | Source | URL                                                                 |
-| -------------- | ------ | ------------------------------------------------------------------- |
-| Git Repo       | GitHub | https://github.com/data-science-extensions/docstring-format-checker |
-| Python Package | PyPI   | https://pypi.org/project/docstring-format-checker                   |
-| Package Docs   | Pages  | https://data-science-extensions.com/docstring-format-checker        |
+| Type           | Source | URL                                                                    |
+| -------------- | ------ | ---------------------------------------------------------------------- |
+| Git Repo       | GitHub | https://github.com/data-science-extensions/docstring-format-checker    |
+| Python Package | PyPI   | https://pypi.org/project/docstring-format-checker                      |
+| Package Docs   | Pages  | https://data-science-extensions.com/toolboxes/docstring-format-checker |
 
 
 ### Section Types
