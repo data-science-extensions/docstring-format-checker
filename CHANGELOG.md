@@ -9,6 +9,199 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v1.10.0"
+
+    ## **v1.10.0 - Enhance Section Validation and Update Dependencies**
+
+    <!-- md:tag v1.10.0 --><br>
+    <!-- md:date 2026-01-04 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v1.10.0](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.10.0) -->
+
+    ??? note "Release Notes"
+
+        ### 📝 Summary
+        
+        This release focuses on improving the robustness of docstring section validation, particularly regarding case sensitivity and error reporting. Standardise section header detection to handle various capitalisation styles while preserving original casing in error messages. Modernise the project's dependency management by introducing Dependabot and upgrading several pre-commit hooks. Refactor utility scripts for better clarity and update package metadata to align with standard practices. Ensure a more consistent and user-friendly experience through these enhancements.
+        
+        
+        ### 📊 Release Statistics
+        
+        | Attribute                 | Note                                          |
+        | ------------------------- | --------------------------------------------- |
+        | **Version:**              | [`v1.10.0`]                                   |
+        | **Python Support:**       | `3.9`, `3.10`, `3.11`, `3.12`, `3.13`, `3.14` |
+        | **Test Coverage:**        | 100% (1035 statements, +2 from v1.9.0)        |
+        | **Pylint Score:**         | 10.00/10                                      |
+        | **Complexity:**           | All functions ≤13 threshold                   |
+        | **Functions:**            | 106 (unchanged from v1.9.0)                   |
+        | **Tests Passing:**        | 250/250 (unchanged from v1.9.0)               |
+        | **Files Changed:**        | 8                                             |
+        | **Lines Added:**          | 76                                            |
+        | **Lines Removed:**        | 53                                            |
+        | **Commits:**              | 10                                            |
+        | **Pull Requests Merged:** | 1 (PR #29)                                    |
+        
+        
+        ### 🎯 Enhance Docstring Section Validation
+        
+        
+        #### 🔍 Overview
+        
+        Improve the reliability of section detection and validation within docstrings. Ensure that the tool correctly identifies configured sections regardless of their case in the docstring, while providing clearer error messages.
+        
+        
+        #### 🛠️ Key Improvements
+        
+        
+        ##### Case-Insensitive Matching
+        
+        Refactor several internal methods to handle section names more robustly. Lowercase section names for configuration lookups but preserve the original case when reporting errors to the user.
+        
+        - Update `._validate_single_admonition()` to use a lowercased version of the section title for configuration checks.
+        - Refactor `._validate_admonition_has_no_colon()` to ensure consistent case-insensitive lookup.
+        - Improve `._check_non_admonition_colon_usage()` to correctly identify non-admonition sections regardless of case.
+        - Standardise section header detection in `._detect_any_section_header()` and `._detect_section_header()`.
+        
+        
+        ##### Clearer Error Reporting
+        
+        Update `._validate_all_required_sections()` to wrap missing section names in single quotes. This makes the error messages more readable and consistent with other validation errors.
+        
+        Example of new output:
+        `Missing required section: 'summary'`
+        
+        
+        ### ⚙️ Update Dependencies and CI/CD Workflows
+        
+        
+        #### 🔍 Overview
+        
+        Modernise the development environment and automate dependency maintenance to ensure the project remains secure and up-to-date.
+        
+        
+        #### 🛠️ Key Improvements
+        
+        
+        ##### Automate Dependency Updates
+        
+        Introduce a new `.github/dependabot.yml` configuration to enable weekly automated updates for GitHub Actions. Include custom labels and designated reviewers to streamline the maintenance process.
+        
+        
+        ##### Upgrade Pre-commit Hooks
+        
+        Bump the versions of several key pre-commit hooks to leverage the latest improvements and bug fixes:
+        
+        | Hook            | Old Version | New Version |
+        | --------------- | ----------- | ----------- |
+        | `black`         | `25.1.0`    | `25.12.0`   |
+        | `blacken-docs`  | `1.19.1`    | `1.20.0`    |
+        | `isort`         | `6.0.1`     | `7.0.0`     |
+        | `pyupgrade`     | `v3.20.0`   | `v3.21.2`   |
+        | `pycln`         | `v2.5.0`    | `v2.6.0`    |
+        | `uv-pre-commit` | `0.8.8`     | `0.9.21`    |
+        
+        
+        ##### Refine CI/CD Workflow
+        
+        Update the `.github/workflows/cd.yml` workflow to use `${{ env.VERSION }}` consistently for version references. Expose `GITHUB_TOKEN` and `REPOSITORY_NAME` to the changelog generation step to ensure it has the necessary context.
+        
+        
+        ### 🧹 Refactor Utility Scripts and Metadata
+        
+        
+        #### 🔍 Overview
+        
+        Clean up internal utility scripts and ensure package metadata is correctly defined.
+        
+        
+        #### 🛠️ Key Improvements
+        
+        
+        ##### Improve Script Clarity
+        
+        Add a comprehensive file header to `src/utils/scripts.py` that outlines its purpose, usage, and provides examples. Improve the discoverability and usability of the internal tooling.
+        
+        
+        ##### Simplify Git Operations
+        
+        Refactor `git_fix_tag_reference()` to remove redundant comments and simplify the implementation. Fix a minor formatting issue in `git_refresh_current_branch()` by removing an extra space in the `git pull` command.
+        
+        
+        ##### Update Package Metadata
+        
+        Refactor `src/docstring_format_checker/__init__.py` to use the correct `Author-email` metadata key. Ensure that the author's email is correctly exposed in the package metadata as `__author_email__`.
+        
+        
+        ### 🧪 Improve Test Consistency
+        
+        
+        #### 🔍 Overview
+        
+        Update the test suite to align with the improved error message formatting.
+        
+        
+        #### 🛠️ Key Improvements
+        
+        
+        ##### Update Assertions
+        
+        Refactor tests in `src/tests/test_cli.py` and `src/tests/test_core.py` to expect the new quoted format for missing section errors. Ensure that the test suite remains in sync with the core validation logic.
+        
+        
+        ### What's Changed
+        * Enhance Section Validation and Update Dependencies by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/28
+        
+        
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.9.0...v1.10.0
+        
+        [`v1.9.0`]: https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.9.0
+        [`v1.10.0`]: https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.10.0
+        
+
+    ??? abstract "Updates"
+
+        * [`b01eb27`](https://github.com/data-science-extensions/docstring-format-checker/commit/b01eb27004ecaedb795f637c8eae93921e7a4cab): Update test assertions for quoted section names<br>
+            Standardise error message assertions for missing sections.<br>
+            - Update the `TestCLI()` class and `TestDocstringChecker()` class to expect single quotes around section names in error strings.<br>
+            - Match output from the `clean()` function against the revised string format for required sections like `'summary'` and `'Parameters'`.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`8b285fb`](https://github.com/data-science-extensions/docstring-format-checker/commit/8b285fb0c702af25358b6a8f8d14096b2bc1a057): Standardise case-insensitivity in section lookups<br>
+            - Use lowercase section titles for consistent matching against configuration settings<br>
+            - Update the `DocstringChecker()` class to handle section headers regardless of their original capitalisation
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`58b072b`](https://github.com/data-science-extensions/docstring-format-checker/commit/58b072b63463d01f7a729370bfd93e292fc50e6d): Add Dependabot configuration for GitHub Actions<br>
+            - Initialise weekly version updates for GitHub Actions<br>
+            - Maintain workflow dependencies via automated tracking<br>
+            - Streamline the review process with labels and reviewers
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`a322b25`](https://github.com/data-science-extensions/docstring-format-checker/commit/a322b2572b346770b57a954264538c1d0885ef60): Refactor case-insensitive section lookups<br>
+            - Preserve original casing of section names and titles by removing immediate `.lower()` method calls.<br>
+            - Relocate case-conversion logic to the comparison stage within `any()` function and generator expressions.<br>
+            - Standardise matching behaviour across the `DocstringChecker()` class to ensure consistent case-insensitivity.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`fff1b93`](https://github.com/data-science-extensions/docstring-format-checker/commit/fff1b93dcf2f389a9312f72c436fd4debb131986): Add quotes to missing section error message<br>
+            - Wrap the section name in single quotes within the error message generated by the `._check_required_sections()` method.<br>
+            - Standardise the visual formatting of missing section error reports for better clarity.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`a565ffe`](https://github.com/data-science-extensions/docstring-format-checker/commit/a565ffed6c8844aceda97da4f6b1389e86050d9d): Update script utilities and documentation<br>
+            - Add a header to the utility script to describe usage and purpose.<br>
+            - Remove the commented-out `check_mypy()` function.<br>
+            - Simplify the `git_fix_tag_reference()` function by removing redundant comments and documentation.<br>
+            - Standardise whitespace in the `git_refresh_current_branch()` function.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`671a10d`](https://github.com/data-science-extensions/docstring-format-checker/commit/671a10d57f98b33cabd8c8cf07873dd43857d3d8): Update package metadata retrieval<br>
+            - Standardise the metadata variable name for the author's email<br>
+            - Update the key used in the `metadata()` function to retrieve `Author-email`<br>
+            - Remove the fallback default value previously used with the `.get()` method<br>
+            - Add a header comment to delineate the package metadata section
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`0122020`](https://github.com/data-science-extensions/docstring-format-checker/commit/01220208e2bf6c461aee85929cb8da047428985e): Standardise variable access in CD workflow<br>
+            - Use `${{ env.VERSION }}` instead of `${VERSION}` to ensure the GitHub Actions runner correctly interpolates variables across all steps.<br>
+            - Provide `GITHUB_TOKEN` and `REPOSITORY_NAME` to the `Generate Changelog` step to facilitate automated updates.<br>
+            - Pass the version correctly to the `git_update_version_cli()`, `build_versioned_docs_cli()`, and `git_fix_tag_reference_cli()` functions within the workflow.
+            (by [chrimaho](https://github.com/chrimaho))
+
+
 !!! info "v1.9.0"
 
     ## **v1.9.0 - Improve Parameter Mismatch Reporting and Test Robustness**
