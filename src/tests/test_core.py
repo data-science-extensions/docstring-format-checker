@@ -3818,7 +3818,7 @@ class TestUnorderedSections(TestCase):
 
     def test_unordered_section_inside_parameter(self) -> None:
         """
-        Test unordered section appearing inside a parameter description..
+        Test unordered section appearing inside a parameter description.
         """
         checker: DocstringChecker = self._create_unordered_checker()
         docstring: str = dedent(
