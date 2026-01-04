@@ -9,6 +9,124 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v1.10.1"
+
+    ## **v1.10.1 - Standardise Dependencies and Modernise CI/CD Workflows**
+
+    <!-- md:tag v1.10.1 --><br>
+    <!-- md:date 2026-01-04 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v1.10.1](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.10.1) -->
+
+    ??? note "Release Notes"
+
+        ### 📝 Summary
+        
+        This release focuses on standardising the project's dependency management and modernising the CI/CD workflows to ensure robust support across multiple Python versions. Introduce environment markers in `pyproject.toml` to allow for version-specific package requirements, specifically supporting Python 3.9 while leveraging newer package versions for Python 3.10 and above. Upgrade several key GitHub Actions to their latest versions to improve security, performance, and reliability. Ensure a more consistent and maintainable development environment through these targeted enhancements.
+        
+        
+        ### 📊 Release Statistics
+        
+        | Attribute                 | Note                                          |
+        | ------------------------- | --------------------------------------------- |
+        | **Version:**              | [`v1.10.1`]                                   |
+        | **Python Support:**       | `3.9`, `3.10`, `3.11`, `3.12`, `3.13`, `3.14` |
+        | **Test Coverage:**        | 100% (1035 statements)                        |
+        | **Pylint Score:**         | 10.00/10                                      |
+        | **Complexity:**           | All functions ≤13 threshold                   |
+        | **Functions:**            | 106                                           |
+        | **Tests Passing:**        | 250/250                                       |
+        | **Files Changed:**        | 3                                             |
+        | **Lines Added:**          | 37                                            |
+        | **Lines Removed:**        | 30                                            |
+        | **Commits:**              | 12                                            |
+        | **Pull Requests Merged:** | 6 (PR #29, #30, #31, #32, #33, #34)           |
+        
+        
+        ### 🎯 Standardise Dependencies with Python Version Markers
+        
+        
+        #### 🔍 Overview
+        
+        Improve the project's dependency management by introducing environment markers that allow for version-specific package requirements. This ensures that the project remains compatible with Python 3.9 while taking advantage of newer features and bug fixes available in more recent package versions for Python 3.10 and above.
+        
+        
+        #### 🛠️ Key Improvements
+        
+        
+        ##### Introduce Environment Markers
+        
+        Refactor `pyproject.toml` to use environment markers for several key dependencies. This allows the project to specify different version ranges based on the Python runtime version.
+        
+        - Update `dev` dependencies:
+            - `ipykernel`: Use `6.*` for Python <3.10 and `7.*` for Python >=3.10.
+            - `isort`: Use `6.*` for Python <3.10 and `7.*` for Python >=3.10.
+            - `pylint`: Use `3.*` for Python <3.10 and `4.*` for Python >=3.10.
+        - Adjust `docs` requirements:
+            - `docstring-inheritance`: Use `2.*` for Python <3.10 and `3.*` for Python >=3.10.
+            - `mkdocstrings`: Use `0.*` for Python <3.10 and `1.*` for Python >=3.10.
+            - `mkdocstrings-python`: Use `1.*` for Python <3.10 and `2.*` for Python >=3.10.
+        - Bump `test` dependencies:
+            - `pytest`: Use `8.*` for Python <3.10 and `9.*` for Python >=3.10.
+            - `complexipy`: Upgrade to `5.*` to leverage the latest complexity analysis features.
+        
+        
+        ##### Standardise Dependency Formatting
+        
+        Ensure consistent formatting across all dependency definitions. Standardise the whitespace and structure of environment markers to improve readability and maintainability.
+        
+        
+        ### ⚙️ Modernise CI/CD Workflows and GitHub Actions
+        
+        
+        #### 🔍 Overview
+        
+        Upgrade the project's CI/CD infrastructure by bumping several key GitHub Actions to their latest versions. This ensures that the project benefits from the latest security patches, performance improvements, and feature updates provided by the action maintainers.
+        
+        
+        #### 🛠️ Key Improvements
+        
+        
+        ##### Upgrade GitHub Actions
+        
+        Bump the versions of several essential GitHub Actions used in the `ci.yml` and `cd.yml` workflows:
+        
+        - `actions/checkout`: Upgrade from `v5` to `v6`.
+        - `actions/setup-python`: Upgrade from `v5` to `v6`.
+        - `actions/upload-artifact`: Upgrade from `v4` to `v6`.
+        - `actions/download-artifact`: Upgrade from `v5` to `v7`.
+        - `astral-sh/setup-uv`: Upgrade from `v6` to `v7`.
+        
+        
+        ##### Refine Workflow Configurations
+        
+        Update the workflow files to ensure consistent environment handling and version referencing. Standardise the use of `${{ env.VERSION }}` and other environment variables to improve the reliability of the automated build and release processes.
+        
+        
+        ### 💪 Pull Requests
+        
+        * Bump actions/checkout from 5 to 6 by @dependabot[bot] in https://github.com/data-science-extensions/docstring-format-checker/pull/32
+        * Bump astral-sh/setup-uv from 6 to 7 by @dependabot[bot] in https://github.com/data-science-extensions/docstring-format-checker/pull/33
+        * Bump actions/upload-artifact from 4 to 6 by @dependabot[bot] in https://github.com/data-science-extensions/docstring-format-checker/pull/31
+        * Bump actions/setup-python from 5 to 6 by @dependabot[bot] in https://github.com/data-science-extensions/docstring-format-checker/pull/29
+        * Bump actions/download-artifact from 5 to 7 by @dependabot[bot] in https://github.com/data-science-extensions/docstring-format-checker/pull/30
+        * Standardise Dependency Versioning Across Python Versions by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/34
+        
+        
+        ### New Contributors
+        
+        * @dependabot[bot] made their first contribution in https://github.com/data-science-extensions/docstring-format-checker/pull/32
+        
+        
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.10.0...v1.10.1
+        
+        [`v1.10.0`]: https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.10.0
+        [`v1.10.1`]: https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.10.1
+        
+
+    ??? abstract "Updates"
+
+
+
 !!! info "v1.10.0"
 
     ## **v1.10.0 - Enhance Section Validation and Update Dependencies**
