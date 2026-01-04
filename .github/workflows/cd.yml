@@ -49,7 +49,7 @@ jobs:
 
       - name: Checkout Repository
         id: checkout-repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ env.GIT_BRANCH }}
 
@@ -101,7 +101,7 @@ jobs:
 
       - name: Checkout repository
         id: checkout-repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ env.GIT_BRANCH }}
 
@@ -176,7 +176,7 @@ jobs:
 
       - name: Checkout repository
         id: checkout-repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ env.GIT_BRANCH }}
 
@@ -245,7 +245,7 @@ jobs:
 
       - name: Checkout repository
         id: checkout-repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ env.GIT_BRANCH }}
 
