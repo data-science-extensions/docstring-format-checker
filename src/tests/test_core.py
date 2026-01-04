@@ -3444,7 +3444,7 @@ class TestDocstringChecker(TestCase):
             # Should have error for missing required Parameters section
             error_messages: list[str] = [error.message for error in errors]
             assert any(
-                "Missing required section: Parameters" in msg for msg in error_messages
+                "Missing required section: 'Parameters'" in msg for msg in error_messages
             ), f"Expected missing Parameters error, got: {error_messages}"
 
         finally:

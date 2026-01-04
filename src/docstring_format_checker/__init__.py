@@ -12,11 +12,12 @@ from docstring_format_checker.config import DEFAULT_CONFIG, load_config
 from docstring_format_checker.core import DocstringChecker, SectionConfig
 
 
+### Define package metadata ----
 _metadata = metadata("docstring-format-checker")
 __name__: str = _metadata["Name"]
 __version__: str = _metadata["Version"]
 __author__: str = _metadata["Author"]
-__email__: str = _metadata.get("Email", "")
+__author_email__: str = _metadata["Author-email"]
 
 __all__: list[str] = [
     "DocstringChecker",

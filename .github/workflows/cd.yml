@@ -118,7 +118,7 @@ jobs:
       - name: Check VERSION
         id: check-version
         run: |
-          if [ -z "${VERSION}" ]; then
+          if [ -z "${{ env.VERSION }}" ]; then
             echo "/$VERSION is missing. Please try again."
             exit 1
           fi
@@ -136,11 +136,11 @@ jobs:
 
       - name: Bump Version
         id: bump-version
-        run: uv version ${VERSION}
+        run: uv version ${{ env.VERSION }}
 
       - name: Update Git
         id: update-git
-        run: uv run ./src/utils/scripts.py git_update_version_cli ${VERSION}
+        run: uv run ./src/utils/scripts.py git_update_version_cli ${{ env.VERSION }}
 
       - name: Build package
         id: build-package
@@ -163,7 +163,7 @@ jobs:
 
       - name: Fix tag reference
         id: fix-tag-reference
-        run: uv run ./src/utils/scripts.py git_fix_tag_reference_cli ${VERSION}
+        run: uv run ./src/utils/scripts.py git_fix_tag_reference_cli ${{ env.VERSION }}
 
   deploy-package:
 
@@ -272,20 +272,23 @@ jobs:
 
       - name: Generate Changelog
         id: generate-changelog
+        env:
+          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+          REPOSITORY_NAME: ${{ env.REPOSITORY_NAME }}
         run: uv run ./src/utils/changelog.py
 
       - name: Commit Changelog
         id: commit-changelog
         run: |
           git add .
-          git commit --message "Update changelog to \`${VERSION}\` [skip ci]" || echo "No changes to commit"
+          git commit --message "Update changelog to \`${{ env.VERSION }}\` [skip ci]" || echo "No changes to commit"
           git push --force --no-verify
           git status
 
       - name: Build Docs
         id: build-docs
-        run: uv run ./src/utils/scripts.py build_versioned_docs_cli ${VERSION}
+        run: uv run ./src/utils/scripts.py build_versioned_docs_cli ${{ env.VERSION }}
 
       - name: Fix tag reference
         id: fix-tag-reference
-        run: uv run ./src/utils/scripts.py git_fix_tag_reference_cli ${VERSION}
+        run: uv run ./src/utils/scripts.py git_fix_tag_reference_cli ${{ env.VERSION }}
