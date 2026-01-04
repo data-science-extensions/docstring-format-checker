@@ -231,7 +231,6 @@ def check_complexity() -> None:
 def check() -> None:
     check_black()
     check_blacken_docs()
-    # check_mypy()
     check_ty()
     check_isort()
     check_codespell()
@@ -241,8 +240,8 @@ def check() -> None:
     check_complexity()
     check_docstrings()
     check_pytest()
-    check_mkdocs()
     check_build()
+    check_mkdocs()
 
 
 ## --------------------------------------------------------------------------- #
