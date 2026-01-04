@@ -9,6 +9,93 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v1.11.1"
+
+    ## **v1.11.1 - Static Type Checking and Robust Sorting**
+
+    <!-- md:tag v1.11.1 --><br>
+    <!-- md:date 2026-01-04 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v1.11.1](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.11.1) -->
+
+    ??? note "Release Notes"
+
+        ### 📃 Overview
+        
+        Introduce static type checking with Pyright and refine the section sorting logic to improve the robustness and reliability of the docstring validation process. This release also enhances the test suite with more explicit assertions and optimises the development workflow.
+        
+        
+        ### ✨ New Features
+        
+        
+        #### 🔍 Integrate Pyright Static Analysis
+        
+        Integrate `pyright` into the development workflow to ensure strict type safety across the codebase.
+        
+        - Add `pyright` to the `dev` dependency group in `pyproject.toml`.
+        - Implement the `check_pyright()` function in `src/utils/scripts.py` to perform automated static analysis.
+        - Update the `check()` function to include Pyright validation as a standard step in the project's quality assurance process.
+        
+        
+        ### 🐛 Bug Fixes
+        
+        
+        #### ⚙️ Refine Section Sorting Logic
+        
+        Improve the robustness of the section sorting mechanism when handling optional order values.
+        
+        - Update the `_parse_sections_config()` function in `config.py` to handle `None` values for section orders by defaulting to `float("inf")`. This ensures that unordered sections are consistently placed at the end of the sequence.
+        - Standardise the sorting logic within the `._build_section_patterns()` and `._build_expected_section_order()` methods in the `DocstringChecker()` class to handle optional orders gracefully.
+        
+        
+        ### ⚙️ Technical Improvements
+        
+        
+        #### 🧪 Enhance Test Assertions
+        
+        Strengthen the test suite by introducing more explicit assertions and type validations.
+        
+        - Add assertions to verify that `func_node` is an instance of the `ast.FunctionDef()` or `ast.AsyncFunctionDef()` class in various test cases.
+        - Update the `TestParameterMismatch()` class to verify that `docstring` and `error_message` are not `None` before performing string operations, resolving potential type errors and improving test reliability.
+        
+        
+        #### 🧹 Optimise Validation Workflow
+        
+        Refine the project's validation script and repository maintenance.
+        
+        - Reorder the `check()` function in `scripts.py` to execute `check_mkdocs()` after `check_build()`, ensuring that the documentation build is verified after the package build.
+        - Update the `.gitignore` file to include the `.complexipy_cache/*` pattern, preventing local cache artefacts from being tracked.
+        
+        
+        ### 💪 Pull Requests
+        
+        * Integrate Pyright and Refine Section Sorting Logic by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/36
+        
+        
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.11.0...v1.11.1
+
+    ??? abstract "Updates"
+
+        * [`e8f526e`](https://github.com/data-science-extensions/docstring-format-checker/commit/e8f526ef15933fa6f2121c8d3c464f38bab8f250): Refine section sorting and enhance test assertions<br>
+            - Update sorting logic in `_parse_sections_config()` function to handle `None` values by defaulting to `float("inf")`<br>
+            - Standardise section sorting within `._get_section_patterns()` and `._get_expected_section_order()` methods in `DocstringChecker()` class<br>
+            - Add assertions to verify `func_node` is an `ast.FunctionDef()` or `ast.AsyncFunctionDef()` class in test suites<br>
+            - Verify `docstring` and `error_message` are not `None` in `TestParameterMismatch()` class to improve type safety<br>
+            - Resolve PyRight errors
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`b9ae1da`](https://github.com/data-science-extensions/docstring-format-checker/commit/b9ae1da6c42bc69a45f4eb8b50934ee63fade27a): Clean up and reorder validation sequence<br>
+            - Remove commented-out reference to the `check_mypy()` function<br>
+            - Reorder the `check_mkdocs()` function to execute after the `check_build()` function
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`2ce144d`](https://github.com/data-science-extensions/docstring-format-checker/commit/2ce144d8737e12cfd99d90c78d2086e9c315f138): Add Pyright for static type checking<br>
+            - Add `pyright` to the `dev` dependency group in `pyproject.toml`<br>
+            - Define the `check_pyright()` function to execute code analysis<br>
+            - Update the `check()` function to call the `check_pyright()` function and standardise the validation process
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`da037b4`](https://github.com/data-science-extensions/docstring-format-checker/commit/da037b43b7c5d8ae03c0400d3239de0955d5239b): Ignore complexipy cache directory<br>
+            - Add the `.complexipy_cache/*` pattern to the `.gitignore` file to ensure local cache artefacts are not tracked in the repository.
+            (by [chrimaho](https://github.com/chrimaho))
+
+
 !!! info "v1.11.0"
 
     ## **v1.11.0 - Flexible Section Ordering and Multi-word Headers**
