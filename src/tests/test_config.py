@@ -739,3 +739,24 @@ class TestConfig(TestCase):
 
         # Should return None since no tool section exists
         assert result is None
+
+    def test_28_section_config_no_order(self) -> None:
+        """
+        Test SectionConfig without an order value.
+        """
+        config = SectionConfig(name="unordered", type="free_text", required=False)
+        assert config.order is None
+        assert config.name == "unordered"
+
+    def test_29_validate_config_order_with_unordered(self) -> None:
+        """
+        Test _validate_config_order with a mix of ordered and unordered sections.
+        """
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="s1", type="free_text"),
+            SectionConfig(name="u1", type="free_text"),
+            SectionConfig(order=2, name="s2", type="free_text"),
+            SectionConfig(name="u2", type="free_text"),
+        ]
+        # Should not raise any error
+        _validate_config_order(sections)

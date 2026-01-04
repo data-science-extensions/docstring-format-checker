@@ -37,10 +37,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/data-science-extensions/docstring-format-checker"
+Homepage = "https://data-science-extensions.com/toolboxes/docstring-format-checker"
 Documentation = "https://data-science-extensions.com/toolboxes/docstring-format-checker/latest/code/"
 Repository = "https://github.com/data-science-extensions/docstring-format-checker"
-Changelog = "https://github.com/data-science-extensions/docstring-format-checker/releases"
+Changelog = "https://data-science-extensions.com/toolboxes/docstring-format-checker/latest/usage/changelog/"
 Issues = "https://github.com/data-science-extensions/docstring-format-checker/issues"
 
 [project.scripts]

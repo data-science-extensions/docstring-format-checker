@@ -3679,6 +3679,254 @@ class TestDocstringChecker(TestCase):
 
 
 ## --------------------------------------------------------------------------- #
+##  Test Unordered Sections                                                 ####
+## --------------------------------------------------------------------------- #
+
+
+class TestUnorderedSections(TestCase):
+    """
+    !!! note "Summary"
+        Tests for sections that do not have a specified order.
+    """
+
+    def _create_unordered_checker(self) -> DocstringChecker:
+        """
+        Create a checker with some ordered and some unordered sections.
+        """
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition="note", prefix="!!!"),
+            SectionConfig(order=2, name="params", type="list_name_and_type", required=True),
+            SectionConfig(order=3, name="returns", type="list_name_and_type", required=False),
+            # Unordered sections
+            SectionConfig(
+                name="deprecation warning", type="free_text", required=False, admonition="deprecation", prefix="!!!"
+            ),
+            SectionConfig(name="todo", type="free_text", required=False, admonition="todo", prefix="!!!"),
+            SectionConfig(name="custom list", type="list_name", required=False),
+        ]
+        config = Config(global_config=GlobalConfig(), sections=sections)
+        return DocstringChecker(config)
+
+    def _check_docstring(self, checker: DocstringChecker, docstring: str) -> list[DocstringError]:
+        """
+        Helper to check a docstring by writing it to a temporary file.
+        """
+        # Indent the docstring to match the function body
+        indented_docstring: str = "\n".join(f"    {line}" if line.strip() else line for line in docstring.splitlines())
+        python_content: str = (
+            "def test_function(x: int, y: int):\n" '    """\n' f"{indented_docstring}\n" '    """\n' "    pass\n"
+        )
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(python_content)
+            temp_file.flush()
+            temp_path = Path(temp_file.name)
+
+        try:
+            return checker.check_file(str(temp_path))
+        finally:
+            temp_path.unlink()
+
+    def test_unordered_section_at_start(self) -> None:
+        """
+        Test unordered section appearing before ordered sections.
+        """
+        checker: DocstringChecker = self._create_unordered_checker()
+        docstring: str = dedent(
+            """
+            !!! deprecation "Deprecation Warning"
+                This function is deprecated.
+
+            !!! note "Summary"
+                A simple function.
+
+            Params:
+                x (int): The input.
+                y (int): Another input.
+            """
+        ).strip()
+        errors: list[DocstringError] = self._check_docstring(checker, docstring)
+        assert len(errors) == 0, f"Expected no errors, got: {[e.message for e in errors]}"
+
+    def test_unordered_section_in_middle(self) -> None:
+        """
+        Test unordered section appearing between ordered sections.
+        """
+        checker: DocstringChecker = self._create_unordered_checker()
+        docstring: str = dedent(
+            """
+            !!! note "Summary"
+                A simple function.
+
+            !!! deprecation "Deprecation Warning"
+                This function is deprecated.
+
+            Params:
+                x (int): The input.
+                y (int): Another input.
+            """
+        ).strip()
+        errors: list[DocstringError] = self._check_docstring(checker, docstring)
+        assert len(errors) == 0, f"Expected no errors, got: {[e.message for e in errors]}"
+
+    def test_unordered_section_at_end(self) -> None:
+        """
+        Test unordered section appearing after ordered sections.
+        """
+        checker: DocstringChecker = self._create_unordered_checker()
+        docstring: str = dedent(
+            """
+            !!! note "Summary"
+                A simple function.
+
+            Params:
+                x (int): The input.
+                y (int): Another input.
+
+            !!! deprecation "Deprecation Warning"
+                This function is deprecated.
+            """
+        ).strip()
+        errors: list[DocstringError] = self._check_docstring(checker, docstring)
+        assert len(errors) == 0, f"Expected no errors, got: {[e.message for e in errors]}"
+
+    def test_multiple_unordered_sections(self) -> None:
+        """
+        Test multiple unordered sections in various positions.
+        """
+        checker: DocstringChecker = self._create_unordered_checker()
+        docstring: str = dedent(
+            """
+            !!! todo "Todo"
+                Fix this later.
+
+            !!! note "Summary"
+                A simple function.
+
+            !!! deprecation "Deprecation Warning"
+                This function is deprecated.
+
+            Params:
+                x (int): The input.
+                y (int): Another input.
+
+            Custom List:
+                - Item 1
+            """
+        ).strip()
+        errors: list[DocstringError] = self._check_docstring(checker, docstring)
+        assert len(errors) == 0, f"Expected no errors, got: {[e.message for e in errors]}"
+
+    def test_unordered_section_inside_parameter(self) -> None:
+        """
+        Test unordered section appearing inside a parameter description.
+        """
+        checker: DocstringChecker = self._create_unordered_checker()
+        docstring: str = dedent(
+            """
+            !!! note "Summary"
+                A simple function.
+
+            Params:
+                x (int):
+                    The input.
+                    !!! deprecation "Deprecation Warning"
+                        This parameter is deprecated.
+                y (int): Another input.
+            """
+        ).strip()
+        errors: list[DocstringError] = self._check_docstring(checker, docstring)
+        assert len(errors) == 0, f"Expected no errors, got: {[e.message for e in errors]}"
+
+    def test_unordered_section_different_types(self) -> None:
+        """
+        Test unordered sections of different types (free_text, list_name).
+        """
+        checker: DocstringChecker = self._create_unordered_checker()
+        docstring: str = dedent(
+            """
+            !!! note "Summary"
+                A simple function.
+
+            Custom List:
+                - Item 1
+
+            Params:
+                x (int): The input.
+                y (int): Another input.
+            """
+        ).strip()
+        errors: list[DocstringError] = self._check_docstring(checker, docstring)
+        assert len(errors) == 0, f"Expected no errors, got: {[e.message for e in errors]}"
+
+    def test_unordered_section_required_error(self) -> None:
+        """
+        Test that a required unordered section still triggers error if missing.
+        """
+        sections: list[SectionConfig] = [
+            SectionConfig(order=1, name="summary", type="free_text", required=True, admonition="note", prefix="!!!"),
+            SectionConfig(name="mandatory unordered", type="free_text", required=True, admonition="info", prefix="!!!"),
+        ]
+        config = Config(global_config=GlobalConfig(), sections=sections)
+        checker: DocstringChecker = DocstringChecker(config)
+
+        docstring: str = dedent(
+            """
+            !!! note "Summary"
+                A simple function.
+            """
+        ).strip()
+        errors: list[DocstringError] = self._check_docstring(checker, docstring)
+        assert any(
+            "Missing required section: 'mandatory unordered'" in err.message for err in errors
+        ), "Expected missing mandatory unordered section error"
+
+    def test_unordered_section_case_insensitivity(self) -> None:
+        """
+        Test that unordered sections are matched case-insensitively.
+        """
+        checker: DocstringChecker = self._create_unordered_checker()
+        docstring: str = dedent(
+            """
+            !!! note "Summary"
+                A simple function.
+
+            !!! DEPRECATION "Deprecation Warning"
+                This function is deprecated.
+
+            Params:
+                x (int): The input.
+                y (int): Another input.
+            """
+        ).strip()
+        errors: list[DocstringError] = self._check_docstring(checker, docstring)
+        assert len(errors) == 0, f"Expected no errors, got: {[e.message for e in errors]}"
+
+    def test_unordered_section_does_not_affect_ordered_validation(self) -> None:
+        """
+        Test that unordered sections don't mask order errors in ordered sections.
+        """
+        checker: DocstringChecker = self._create_unordered_checker()
+        docstring: str = dedent(
+            """
+            Params:
+                x (int): The input.
+                y (int): Another input.
+
+            !!! deprecation "Deprecation Warning"
+                This function is deprecated.
+
+            !!! note "Summary"
+                A simple function.
+            """
+        ).strip()
+        errors: list[DocstringError] = self._check_docstring(checker, docstring)
+        # Summary (order 1) appears after Params (order 2)
+        assert any(
+            "Section 'Summary' appears out of order" in err.message for err in errors
+        ), "Expected out of order error for Summary section"
+
+
+## --------------------------------------------------------------------------- #
 ##  Test Parameter Type Validation                                         ####
 ## --------------------------------------------------------------------------- #
 

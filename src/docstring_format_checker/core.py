@@ -1011,7 +1011,8 @@ class DocstringChecker:
                 continue
 
             # Check if we've left the Params section (next section starts)
-            if in_params_section and re.match(r"^[ ]{0,4}[A-Z]\w+:", line):
+            # Match section names (can include spaces) followed by a colon
+            if in_params_section and re.match(r"^[ ]{0,4}[A-Z][\w\s]+:", line):
                 break
 
             # Extract parameter name
@@ -1495,7 +1496,11 @@ class DocstringChecker:
                 List of tuples containing (pattern, section_name).
         """
         section_patterns: list[tuple[str, str]] = []
-        for section in sorted(self.sections_config, key=lambda x: x.order):
+        # Sort sections that have an order, then append those that don't
+        ordered_sections = sorted([s for s in self.sections_config if s.order is not None], key=lambda x: x.order)
+        unordered_sections: list[SectionConfig] = [s for s in self.sections_config if s.order is None]
+
+        for section in ordered_sections + unordered_sections:
             if (
                 section.type == "free_text"
                 and isinstance(section.admonition, str)
@@ -1563,7 +1568,10 @@ class DocstringChecker:
             (list[str]):
                 List of section names in expected order.
         """
-        expected_order: list[str] = [s.name.title() for s in sorted(self.sections_config, key=lambda x: x.order)]
+        expected_order: list[str] = [
+            s.name.title()
+            for s in sorted([s for s in self.sections_config if s.order is not None], key=lambda x: x.order)
+        ]
         expected_order.extend(
             [
                 "Summary",
@@ -2043,9 +2051,10 @@ class DocstringChecker:
 
         # Non-admonition sections (must not be indented)
         if not full_line.startswith((" ", "\t")):
-            simple_section_match: Optional[re.Match[str]] = re.match(r"^(\w+):?$", stripped_line)
+            # Match section names (can include spaces) followed by an optional colon
+            simple_section_match: Optional[re.Match[str]] = re.match(r"^([A-Z][\w\s]+):?$", stripped_line)
             if simple_section_match:
-                section_name: str = simple_section_match.group(1)
+                section_name: str = simple_section_match.group(1).strip()
                 # Check if it's a known section
                 return any(s.name.lower() == section_name.lower() for s in self.sections_config)
 
@@ -2080,9 +2089,10 @@ class DocstringChecker:
 
         # Non-admonition sections (must not be indented)
         if not full_line.startswith((" ", "\t")):
-            simple_section_match: Optional[re.Match[str]] = re.match(r"^(\w+):?$", stripped_line)
+            # Match section names (can include spaces) followed by an optional colon
+            simple_section_match: Optional[re.Match[str]] = re.match(r"^([A-Z][\w\s]+):?$", stripped_line)
             if simple_section_match:
-                section_name: str = simple_section_match.group(1)
+                section_name: str = simple_section_match.group(1).strip()
                 # Check if it's a known section
                 potential_section: Optional[SectionConfig] = next(
                     (s for s in self.sections_config if s.name.lower() == section_name.lower()), None

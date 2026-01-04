@@ -43,6 +43,7 @@ A powerful Python CLI tool that validates docstring formatting and completeness 
 
 - 🔍 **AST-based parsing** - Robust code analysis without regex fragility
 - ⚙️ **Configurable validation** - Four section types with TOML-based configuration
+- 📚 **Flexible section ordering** - Support for unordered "floating" sections
 - 📁 **Hierarchical config discovery** - Automatic `pyproject.toml` detection
 - 🎨 **Rich terminal output** - Beautiful colored output and error tables
 - 🚀 **Dual CLI entry points** - Use `docstring-format-checker` or `dfc`
@@ -70,11 +71,11 @@ dfc config-example
 
 For reference, these URL's are used:
 
-| Type           | Source | URL                                                                 |
-| -------------- | ------ | ------------------------------------------------------------------- |
-| Git Repo       | GitHub | https://github.com/data-science-extensions/docstring-format-checker |
-| Python Package | PyPI   | https://pypi.org/project/docstring-format-checker                   |
-| Package Docs   | Pages  | https://data-science-extensions.com/docstring-format-checker        |
+| Type           | Source | URL                                                                    |
+| -------------- | ------ | ---------------------------------------------------------------------- |
+| Git Repo       | GitHub | https://github.com/data-science-extensions/docstring-format-checker    |
+| Python Package | PyPI   | https://pypi.org/project/docstring-format-checker                      |
+| Package Docs   | Pages  | https://data-science-extensions.com/toolboxes/docstring-format-checker |
 
 
 ### Section Types
@@ -91,7 +92,9 @@ Configure validation for four types of docstring sections:
 
 ### Configuration
 
-Create a `pyproject.toml` with your validation rules:
+Create a `pyproject.toml` with your validation rules. The `order` attribute is optional; sections without an order (like "deprecation warning") can appear anywhere in the docstring.
+
+You can utilise a layout in separate blocks like this:
 
 ```toml
 [tool.dfc]
@@ -110,19 +113,42 @@ name = "params"
 type = "list_name_and_type"
 required = true
 
+# Unordered section - can appear anywhere
+[[tool.dfc.sections]]
+name = "deprecation warning"
+type = "free_text"
+admonition = "deprecation"
+prefix = "!!!"
+required = false
+
 [[tool.dfc.sections]]
 order = 3
 name = "returns"
 type = "list_name_and_type"
 required = false
-
-[[tool.dfc.sections]]
-order = 4
-name = "raises"
-type = "list_type"
-required = false
 ```
 
+Or like this in a single block:
+
+```toml
+[tool.dfc]                                                                                                                                                                                             │
+# or [tool.docstring-format-checker]                                                                                                                                                                   │
+allow_undefined_sections = false                                                                                                                                                                       │
+require_docstrings = true                                                                                                                                                                              │
+check_private = true                                                                                                                                                                                   │
+validate_param_types = true                                                                                                                                                                            │
+optional_style = "validate"  # "silent", "validate", or "strict"                                                                                                                                       │
+sections = [                                                                                                                                                                                           │
+    { order = 1, name = "summary",  type = "free_text",          required = true, admonition = "note", prefix = "!!!" },                                                                               │
+    { order = 2, name = "details",  type = "free_text",          required = false, admonition = "abstract", prefix = "???+" },                                                                         │
+    { order = 3, name = "params",   type = "list_name_and_type", required = false },                                                                                                                   │
+    { order = 4, name = "raises",   type = "list_type",          required = false },                                                                                                                   │
+    { order = 5, name = "returns",  type = "list_name_and_type", required = false },                                                                                                                   │
+    { order = 6, name = "yields",   type = "list_type",          required = false },                                                                                                                   │
+    { order = 7, name = "examples", type = "free_text",          required = false, admonition = "example", prefix = "???+" },                                                                          │
+    { order = 8, name = "notes",    type = "free_text",          required = false, admonition = "note", prefix = "???" },                                                                              │
+]
+```
 
 ### Installation
 
