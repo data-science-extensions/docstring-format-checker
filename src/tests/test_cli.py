@@ -1253,7 +1253,7 @@ class TestCLI(TestCase):
 
             result: Result = self.runner.invoke(app, [temp_file1_name, temp_file2_name])
             assert result.exit_code == 1
-            assert "Missing required section: summary" in clean(result.output)
+            assert "Missing required section: 'summary'" in clean(result.output)
 
         finally:
             Path(temp_file1_name).unlink(missing_ok=True)
