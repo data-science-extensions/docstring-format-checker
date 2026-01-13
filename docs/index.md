@@ -1,4 +1,4 @@
 ---
 template: home.html
-title: toolbox-python
+title: docstring-format-checker
 ---

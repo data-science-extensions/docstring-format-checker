@@ -17,6 +17,7 @@ theme:
   name: material
   favicon: ./assets/icons/1589516.svg
   coverpage_icon: ./assets/icons/1589516.svg
+  coverpage_icon_source: https://www.flaticon.com/free-icon/coding_1589516
   custom_dir: docs/overrides
   palette:
     primary: blue grey
