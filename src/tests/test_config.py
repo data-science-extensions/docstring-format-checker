@@ -112,6 +112,85 @@ class TestConfig(TestCase):
             # Clean up
             config_file.unlink(missing_ok=True)
 
+    def test_02b_load_config_multiple_sections_no_order(self) -> None:
+        """
+        Test loading configuration with multiple sections that don't have an order value.
+        """
+
+        toml_content: str = dedent(
+            """
+            [tool.dfc]
+
+            [[tool.dfc.sections]]
+            name = "summary"
+            type = "free_text"
+            order = 1
+            required = true
+
+            [[tool.dfc.sections]]
+            name = "deprecation"
+            type = "free_text"
+            required = false
+
+            [[tool.dfc.sections]]
+            name = "warning"
+            type = "free_text"
+            required = false
+            """
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            config_file: Path = temp_path.joinpath("test_config.toml")
+            config_file.write_text(toml_content)
+
+            # This should not raise InvalidConfigError_DuplicateOrderValues
+            config: Config = load_config(str(config_file))
+            assert len(config.sections) == 3
+            assert config.sections[0].name == "summary"
+
+            # Sections without order should be at the end due to float('inf') sorting
+            unordered_names = [s.name for s in config.sections[1:]]
+            assert "deprecation" in unordered_names
+            assert "warning" in unordered_names
+
+            # Clean up
+            config_file.unlink(missing_ok=True)
+
+    def test_02c_load_config_explicit_duplicate_order(self) -> None:
+        """
+        Test that explicitly providing duplicate order values still raises an error.
+        """
+
+        toml_content: str = dedent(
+            """
+            [tool.dfc]
+
+            [[tool.dfc.sections]]
+            name = "summary"
+            type = "free_text"
+            order = 1
+            required = true
+
+            [[tool.dfc.sections]]
+            name = "other"
+            type = "free_text"
+            order = 1
+            required = false
+            """
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            config_file: Path = temp_path.joinpath("test_config.toml")
+            config_file.write_text(toml_content)
+
+            with raises(InvalidConfigError_DuplicateOrderValues):
+                load_config(str(config_file))
+
+            # Clean up
+            config_file.unlink(missing_ok=True)
+
     def test_03_load_config_alternative_table_name(self) -> None:
         """
         Test loading configuration from an alternative TOML table name.

@@ -492,7 +492,7 @@ def _parse_sections_config(tool_config: dict[str, Any]) -> list[SectionConfig]:
                 admonition_value = False  # Use SectionConfig default
 
             section = SectionConfig(
-                order=section_data.get("order", 0),
+                order=section_data.get("order"),
                 name=section_data.get("name", ""),
                 type=section_data.get("type", ""),
                 admonition=admonition_value,
