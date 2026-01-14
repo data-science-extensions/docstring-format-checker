@@ -9,6 +9,84 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v1.11.2"
+
+    ## **v1.11.2 - Doctest Utilities and Configuration Refinement**
+
+    <!-- md:tag v1.11.2 --><br>
+    <!-- md:date 2026-01-14 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v1.11.2](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.11.2) -->
+
+    ??? note "Release Notes"
+
+        ### 📃 Overview
+        
+        Introduce new utility functions for executing doctests and refine the configuration loading process to better handle unordered sections. This release also standardises documentation metadata and improves the reliability of the coverage reporting workflow.
+        
+        
+        ### ✨ New Features
+        
+        
+        #### 🔍 Integrate Doctest Checking Functions
+        
+        Introduce automated doctest execution to verify code examples within docstrings.
+        
+        - Implement the `check_doctest()` function in `src/utils/scripts.py` to run doctests across all Python files in the package.
+        - Implement the `check_doctest_module()` function to target specific modules for doctest validation.
+        - Implement the `check_doctest_cli()` function to provide a command-line interface for module-specific doctest checking.
+        
+        
+        ### 🐛 Bug Fixes
+        
+        
+        #### ⚙️ Refine Configuration Order Validation
+        
+        Resolve an issue where multiple sections without an explicit order value caused duplicate key errors.
+        
+        - Update the `SectionConfig()` class to consistently allow `None` for the `order` attribute.
+        - Update the `_parse_sections_config()` function in `config.py` to remove the default value of `0` when extracting `order` from configuration data.
+        - Ensure that sections without an explicit order are correctly sorted to the end of the validation sequence.
+        
+        
+        ### ⚙️ Technical Improvements
+        
+        
+        #### 🚀 Enhance Project Workflow
+        
+        Improve the robustness of the development and documentation workflows.
+        
+        - Update the `git_add_coverage_report()` function to use the `--force` flag when adding the coverage report directory, ensuring reports are captured regardless of ignore rules.
+        - Fix typographical errors and standardise the project title to `docstring-format-checker` across documentation files.
+        - Refine the documentation home page to use a dedicated `coverpage_icon_source` variable in `mkdocs.yaml` for better maintainability.
+        
+        
+        ### 💪 Pull Requests
+        
+        * Enhance Configuration Handling for non-Ordered Sections by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/37
+        
+        
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.11.1...v1.11.2
+
+    ??? abstract "Updates"
+
+        * [`3a64287`](https://github.com/data-science-extensions/docstring-format-checker/commit/3a64287cfb6b579b641920d676e82407fef9557f): Add doctest checking functions<br>
+            - Introduce `check_doctest()` function to run doctest on all Python files.<br>
+            - Introduce `check_doctest_module(module_name: str)` function to run doctest on a specific module.<br>
+            - Introduce `check_doctest_cli()` function to handle command line interface for doctest checking.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`c34fa7d`](https://github.com/data-science-extensions/docstring-format-checker/commit/c34fa7df275ba3e5d5fe07f8f261425d4610f0cb): Fix typos
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`dd78484`](https://github.com/data-science-extensions/docstring-format-checker/commit/dd78484daf2503da93c1ceca364f73a5bfa772e0): Refine section order handling in configuration loading<br>
+            - Update `order` assignment in `SectionConfig` to allow None values.<br>
+            - Add tests for loading configurations with multiple sections without order.<br>
+            - Implement test for handling explicit duplicate order values.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`ca6646e`](https://github.com/data-science-extensions/docstring-format-checker/commit/ca6646ed424104752156b64a36cf15204e7f9ad9): Force git to add coverage report during CD workflow<br>
+            - Update the command to force add the coverage report directory using `git add ./docs/code/coverage/ --force`<br>
+            - Ensure the coverage report is committed without verification
+            (by [chrimaho](https://github.com/chrimaho))
+
+
 !!! info "v1.11.1"
 
     ## **v1.11.1 - Static Type Checking and Robust Sorting**
