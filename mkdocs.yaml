@@ -56,6 +56,7 @@ nav:
       - Config: code/config.md
       - Core: code/core.md
       - Exceptions: code/exceptions.md
+  - Data Science Extensions: https://data-science-extensions.com/
 
 
 markdown_extensions:
