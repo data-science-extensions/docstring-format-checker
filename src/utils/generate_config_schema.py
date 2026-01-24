@@ -23,7 +23,7 @@ import json
 import os
 import sys
 from dataclasses import MISSING, fields
-from functools import lru_cache
+from functools import cached_property
 from pathlib import Path
 from typing import Any, Literal, Self, Union, get_args, get_origin
 
@@ -74,8 +74,7 @@ class SchemaGeneratorMixin:
 
     schema: dict[str, Any] = {}
 
-    @property
-    @lru_cache
+    @cached_property
     def package_info(self) -> dict[str, Any]:
         with open(file=PYPROJECT_TOML_LOCATION, mode="rb") as f:
             pyproject_data: dict[str, Any] = tomllib.load(f)
