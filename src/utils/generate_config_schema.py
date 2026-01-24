@@ -21,7 +21,7 @@
 # ## Python StdLib Imports ----
 import json
 import os
-import tomllib
+import sys
 from dataclasses import MISSING, fields
 from functools import lru_cache
 from pathlib import Path
@@ -32,6 +32,14 @@ import black
 
 # ## Local First Party Imports ----
 from docstring_format_checker.config import GlobalConfig, SectionConfig
+
+
+if sys.version_info >= (3, 11):
+    # ## Python StdLib Imports ----
+    import tomllib
+else:
+    # ## Python Third Party Imports ----
+    import tomli as tomllib
 
 
 ## --------------------------------------------------------------------------- #

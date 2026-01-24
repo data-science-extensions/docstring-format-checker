@@ -53,5 +53,4 @@ jobs:
       - name: Generate Config Schemas
         run: uv run ./src/utils/generate_config_schema.py
       - name: Check for Schema Changes
-        if: matrix.python-version >= '3.11'
         run: git diff --exit-code src/schemas/json/ || (echo "Schemas have changed. Please commit the updated schema files." && exit 1)
