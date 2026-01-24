@@ -204,7 +204,7 @@ class SectionConfig:
         default="",
         metadata={
             "title": "Message",
-            "description": "Optional message for validation errors",
+            "description": "Optional message for validation errors.",
         },
     )
 
