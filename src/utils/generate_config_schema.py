@@ -131,11 +131,11 @@ class DFCSchemaGenerator(SchemaGeneratorMixin):
                 self.schema["properties"][field.name]["description"] = field.metadata["description"]
 
             # Add type, handling Literal types separately
-            if field.type.__name__ == "Literal":
+            if get_origin(field.type) is Literal:
                 self.schema["properties"][field.name]["type"] = "string"
-                self.schema["properties"][field.name]["enum"] = list(field.type.__args__)
+                self.schema["properties"][field.name]["enum"] = list(get_args(field.type))
             else:
-                typ = field.type.__name__
+                typ: str = getattr(field.type, "__name__", str(field.type))
                 self.schema["properties"][field.name]["type"] = TYPE_MAP.get(typ, typ)
 
             # Add default if available
