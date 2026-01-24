@@ -71,7 +71,10 @@
                     "order": {
                         "title": "Order",
                         "description": "Order of the section in the docstring.",
-                        "type": "integer",
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
                         "default": null
                     },
                     "admonition": {
