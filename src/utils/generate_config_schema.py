@@ -208,12 +208,18 @@ class DFCSchemaGenerator(SchemaGeneratorMixin):
 
             elif get_origin(field.type) is Union:
 
-                # Union types with multiple arguments are treated as an array of possible types
-                self.schema["properties"]["sections"]["items"]["properties"][field.name]["type"] = []
+                # Union types with multiple arguments are treated as an array of possible types.
+                # If NoneType is present in the union, emit "null" instead of "NoneType".
+                union_types: list[str] = []
+                has_none_type = False
                 for arg in get_args(field.type):
-                    self.schema["properties"]["sections"]["items"]["properties"][field.name]["type"].append(
-                        TYPE_MAP.get(arg.__name__, arg.__name__)
-                    )
+                    if arg is type(None):
+                        has_none_type = True
+                        continue
+                    union_types.append(TYPE_MAP.get(arg.__name__, arg.__name__))
+                if has_none_type:
+                    union_types.append("null")
+                self.schema["properties"]["sections"]["items"]["properties"][field.name]["type"] = union_types
 
             else:
 
