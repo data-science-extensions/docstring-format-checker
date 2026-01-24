@@ -18,6 +18,9 @@
 ## --------------------------------------------------------------------------- #
 
 
+# ## Future Python Library Imports ----
+from __future__ import annotations
+
 # ## Python StdLib Imports ----
 import json
 import os
@@ -25,7 +28,7 @@ import sys
 from dataclasses import MISSING, fields
 from functools import cached_property
 from pathlib import Path
-from typing import Any, Literal, Self, Union, get_args, get_origin
+from typing import Any, Literal, Union, get_args, get_origin
 
 # ## Python Third Party Imports ----
 import black
@@ -95,7 +98,7 @@ class SchemaGeneratorMixin:
 
 class DFCSchemaGenerator(SchemaGeneratorMixin):
 
-    def generate_schema_headers(self) -> Self:
+    def generate_schema_headers(self) -> DFCSchemaGenerator:
         self.schema: dict[str, Any] = {
             "$schema": "http://json-schema.org/draft-07/schema#",
             "$id": "https://json.schemastore.org/partial-dfc.json",
@@ -107,7 +110,7 @@ class DFCSchemaGenerator(SchemaGeneratorMixin):
         # Return self for chaining
         return self
 
-    def generate_schema_global_properties(self) -> Self:
+    def generate_schema_global_properties(self) -> DFCSchemaGenerator:
 
         # Extract GlobalConfig fields
         global_fields = fields(GlobalConfig)
@@ -144,7 +147,7 @@ class DFCSchemaGenerator(SchemaGeneratorMixin):
         # Return self for chaining
         return self
 
-    def generate_schema_section_properties(self) -> Self:
+    def generate_schema_section_properties(self) -> DFCSchemaGenerator:
 
         # Extract SectionConfig fields
         section_fields = fields(SectionConfig)
@@ -248,7 +251,7 @@ class DFCSchemaGenerator(SchemaGeneratorMixin):
 
 class PyprojectSchemaGenerator(SchemaGeneratorMixin):
 
-    def generate_schema(self) -> Self:
+    def generate_schema(self) -> PyprojectSchemaGenerator:
         self.schema = {
             "properties": {
                 "tool": {
