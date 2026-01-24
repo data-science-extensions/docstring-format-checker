@@ -35,11 +35,16 @@ theme:
     - toc.follow
     - content.action.edit
     - content.action.view
+    - content.code.select
+    - content.code.copy
+    - content.code.annotate
   logo: ./assets/icons/1589516.svg
   icon:
     repo: material/github
     edit: material/file-edit-outline
     view: material/file-eye-outline
+  font:
+    code: Consolas, 'Courier New', monospace
 
 hooks:
   - docs/overrides/hooks/shortcodes.py
