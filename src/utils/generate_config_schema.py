@@ -49,7 +49,7 @@ else:
 
 PYPROJECT_TOML_LOCATION: Path = Path(__file__).parent.parent.parent.joinpath("pyproject.toml")
 SCHEMA_OUTPUT_LOCATION: Path = Path(__file__).parent.parent.joinpath("schemas").joinpath("json")
-VERBOSE: bool = bool(os.environ.get("VERBOSE") or False)
+VERBOSE: bool = bool(os.environ.get("VERBOSE", False))
 TYPE_MAP: dict[str, str] = {
     "str": "string",
     "int": "integer",
