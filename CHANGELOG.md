@@ -9,6 +9,157 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v1.11.3"
+
+    ## **v1.11.3**
+
+    <!-- md:tag v1.11.3 --><br>
+    <!-- md:date 2026-01-24 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v1.11.3](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.11.3) -->
+
+    ??? note "Release Notes"
+
+        ### 📃 Overview
+        
+        Introduce a comprehensive JSON Schema generation pipeline to automate the validation of `pyproject.toml` configurations. This release also enhances the configuration models with rich metadata for improved IDE support and refines the CI workflow to ensure schema integrity across the codebase.
+        
+        
+        ### ✨ New Features
+        
+        
+        #### 🏗️ Implement JSON Schema Generation Pipeline
+        
+        Introduce the `DFCSchemaGenerator()` and `PyprojectSchemaGenerator()` classes to automatically generate JSON schemas from internal Python configuration models. This ensures that the configuration options are always synchronised with the current implementation.
+        
+        
+        ### ⚙️ Technical Improvements
+        
+        
+        #### 📝 Enhance Configuration Metadata
+        
+        Extend the `GlobalConfig()` and `SectionConfig()` dataclasses in `config.py` with descriptive metadata using the `field()` function. This enables modern IDEs such as VS Code to provide real-time tooltips and autocomplete for the `[tool.dfc]` section in `pyproject.toml`.
+        
+        
+        #### 🛡️ Integrate Schema Integrity Workflow in CI
+        
+        Update the CI pipeline in `ci.yml` to automatically generate and verify JSON schemas. The workflow now ensures that any changes to configuration models are reflected in the generated schemas, preventing documentation drift.
+        
+        
+        #### ⚙️ Refine Schema Generator Robustness
+        
+        Improve the reliability of the `generate_config_schema.py` utility with several robust enhancements.
+        
+        - Handle `Optional` and `Union` types more effectively, ensuring correct mapping to JSON Schema type arrays and `null` values.
+        - Standardise the detection of `Literal` types using the `get_origin()` function.
+        - Optimise package information retrieval by replacing the `lru_cache()` decorator with the `cached_property()` decorator for better performance.
+        - Implement conditional imports for `tomllib` to maintain compatibility with Python versions below 3.11 using the `tomli` package.
+        
+        
+        #### 🐛 Fix Documentation and Formatting
+        
+        Resolve issues with broken URLs and standardise formatting across documentation files to improve clarity and maintainability.
+        
+        
+        ### 📙 Documentation
+        
+        
+        #### 📘 Document the JSON Schema System
+        
+        Initialise a comprehensive `README.md` in the `src/schemas/json/` directory to guide developers on how to enable and maintain JSON Schema validation for their local project configurations.
+        
+        
+        ### 💪 Pull Requests
+        
+        * Introduce automated JSON Schema generation for `pyproject.toml` configuration validation by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/38
+        
+        
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.11.2...v1.11.3
+        
+
+    ??? abstract "Updates"
+
+        * [`fb82545`](https://github.com/data-science-extensions/docstring-format-checker/commit/fb8254590c62c2c38eceaac7f581e1ceba93fdda): Refactor type hints for schema generator methods<br>
+            - Update return type hints from `Self` to specific generator classes.<br>
+            - Improve clarity and type safety in method signatures.<br>
+            - Ensure consistency across schema generation methods.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`d84f64d`](https://github.com/data-science-extensions/docstring-format-checker/commit/d84f64d6c4934e20cda28457cffe57eb6fc1c218): Fix broken URLs<br>
+            The markdown link paths use incorrect relative paths. Since this README is at `src/schemas/json/README.md`, the correct relative paths should be `partial-dfc.json` (for the file in the same directory) and `pyproject.json` (also in the same directory), or if absolute paths from the repo root are desired, they would work as-is on GitHub. However, the current `src/schemas/json/` prefix suggests an absolute path from root was intended, which works on GitHub but not in all markdown viewers.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`0180aed`](https://github.com/data-science-extensions/docstring-format-checker/commit/0180aed366b015ba0d546267efe055089e02c7a4): Update src/utils/generate_config_schema.py<br>
+            The condition `if field.default is not None` will incorrectly exclude fields with a `False` or `0` default value, which are valid defaults that should be included in the schema. This should be `if field.default is not MISSING` to properly check whether a field has a default value, consistent with the approach used in `generate_schema_section_properties` at line 217.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`2ffcd75`](https://github.com/data-science-extensions/docstring-format-checker/commit/2ffcd7502d1b79ceb1e3435e008bb7ad59649b86): Fix formatting<br>
+            Inconsistent punctuation in description fields. Most descriptions end with a period (e.g., lines 10, 16, 22, 28, 34, 57, 62, 73, 88, 94), but the description on line 100 does not. For consistency, the description should end with a period: "Optional message for validation errors."
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`43b66dc`](https://github.com/data-science-extensions/docstring-format-checker/commit/43b66dc65fc4e702992e8ad4f59e6e99d121850a): Replace `lru_cache` with `cached_property` for package info retrieval<br>
+            - Improve efficiency by using `cached_property` decorator<br>
+            - Update import statement for `cached_property` from `functools`
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`68bac8b`](https://github.com/data-science-extensions/docstring-format-checker/commit/68bac8b554f42ce0679680162799aa104067b3cd): Fix broken URLs<br>
+            The markdown link path `src/utils/generate_config_schema.py` is incorrect. Since this README is located at `src/schemas/json/README.md`, the relative path to the script should be `../../utils/generate_config_schema.py`. The current path will not resolve correctly when viewing the README on GitHub or in most markdown viewers.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`2226ba1`](https://github.com/data-science-extensions/docstring-format-checker/commit/2226ba1783d90f39cc4e7f0361bbce719d405d77): Fix formatting<br>
+            Inconsistent punctuation in description. All other field descriptions in this class and in `GlobalConfig` end with a period. For consistency, this should be "Optional message for validation errors."
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`74f680d`](https://github.com/data-science-extensions/docstring-format-checker/commit/74f680d4234278bce06b4fbf092c859a2ed1afd4): Better handle instances where there is an array of types<br>
+            When handling Union types with NoneType (lines 200-207), the code doesn't filter out `NoneType` from the resulting type array. This means for a Union like `Union[bool, str, None]`, the schema will include `"type": ["boolean", "string", "NoneType"]` instead of the correct `["boolean", "string", "null"]`. The code should skip NoneType when building the type array and append `"null"` instead, or handle it similarly to the Optional case.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`12ec899`](https://github.com/data-science-extensions/docstring-format-checker/commit/12ec899330184cfb2105170dbd266bc63993306c): Update order property type to allow null values<br>
+            Setting `"default": null` in JSON Schema for an integer field is semantically incorrect. In JSON Schema, `null` is not the same as undefined or omitted. For optional fields (like `Optional[int]`), the schema should either omit the default key entirely, or if the Python default is truly None, the schema type should be `["integer", "null"]` to allow null values. The current configuration with `"type": "integer"` and `"default": null` will fail validation.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`c2eed4f`](https://github.com/data-science-extensions/docstring-format-checker/commit/c2eed4fb87038db3c8f6d9b6f44e9d6362ad8bc1): Better handle the `VERBOSE` constant<br>
+            The expression `bool(os.environ.get("VERBOSE") or False)` is redundant. Since `os.environ.get("VERBOSE")` returns either a string (which is truthy even if it's an empty string) or None, the `or False` part has no effect, and wrapping in `bool()` is unnecessary. The cleaner approach would be `bool(os.environ.get("VERBOSE"))` or to check for a specific value like `os.environ.get("VERBOSE", "").lower() in ("1", "true", "yes")`.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`582910d`](https://github.com/data-science-extensions/docstring-format-checker/commit/582910dd8f5766a309239e8645f54ffdc2998da4): Make the handling of `Optional` types more robust<br>
+            For Optional types (Union with None), the schema generation only extracts the non-None type (lines 189-198) but then still assigns the Python `None` default at line 218. This creates invalid JSON schemas where `"type": "integer"` is paired with `"default": null`. For Optional types, the JSON Schema type should be an array like `["integer", "null"]` to allow null values, or the default should be omitted if the field is truly optional in the schema.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`b1eac01`](https://github.com/data-science-extensions/docstring-format-checker/commit/b1eac01537b135d2ce0e11dbd9a27a7a4f4de0d5): Make name extraction more robust<br>
+            Inconsistent method for detecting Literal types. This code uses `field.type.__name__ == "Literal"` which checks the `__name__` attribute directly, while the section properties method (line 181) uses `get_origin(field.type) is Literal`. The approach at line 126 is fragile and will fail if the type annotation doesn't have a `__name__` attribute. Both methods should use `get_origin()` for consistency and robustness.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`0c8af62`](https://github.com/data-science-extensions/docstring-format-checker/commit/0c8af62ec4d4cc19f9d48e1c14ac8b03ded49680): Update schema change check for Python version compatibility<br>
+            - Replace `tomllib` import with conditional import based on Python version<br>
+            - Ensure compatibility with Python versions below 3.11 by using `tomli` instead
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`2060b1f`](https://github.com/data-science-extensions/docstring-format-checker/commit/2060b1fb7d70a52c22a32225ab60d3a7538e87d7): Update schema change check for Python version<br>
+            - Change the condition for checking schema changes to require Python version 3.11 or higher.<br>
+            - Update the line: `if: matrix.python-version >= '3.10'` to `if: matrix.python-version >= '3.11'`.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`6c1e5cf`](https://github.com/data-science-extensions/docstring-format-checker/commit/6c1e5cff7b5607d7d2e10e0ac77b1456cc21d198): Add conditional check for schema changes in CI workflow<br>
+            - Include condition to check for schema changes only if Python version is 3.10 or higher.<br>
+            - Run `git diff --exit-code src/schemas/json/` to verify schema integrity.<br>
+            - Prompt user to commit updated schema files if changes are detected.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`9c9d36d`](https://github.com/data-science-extensions/docstring-format-checker/commit/9c9d36d1d5fa44c72a22bb370dcbe08d8d1e865a): Add README for JSON Schema of pyproject.toml<br>
+            - Provide an overview of JSON Schema validation for `pyproject.toml` files.<br>
+            - Describe the automated schema generation process using the `src/utils/generate_config_schema.py` script.<br>
+            - Explain the integration of schema generation into the CI workflow.<br>
+            - List the generated schema files and their purposes.<br>
+            - Include instructions for local validation in VS Code.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`d370dd8`](https://github.com/data-science-extensions/docstring-format-checker/commit/d370dd8b39f4d0ddc7c229be3e0746a945d78b00): Add steps to generate and check configuration schemas during CI workflow<br>
+            - Include step to generate config schemas using `uv run ./src/utils/generate_config_schema.py`<br>
+            - Add step to check for schema changes with `git diff --exit-code src/schemas/json/`<br>
+            - Prompt to commit updated schema files if changes are detected
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`7af8c49`](https://github.com/data-science-extensions/docstring-format-checker/commit/7af8c49d468bf32e98de87a2cd470a40cc3a6767): Add JSON Schema files for docstring-format-checker configuration<br>
+            - Introduce `partial-dfc.json` schema for validating docstring configurations.<br>
+            - Create `pyproject.json` schema to reference the partial schema.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`c03446c`](https://github.com/data-science-extensions/docstring-format-checker/commit/c03446c395ee1c9d724dd3cbb8ce701c6815be67): Add `generate_config_schema.py` for JSON Schema generation<br>
+            - Implement `SchemaGeneratorMixin` class for shared functionality.<br>
+            - Create `DFCSchemaGenerator` class to generate schema for `docstring-format-checker`.<br>
+            - Add `PyprojectSchemaGenerator` class for `pyproject.toml` schema generation.<br>
+            - Include methods to write generated schemas to files.<br>
+            - Define constants for file paths and type mappings.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`357e167`](https://github.com/data-science-extensions/docstring-format-checker/commit/357e167f9f15c6d986b07bb45cd3218b1e6dbda2): Enhance configuration data classes with metadata fields<br>
+            - Add metadata to `GlobalConfig` fields for better documentation.<br>
+            - Introduce metadata to `SectionConfig` fields for improved clarity.<br>
+            - Utilise `field()` from `dataclasses` to define default values and descriptions.
+            (by [chrimaho](https://github.com/chrimaho))
+
+
 !!! info "v1.11.2"
 
     ## **v1.11.2 - Doctest Utilities and Configuration Refinement**
