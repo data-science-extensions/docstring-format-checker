@@ -330,6 +330,20 @@ jobs:
 ```
 
 
+#### Integration with Pre-commit
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+-   repo: local
+    rev: "1.11.3"
+    hooks:
+    -   id: docstring-format-checker
+        name: Docstring Format Checker
+        entry: dfc check
+```
+
+
 ### Example Output
 
 ```
