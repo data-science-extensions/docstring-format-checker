@@ -227,7 +227,7 @@ You can install and use this package multiple ways by using any of your preferre
     ```toml
     [project]
     dependencies = [
-        "docstring-format-checker==0.*",
+        "docstring-format-checker==1.*",
     ]
     ```
 
@@ -241,7 +241,7 @@ You can install and use this package multiple ways by using any of your preferre
 2. Or just run this:
 
     ```sh
-    poetry add "docstring-format-checker==0.*"
+    poetry add "docstring-format-checker==1.*"
     poetry sync
     poetry install
     ```
@@ -254,7 +254,7 @@ You can install and use this package multiple ways by using any of your preferre
     ```toml
     [project]
     dependencies = [
-        "docstring-format-checker==0.*",
+        "docstring-format-checker==1.*",
     ]
     ```
 
@@ -267,14 +267,14 @@ You can install and use this package multiple ways by using any of your preferre
 2. Or run this:
 
     ```sh
-    uv add "docstring-format-checker==0.*"
+    uv add "docstring-format-checker==1.*"
     uv sync
     ```
 
 3. Or just run this:
 
     ```sh
-    uv pip install "docstring-format-checker==0.*"
+    uv pip install "docstring-format-checker==1.*"
     ```
 
 
