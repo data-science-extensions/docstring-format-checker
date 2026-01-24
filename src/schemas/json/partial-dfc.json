@@ -100,7 +100,7 @@
                     },
                     "message": {
                         "title": "Message",
-                        "description": "Optional message for validation errors",
+                        "description": "Optional message for validation errors.",
                         "type": "string",
                         "default": ""
                     }
