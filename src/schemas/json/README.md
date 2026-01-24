@@ -19,7 +19,7 @@ To support `[tool.dfc]` in the `pyproject.toml` file, a JSON Schema fragment is 
 
 ### ⚙️ Automated Generation
 
-Utilise the [src/utils/generate_config_schema.py](src/utils/generate_config_schema.py) script to generate and update the schema files. This script uses introspection on the `GlobalConfig()` and `SectionConfig()` classes to ensure the schema always reflects the actual code structure.
+Utilise the [src/utils/generate_config_schema.py](../../utils/generate_config_schema.py) script to generate and update the schema files. This script uses introspection on the `GlobalConfig()` and `SectionConfig()` classes to ensure the schema always reflects the actual code structure.
 
 Run the following command to regenerate the schemas:
 
