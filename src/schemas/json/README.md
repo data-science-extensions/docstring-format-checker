@@ -41,8 +41,8 @@ This generation process is integrated into the project's CI workflow, as defined
 
 Two primary schema files are generated in this directory:
 
-- [src/schemas/json/partial-dfc.json](src/schemas/json/partial-dfc.json): Contains the core schema definitions for the `dfc` tool configuration. This is the file intended for submission to SchemaStore.org.
-- [src/schemas/json/pyproject.json](src/schemas/json/pyproject.json): A wrapper schema used for local testing and validation of the entire `pyproject.toml` structure.
+- [partial-dfc.json](partial-dfc.json): Contains the core schema definitions for the `dfc` tool configuration. This is the file intended for submission to SchemaStore.org.
+- [pyproject.json](pyproject.json): A wrapper schema used for local testing and validation of the entire `pyproject.toml` structure.
 
 
 ### 💻 Local Validation in VS Code
