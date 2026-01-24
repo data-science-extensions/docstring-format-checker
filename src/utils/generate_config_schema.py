@@ -138,7 +138,7 @@ class DFCSchemaGenerator(SchemaGeneratorMixin):
                 self.schema["properties"][field.name]["type"] = TYPE_MAP.get(typ, typ)
 
             # Add default if available
-            if field.default is not None:
+            if field.default is not MISSING:
                 self.schema["properties"][field.name]["default"] = field.default
 
         # Return self for chaining
