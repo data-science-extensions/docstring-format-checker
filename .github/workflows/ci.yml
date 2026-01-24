@@ -50,3 +50,7 @@ jobs:
         run: uv sync --no-cache --all-groups --upgrade --reinstall-package=${{ env.PACKAGE_NAME }}
       - name: Run checks
         run: uv run ./src/utils/scripts.py check
+      - name: Generate Config Schemas
+        run: uv run ./src/utils/generate_config_schema.py
+      - name: Check for Schema Changes
+        run: git diff --exit-code src/schemas/json/ || (echo "Schemas have changed. Please commit the updated schema files." && exit 1)

@@ -44,7 +44,7 @@
 
 # ## Python StdLib Imports ----
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal, Optional, Union
 
@@ -111,11 +111,41 @@ class GlobalConfig:
         Global configuration for docstring checking behavior.
     """
 
-    allow_undefined_sections: bool = False
-    require_docstrings: bool = True
-    check_private: bool = False
-    validate_param_types: bool = True
-    optional_style: Literal["silent", "validate", "strict"] = "validate"
+    allow_undefined_sections: bool = field(
+        default=False,
+        metadata={
+            "title": "Allow Undefined Sections",
+            "description": "Allow sections not defined in the configuration.",
+        },
+    )
+    require_docstrings: bool = field(
+        default=True,
+        metadata={
+            "title": "Require Docstrings",
+            "description": "Require docstrings for all functions/methods.",
+        },
+    )
+    check_private: bool = field(
+        default=False,
+        metadata={
+            "title": "Check Private Members",
+            "description": "Check docstrings for private members (starting with an underscore).",
+        },
+    )
+    validate_param_types: bool = field(
+        default=True,
+        metadata={
+            "title": "Validate Parameter Types",
+            "description": "Validate that parameter types are provided in the docstring.",
+        },
+    )
+    optional_style: Literal["silent", "validate", "strict"] = field(
+        default="validate",
+        metadata={
+            "title": "Optional Style",
+            "description": "The style for reporting issues in optional sections.",
+        },
+    )
 
 
 ## --------------------------------------------------------------------------- #
@@ -130,13 +160,53 @@ class SectionConfig:
         Configuration for a docstring section.
     """
 
-    name: str
-    type: Literal["free_text", "list_name", "list_type", "list_name_and_type"]
-    order: Optional[int] = None
-    admonition: Union[bool, str] = False
-    prefix: str = ""  # Support any prefix string
-    required: bool = False
-    message: str = ""  # Optional message for validation errors
+    name: str = field(
+        metadata={
+            "title": "Name",
+            "description": "Name of the docstring section.",
+        },
+    )
+    type: Literal["free_text", "list_name", "list_type", "list_name_and_type"] = field(
+        metadata={
+            "title": "Type",
+            "description": "Type of the section content.",
+        },
+    )
+    order: Optional[int] = field(
+        default=None,
+        metadata={
+            "title": "Order",
+            "description": "Order of the section in the docstring.",
+        },
+    )
+    admonition: Union[bool, str] = field(
+        default=False,
+        metadata={
+            "title": "Admonition",
+            "description": "Admonition style for the section. Can be False (no admonition) or a string specifying the admonition type.",
+        },
+    )
+    prefix: str = field(
+        default="",
+        metadata={
+            "title": "Prefix",
+            "description": "Prefix string for the admonition values.",
+        },
+    )
+    required: bool = field(
+        default=False,
+        metadata={
+            "title": "Required",
+            "description": "Whether this section is required in the docstring.",
+        },
+    )
+    message: str = field(
+        default="",
+        metadata={
+            "title": "Message",
+            "description": "Optional message for validation errors.",
+        },
+    )
 
     def __post_init__(self) -> None:
         """
