@@ -201,9 +201,10 @@ class DFCSchemaGenerator(SchemaGeneratorMixin):
             ):
 
                 # Optional types are stored as a Union, with the second argument as NoneType
-                self.schema["properties"]["sections"]["items"]["properties"][field.name]["type"] = TYPE_MAP.get(
-                    get_args(field.type)[0].__name__, get_args(field.type)[0].__name__
-                )
+                self.schema["properties"]["sections"]["items"]["properties"][field.name]["type"] = [
+                    TYPE_MAP.get(get_args(field.type)[0].__name__, get_args(field.type)[0].__name__),
+                    "null",
+                ]
 
             elif get_origin(field.type) is Union:
 
