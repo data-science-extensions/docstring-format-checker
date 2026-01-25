@@ -356,7 +356,7 @@ Never assign the same `order` value to two different sections. If you do, `dfc` 
 
 ### **Pro-tip**: Floating Sections
 
-Omit the `order` attribute for sections that might appear anywhere, such as "Notes" or "Examples". These be referred to as "floating" sections. They provide flexibility while still ensuring the content follow your mandated `type`.
+Omit the `order` attribute for sections that might appear anywhere, such as "Notes" or "Examples". These are referred to as "floating" sections. They provide flexibility while still ensuring the content follows your mandated `type`.
 
 
 ### **Pro-tip**: Disable Built-ins
