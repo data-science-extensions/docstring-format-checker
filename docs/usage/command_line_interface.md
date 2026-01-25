@@ -205,7 +205,7 @@ Manage the interaction between `dfc` and other tools or scripts.
 
 ### 🏁 Check Mode (`--check` / `-c`)
 
-Ensure that `dfc` return a non-zero exit code if any issues are found. Integrate `dfc` into Continuous Integration (CI) pipelines or git hooks with this flag.
+Ensure that `dfc` returns a non-zero exit code if any issues are found. Integrate `dfc` into Continuous Integration (CI) pipelines or git hooks with this flag.
 
 
 ```sh {.sh .bash title="Terminal"}
