@@ -138,7 +138,7 @@ There are seven section options you can set.
 
 ### 1. Section Name
 
-Specify the name of the section as it appear in your docstrings.
+Specify the name of the section as it appears in your docstrings.
 
 | Config |   Type   | Required |  Default   |
 | :----: | :------: | :------: | :--------: |
