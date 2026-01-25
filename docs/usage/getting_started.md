@@ -172,7 +172,7 @@ In the above sample, we have provided three global options and three sections wh
 
 - `require_docstrings`: When set to `true`, `dfc` report an error for any public function, method, or class that lack a docstring.
 - `validate_param_types`: Ensure that parameters in the docstring include type annotations (e.g., `width (int): ...`).
-- `sections`: This list define the specific parts of a docstring that `dfc` should look for and validate. Each section have a `name`, `type`, and can be `required`.
+- `sections`: This list defines the specific parts of a docstring that `dfc` should look for and validate. Each section has a `name`, `type`, and can be `required`.
 
 However, there are more options available to fine-tune the behaviour of `dfc`. The Global section allows five different options, and each section has the possibility of seven options. Here is a brief overview of some commonly used options:
 
