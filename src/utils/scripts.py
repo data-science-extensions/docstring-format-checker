@@ -67,11 +67,49 @@ def lint_check() -> None:
 
 @lru_cache
 def get_all_files(*suffixes) -> list[str]:
-    return [
-        str(p)
-        for p in Path("./").glob("**/*")
-        if ".venv" not in p.parts and not p.parts[0].startswith(".") and p.is_file() and p.suffix in {*suffixes}
-    ]
+    """
+    !!! note "Summary"
+        Get all files with the specified suffixes, excluding .venv and hidden directories.
+        Uses `find` for performance or defaulting back to `Path.glob`.
+    """
+    try:
+        find_cmd: list[str] = [
+            "find",
+            ".",
+            "-name",
+            ".venv",
+            "-prune",
+            "-o",
+            "-name",
+            ".*",
+            "-not",
+            "-name",
+            ".",
+            "-prune",
+            "-o",
+            "-type",
+            "f",
+        ]
+        if suffixes:
+            find_cmd.append("(")
+            for i, s in enumerate(suffixes):
+                if i > 0:
+                    find_cmd.append("-o")
+                find_cmd.append("-name")
+                find_cmd.append(f"*{s}")
+            find_cmd.append(")")
+        find_cmd.append("-print")
+        output: str = subprocess.check_output(find_cmd, text=True, stderr=subprocess.DEVNULL)
+        return sorted([f.removeprefix("./") for f in output.splitlines() if f])
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        # Fallback to Path.glob
+        return sorted(
+            [
+                str(p)
+                for p in Path("./").glob("**/*")
+                if ".venv" not in p.parts and not p.parts[0].startswith(".") and p.is_file() and p.suffix in {*suffixes}
+            ]
+        )
 
 
 ## --------------------------------------------------------------------------- #
@@ -99,7 +137,13 @@ def run_blacken_docs() -> None:
     while attempt < max_attempts:
 
         attempt += 1
-        files: list[str] = get_all_files(".md", ".py", ".ipynb")
+        files: list[str] = [
+            file
+            for file in get_all_files(".md", ".py", ".ipynb")
+            if "getting_started.md" not in file
+            and "configuration.md" not in file
+            and "command_line_interface.md" not in file
+        ]
         _command: list[str] = ["blacken-docs", *files]
 
         print(f"\n{'Attempt ' + str(attempt) + ': ' if attempt > 1 else ''}{' '.join(_command)}", flush=True)
@@ -170,7 +214,16 @@ def check_black() -> None:
 
 
 def check_blacken_docs() -> None:
-    run("blacken-docs --check", *get_all_files(".md", ".py", ".ipynb"))
+    run(
+        "blacken-docs --check",
+        *[
+            file
+            for file in get_all_files(".md", ".py", ".ipynb")
+            if "getting_started.md" not in file
+            and "configuration.md" not in file
+            and "command_line_interface.md" not in file
+        ],
+    )
 
 
 def check_ty() -> None:

@@ -199,14 +199,6 @@ def _show_usage_examples_callback() -> None:
     !!! note "Summary"
         Show examples and exit.
 
-    Params:
-        ctx (Context):
-            The context object.
-        param (CallbackParam):
-            The parameter object.
-        value (bool):
-            The boolean value indicating if the flag was set.
-
     Returns:
         (None):
             Nothing is returned.
@@ -247,14 +239,6 @@ def _show_config_example_callback() -> None:
     """
     !!! note "Summary"
         Show configuration example and exit.
-
-    Params:
-        ctx (Context):
-            The context object.
-        param (CallbackParam):
-            The parameter object.
-        value (bool):
-            The boolean value indicating if the flag was set.
 
     Returns:
         (None):
