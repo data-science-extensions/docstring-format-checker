@@ -186,7 +186,7 @@ Enforce a specific sequence of sections within your docstrings.
 | :-----: | :-------: | :------: | :-----: |
 | `order` | `integer` |    no    | `null`  |
 
-If two sections have an `order` defined, `dfc` ensure they appear in that relative order.
+If two sections have an `order` defined, `dfc` ensures they appear in that relative order.
 If `order` is not set, the section can appear anywhere in the docstring.
 If `order` is set, all sections with an `order` must appear before any sections without an `order`, maintaining the defined sequence, and cannot have any duplicate `order` values.
 
