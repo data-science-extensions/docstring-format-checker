@@ -131,7 +131,7 @@ This setting controls how `dfc` reports issues when a parameter has a default va
 
 ## 📂 Section Configuration
 
-Define specific sections within your docstrings using the `[[tool.dfc.sections]]` array. This allow you to validate for summaries, parameters, return values, and more.
+Define specific sections within your docstrings using the `[[tool.dfc.sections]]` array. This allows you to validate for summaries, parameters, return values, and more.
 
 There are seven section options you can set.
 
