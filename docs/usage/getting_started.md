@@ -33,7 +33,7 @@ Walk through a simple example to see how `dfc` work.
 
 ### Create a sample module
 
-Create a new file named `sample.py` with the following content. Include a function with a docstring that miss some common sections like a summary and standardised parameter names.
+Create a new file named `sample.py` with the following content. Include a function with a docstring that misses some common sections like a summary and standardised parameter names.
 
 ```python {.py .python linenums="1" title="sample.py"}
 --8<-- "docs/usage/examples/sample_bad.py"
