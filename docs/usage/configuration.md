@@ -119,7 +119,7 @@ This setting controls how `dfc` reports issues when a parameter has a default va
 | Option       | Description                                                                                    |
 | ------------ | ---------------------------------------------------------------------------------------------- |
 | `"silent"`   | Do not report any missing optional indicator.                                                  |
-| `"validate"` | Warn if `, optional` be present but the parameter do not have a default value.                 |
+| `"validate"` | Warn if `, optional` is present but the parameter does not have a default value.               |
 | `"strict"`   | Require all parameters with default value to include the `, optional` suffix in the docstring. |
 
 <div class="scroll-chunks" markdown>
