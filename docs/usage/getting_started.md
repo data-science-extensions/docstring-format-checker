@@ -80,7 +80,7 @@ dfc --help
 
 <div class="result" markdown>
 
-This display the help message, which include usage examples and a configuration template:
+This displays the help message, which includes usage examples and a configuration template:
 
 ```text
      _                _        _                    __                            _             _               _
