@@ -137,7 +137,7 @@ Customise the behaviour of `dfc` and its search location for settings.
 
 ### 📄 Configuration File (`--config` / `-f`)
 
-Direct `dfc` to look for a `[tool.dfc]` section in your [pyproject.toml](docs/usage/examples/pyproject.toml). Use this option to point to a specific TOML file instead.
+Direct `dfc` to look for a `[tool.dfc]` section in your [pyproject.toml](examples/pyproject.toml). Use this option to point to a specific TOML file instead.
 
 ```sh {.sh .bash title="Terminal"}
 dfc --config=custom_config.toml src/
