@@ -1,6 +1,6 @@
 # Standardise Your Documentation with Configuration
 
-Define your own standards and ensure consistency across your project with a `pyproject.toml` file. `docstring-format-checker` (or `dfc`) offer a wide range of configuration options to suit any project's needs.
+Define your own standards and ensure consistency across your project with a `pyproject.toml` file. `docstring-format-checker` (or `dfc`) offers a wide range of configuration options to suit any project's needs.
 
 
 <style>
