@@ -42,3 +42,13 @@
     background-size: var(--dim) var(--dim);
     background-image: url('https://raw.githubusercontent.com/vscode-icons/vscode-icons/0927fc72a1d655c12ec60178df88bef6da3b883d/icons/file_type_log.svg');
 }
+
+.toml span.filename::before {
+    content: '';
+    display: inline-block;
+    width: var(--dim);
+    height: var(--dim);
+    margin-right: 1em;
+    background-size: var(--dim) var(--dim);
+    background-image: url('https://upload.wikimedia.org/wikipedia/commons/c/c1/TOML_Logo.svg');
+}

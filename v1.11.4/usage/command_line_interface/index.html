@@ -1,0 +1,2004 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A Python CLI tool that validates docstring formatting and completeness using AST parsing. Configure validation rules via TOML and ensure consistent documentation across your codebase.">
+      
+      
+        <meta name="author" content="[Chris Mahoney](mailto:chris@mahoneyconsultingservices.com)">
+      
+      
+      
+        <link rel="prev" href="../configuration/">
+      
+      
+        <link rel="next" href="../contributing/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/icons/1589516.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>CLI - Docstring Format Checker</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CConsolas,+'Courier+New',+monospace:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Consolas, 'Courier New', monospace"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/style.css">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/admonitions.css">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/code_chunks.css">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/shortcodes.css">
+    
+      <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v6.4.2/css/all.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue-grey" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#cli-interaction-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+          <aside class="md-banner md-banner--warning">
+            <div class="md-banner__inner md-grid md-typeset">
+              
+  You're not viewing the latest version.
+  <a href="../../..">
+    <strong>Click here to go to latest.</strong>
+  </a>
+
+            </div>
+            <script>var el=document.querySelector("[data-md-component=outdated]"),base=new URL("../.."),outdated=__md_get("__outdated",sessionStorage,base);!0===outdated&&el&&(el.hidden=!1)</script>
+          </aside>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Docstring Format Checker" class="md-header__button md-logo" aria-label="Docstring Format Checker" data-md-component="logo">
+      
+  <img src="../../assets/icons/1589516.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Docstring Format Checker
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              CLI
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/data-science-extensions/docstring-format-checker" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    docstring-format-checker
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Usage
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../code/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Modules
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="https://data-science-extensions.com/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Data Science Extensions
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Docstring Format Checker" class="md-nav__button md-logo" aria-label="Docstring Format Checker" data-md-component="logo">
+      
+  <img src="../../assets/icons/1589516.svg" alt="logo">
+
+    </a>
+    Docstring Format Checker
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/data-science-extensions/docstring-format-checker" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    docstring-format-checker
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Usage
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-dfc-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🛠️ The dfc Command
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🛠️ The dfc Command">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-syntax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📟 Basic Syntax
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#full-help-command-help-h" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full Help Command (--help / -h)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#target-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📂 Target Paths
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📂 Target Paths">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#single-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📄 Single Files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#directories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📁 Directories
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multiple-targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🗃️ Multiple Targets
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚙️ Core Options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="⚙️ Core Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#configuration-file-config-f" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📄 Configuration File (--config / -f)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exclusion-patterns-exclude-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🚫 Exclusion Patterns (--exclude / -x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output-format-output-o" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎨 Output Format (--output / -o)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🎨 Output Format (--output / -o)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#render-as-a-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📝 Render as a list
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#render-as-a-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📊 Render as a table
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#execution-controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🛡️ Execution Controls
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🛡️ Execution Controls">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#check-mode-check-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🏁 Check Mode (--check / -c)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quiet-mode-quiet-q" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔇 Quiet Mode (--quiet / -q)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#helper-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📖 Helper Commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📖 Helper Commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#show-examples-example-e" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        💡 Show Examples (--example / -e)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#version-information-version-v" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔢 Version Information (--version / -v)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#help-message-help-h" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ❓ Help Message (--help / -h)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#guided-walkthrough" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎓 Guided Walkthrough
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🎓 Guided Walkthrough">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-create-a-workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🏗️ 1. Create a workspace
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-identify-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔍 2. Identify issues
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-utilise-the-table-view" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📊 3. Utilise the table view
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-check-an-entire-directory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📂 4. Check an entire directory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-standardise-for-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🤖 5. Standardise for CI
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#watch-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚠️ Watch Out
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="⚠️ Watch Out">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shell-pattern-matching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🐚 Shell Pattern Matching
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#argument-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📝 Argument Order
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change Log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../code/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../code/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../code/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../code/core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../code/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exceptions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://data-science-extensions.com/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Science Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-dfc-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🛠️ The dfc Command
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🛠️ The dfc Command">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-syntax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📟 Basic Syntax
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#full-help-command-help-h" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full Help Command (--help / -h)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#target-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📂 Target Paths
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📂 Target Paths">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#single-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📄 Single Files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#directories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📁 Directories
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multiple-targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🗃️ Multiple Targets
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚙️ Core Options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="⚙️ Core Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#configuration-file-config-f" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📄 Configuration File (--config / -f)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exclusion-patterns-exclude-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🚫 Exclusion Patterns (--exclude / -x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output-format-output-o" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎨 Output Format (--output / -o)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🎨 Output Format (--output / -o)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#render-as-a-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📝 Render as a list
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#render-as-a-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📊 Render as a table
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#execution-controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🛡️ Execution Controls
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🛡️ Execution Controls">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#check-mode-check-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🏁 Check Mode (--check / -c)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quiet-mode-quiet-q" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔇 Quiet Mode (--quiet / -q)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#helper-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📖 Helper Commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📖 Helper Commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#show-examples-example-e" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        💡 Show Examples (--example / -e)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#version-information-version-v" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔢 Version Information (--version / -v)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#help-message-help-h" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ❓ Help Message (--help / -h)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#guided-walkthrough" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎓 Guided Walkthrough
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🎓 Guided Walkthrough">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-create-a-workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🏗️ 1. Create a workspace
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-identify-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔍 2. Identify issues
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-utilise-the-table-view" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📊 3. Utilise the table view
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-check-an-entire-directory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📂 4. Check an entire directory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-standardise-for-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🤖 5. Standardise for CI
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#watch-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚠️ Watch Out
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="⚠️ Watch Out">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shell-pattern-matching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🐚 Shell Pattern Matching
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#argument-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📝 Argument Order
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/data-science-extensions/docstring-format-checker/edit/main/docs/usage/command_line_interface.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/data-science-extensions/docstring-format-checker/raw/main/docs/usage/command_line_interface.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="cli-interaction-guide">CLI Interaction Guide<a class="headerlink" href="#cli-interaction-guide" title="Permanent link">🔗</a></h1>
+<p>Interface directly with the <code>docstring-format-checker</code> (or <code>dfc</code>) to standardise your project's documentation. Access a detailed walkthrough of all command-line operations, designed to help new developers master the tool's capabilities.</p>
+<h2 id="the-dfc-command">🛠️ The <code>dfc</code> Command<a class="headerlink" href="#the-dfc-command" title="Permanent link">🔗</a></h2>
+<p>Interact with the tool primarily through the <code>dfc</code> command. Treat this as an alias for the longer <code>docstring-format-checker</code> command, providing a more concise interface for frequent use.</p>
+<h3 id="basic-syntax">📟 Basic Syntax<a class="headerlink" href="#basic-syntax" title="Permanent link">🔗</a></h3>
+<p>Follow the general structure of a <code>dfc</code> command:</p>
+<div class="sh bash highlight"><span class="filename">Terminal</span><pre><span></span><code>dfc<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">[</span>PATHS<span class="o">]</span>...
+</code></pre></div>
+<p>Target one or more paths, such as specific Python files or entire directories.</p>
+<h3 id="full-help-command-help-h">Full Help Command (<code>--help</code> / <code>-h</code>)<a class="headerlink" href="#full-help-command-help-h" title="Permanent link">🔗</a></h3>
+<div class="sh bash highlight"><span class="filename">Terminal</span><pre><span></span><code>dfc<span class="w"> </span>--help
+</code></pre></div>
+<div class="result">
+<div class="highlight"><pre><span></span><code>     _                _        _                    __                            _             _               _
+  __| | ___   ___ ___| |_ _ __(_)_ __   __ _       / _| ___  _ __ _ __ ___   __ _| |_       ___| |__   ___  ___| | _____ _ __
+ / _` |/ _ \ / __/ __| __| &#39;__| | &#39;_ \ / _` |_____| |_ / _ \| &#39;__| &#39;_ ` _ \ / _` | __|____ / __| &#39;_ \ / _ \/ __| |/ / _ \ &#39;__|
+| (_| | (_) | (__\__ \ |_| |  | | | | | (_| |_____|  _| (_) | |  | | | | | | (_| | ||_____| (__| | | |  __/ (__|   &lt;  __/ |
+ \__,_|\___/ \___|___/\__|_|  |_|_| |_|\__, |     |_|  \___/|_|  |_| |_| |_|\__,_|\__|     \___|_| |_|\___|\___|_|\_\___|_|
+                                       |___/
+
+
+ Usage: dfc [OPTIONS] [PATHS]... COMMAND [ARGS]...
+
+ A CLI tool to check and validate Python docstring formatting and completeness.
+
+╭─ Arguments ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│   paths      [PATHS]...  Path(s) to Python file(s) or directory(s) for DFC to check                                                                                               │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --config   -f      TEXT  Path to configuration file (TOML format)                                                                                                                 │
+│ --exclude  -x      TEXT  Glob patterns to exclude (can be used multiple times)                                                                                                    │
+│ --output   -o      TEXT  Output format: &#39;table&#39; or &#39;list&#39; [default: list]                                                                                                         │
+│ --check    -c            Throw error (exit 1) if any issues are found                                                                                                             │
+│ --quiet    -q            Only output pass/fail confirmation, suppress errors unless failing                                                                                       │
+│ --example  -e      TEXT  Show examples: &#39;config&#39; for configuration example, &#39;usage&#39; for usage examples                                                                            │
+│ --version  -v            Show version and exit                                                                                                                                    │
+│ --help     -h            Show this message and exit                                                                                                                               │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+╭─ Usage Examples ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Execute the below commands in any terminal after installing the package.                                                                                                          │
+│                                                                                                                                                                                   │
+│ dfc myfile.py                   # Check a single Python file (list output)                                                                                                        │
+│ dfc myfile.py other_file.py     # Check multiple Python files                                                                                                                     │
+│ dfc src/                        # Check all Python files in src/ directory                                                                                                        │
+│ dfc -x src/app/__init__.py src/ # Check all Python files in src/ directory, excluding one init file                                                                               │
+│ dfc --output=table myfile.py    # Check with table output format                                                                                                                  │
+│ dfc -o list myfile.py           # Check with list output format (default)                                                                                                         │
+│ dfc --check myfile.py           # Check and exit with error if issues found                                                                                                       │
+│ dfc --quiet myfile.py           # Check quietly, only show pass/fail                                                                                                              │
+│ dfc --quiet --check myfile.py   # Check quietly and exit with error if issues found                                                                                               │
+│ dfc . --exclude &#39;*/tests/*&#39;     # Check current directory, excluding tests                                                                                                        │
+│ dfc . -c custom.toml            # Use custom configuration file                                                                                                                   │
+│ dfc --example=config            # Show example configuration                                                                                                                      │
+│ dfc -e usage                    # Show usage examples (this help)                                                                                                                 │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Configuration Example ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Place the below config in your `pyproject.toml` file.                                                                                                                             │
+│                                                                                                                                                                                   │
+│ [tool.dfc]                                                                                                                                                                        │
+│ # or [tool.docstring-format-checker]                                                                                                                                              │
+│ allow_undefined_sections = false                                                                                                                                                  │
+│ require_docstrings = true                                                                                                                                                         │
+│ check_private = true                                                                                                                                                              │
+│ validate_param_types = true                                                                                                                                                       │
+│ optional_style = &quot;validate&quot;  # &quot;silent&quot;, &quot;validate&quot;, or &quot;strict&quot;                                                                                                                  │
+│ sections = [                                                                                                                                                                      │
+│     { order = 1, name = &quot;summary&quot;,  type = &quot;free_text&quot;,          required = true, admonition = &quot;note&quot;, prefix = &quot;!!!&quot; },                                                          │
+│     { order = 2, name = &quot;details&quot;,  type = &quot;free_text&quot;,          required = false, admonition = &quot;abstract&quot;, prefix = &quot;???+&quot; },                                                    │
+│     { order = 3, name = &quot;params&quot;,   type = &quot;list_name_and_type&quot;, required = false },                                                                                              │
+│     { order = 4, name = &quot;raises&quot;,   type = &quot;list_type&quot;,          required = false },                                                                                              │
+│     { order = 5, name = &quot;returns&quot;,  type = &quot;list_name_and_type&quot;, required = false },                                                                                              │
+│     { order = 6, name = &quot;yields&quot;,   type = &quot;list_type&quot;,          required = false },                                                                                              │
+│     { order = 7, name = &quot;examples&quot;, type = &quot;free_text&quot;,          required = false, admonition = &quot;example&quot;, prefix = &quot;???+&quot; },                                                     │
+│     { order = 8, name = &quot;notes&quot;,    type = &quot;free_text&quot;,          required = false, admonition = &quot;note&quot;, prefix = &quot;???&quot; },                                                         │
+│ ]                                                                                                                                                                                 │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+</code></pre></div>
+</div>
+<h2 id="target-paths">📂 Target Paths<a class="headerlink" href="#target-paths" title="Permanent link">🔗</a></h2>
+<p>Determine which parts of your codebase <code>dfc</code> should examine.</p>
+<h3 id="single-files">📄 Single Files<a class="headerlink" href="#single-files" title="Permanent link">🔗</a></h3>
+<p>Check an individual file by providing its path:</p>
+<div class="sh bash highlight"><span class="filename">Terminal</span><pre><span></span><code>dfc<span class="w"> </span>sample.py
+</code></pre></div>
+<h3 id="directories">📁 Directories<a class="headerlink" href="#directories" title="Permanent link">🔗</a></h3>
+<p>Check all Python files within a directory (including subdirectories) by providing the folder path:</p>
+<div class="sh bash highlight"><span class="filename">Terminal</span><pre><span></span><code>dfc<span class="w"> </span>src/
+</code></pre></div>
+<h3 id="multiple-targets">🗃️ Multiple Targets<a class="headerlink" href="#multiple-targets" title="Permanent link">🔗</a></h3>
+<p>Combine multiple files and directories in a single command:</p>
+<div class="sh bash highlight"><span class="filename">Terminal</span><pre><span></span><code>dfc<span class="w"> </span>module1.py<span class="w"> </span>src/utils/
+</code></pre></div>
+<h2 id="core-options">⚙️ Core Options<a class="headerlink" href="#core-options" title="Permanent link">🔗</a></h2>
+<p>Customise the behaviour of <code>dfc</code> and its search location for settings.</p>
+<h3 id="configuration-file-config-f">📄 Configuration File (<code>--config</code> / <code>-f</code>)<a class="headerlink" href="#configuration-file-config-f" title="Permanent link">🔗</a></h3>
+<p>Direct <code>dfc</code> to look for a <code>[tool.dfc]</code> section in your <a href="../examples/pyproject.toml">pyproject.toml</a>. Use this option to point to a specific TOML file instead.</p>
+<div class="sh bash highlight"><span class="filename">Terminal</span><pre><span></span><code>dfc<span class="w"> </span>--config<span class="o">=</span>custom_config.toml<span class="w"> </span>src/
+</code></pre></div>
+<h3 id="exclusion-patterns-exclude-x">🚫 Exclusion Patterns (<code>--exclude</code> / <code>-x</code>)<a class="headerlink" href="#exclusion-patterns-exclude-x" title="Permanent link">🔗</a></h3>
+<p>Ignore specific files or directories using glob patterns. This is particularly useful for skipping third-party libraries, virtual environments, or test suites.</p>
+<div class="sh bash highlight"><span class="filename">Terminal</span><pre><span></span><code>dfc<span class="w"> </span>.<span class="w"> </span>--exclude<span class="o">=</span><span class="s1">&#39;*/tests/*&#39;</span><span class="w"> </span>--exclude<span class="w"> </span><span class="s1">&#39;setup.py&#39;</span>
+</code></pre></div>
+<div class="admonition tip">
+<p class="admonition-title">Note</p>
+<p>Provide the <code>--exclude</code> flag multiple times to specify several patterns.</p>
+</div>
+<h3 id="output-format-output-o">🎨 Output Format (<code>--output</code> / <code>-o</code>)<a class="headerlink" href="#output-format-output-o" title="Permanent link">🔗</a></h3>
+<p>Standardise the appearance of error reports. Choose between a detailed <code>list</code> (default) or a structured <code>table</code>.</p>
+<h4 id="render-as-a-list">📝 Render as a list<a class="headerlink" href="#render-as-a-list" title="Permanent link">🔗</a></h4>
+<div class="sh bash highlight"><span class="filename">Terminal</span><pre><span></span><code>dfc<span class="w"> </span>--output<span class="o">=</span>list<span class="w"> </span>sample.py
+</code></pre></div>
+<div class="result">
+<div class="highlight"><pre><span></span><code>sample.py
+  Line 1 - function &#39;calculate_area&#39;:
+    - Missing required section: &#39;summary&#39;
+    - Missing required section: &#39;params&#39;
+</code></pre></div>
+</div>
+<h4 id="render-as-a-table">📊 Render as a table<a class="headerlink" href="#render-as-a-table" title="Permanent link">🔗</a></h4>
+<div class="sh bash highlight"><span class="filename">Terminal</span><pre><span></span><code>dfc<span class="w"> </span>--output<span class="o">=</span>table<span class="w"> </span>sample.py
+</code></pre></div>
+<div class="result">
+<div class="highlight"><pre><span></span><code>┏━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ File      ┃ Line ┃ Item           ┃ Type     ┃ Error                                 ┃
+┡━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ sample.py │    1 │ calculate_area │ function │ - Missing required section: &#39;summary&#39; │
+└───────────┴──────┴────────────────┴──────────┴───────────────────────────────────────┘
+</code></pre></div>
+</div>
+<h2 id="execution-controls">🛡️ Execution Controls<a class="headerlink" href="#execution-controls" title="Permanent link">🔗</a></h2>
+<p>Manage the interaction between <code>dfc</code> and other tools or scripts.</p>
+<h3 id="check-mode-check-c">🏁 Check Mode (<code>--check</code> / <code>-c</code>)<a class="headerlink" href="#check-mode-check-c" title="Permanent link">🔗</a></h3>
+<p>Ensure that <code>dfc</code> returns a non-zero exit code if any issues are found. Integrate <code>dfc</code> into Continuous Integration (CI) pipelines or git hooks with this flag.</p>
+<div class="sh bash highlight"><span class="filename">Terminal</span><pre><span></span><code>dfc<span class="w"> </span>--check<span class="w"> </span>src/
+</code></pre></div>
+<h3 id="quiet-mode-quiet-q">🔇 Quiet Mode (<code>--quiet</code> / <code>-q</code>)<a class="headerlink" href="#quiet-mode-quiet-q" title="Permanent link">🔗</a></h3>
+<p>Suppress all detailed error messages. Report only a high-level summary if errors occur, or nothing at all if the check passes.</p>
+<div class="sh bash highlight"><span class="filename">Terminal</span><pre><span></span><code>dfc<span class="w"> </span>--quiet<span class="w"> </span>--check<span class="w"> </span>src/
+</code></pre></div>
+<h2 id="helper-commands">📖 Helper Commands<a class="headerlink" href="#helper-commands" title="Permanent link">🔗</a></h2>
+<p>Access built-in documentation and version information directly from the terminal.</p>
+<h3 id="show-examples-example-e">💡 Show Examples (<code>--example</code> / <code>-e</code>)<a class="headerlink" href="#show-examples-example-e" title="Permanent link">🔗</a></h3>
+<p>View pre-configured templates to help you get started quickly.</p>
+<ul>
+<li><code>--example config</code>: Display a comprehensive TOML configuration template.</li>
+<li><code>--example usage</code>: Display common CLI usage patterns.</li>
+</ul>
+<div class="sh bash highlight"><span class="filename">Terminal</span><pre><span></span><code>dfc<span class="w"> </span>--example<span class="o">=</span>config
+</code></pre></div>
+<h3 id="version-information-version-v">🔢 Version Information (<code>--version</code> / <code>-v</code>)<a class="headerlink" href="#version-information-version-v" title="Permanent link">🔗</a></h3>
+<p>Check which version of <code>docstring-format-checker</code> is currently installed.</p>
+<div class="sh bash highlight"><span class="filename">Terminal</span><pre><span></span><code>dfc<span class="w"> </span>--version
+</code></pre></div>
+<h3 id="help-message-help-h">❓ Help Message (<code>--help</code> / <code>-h</code>)<a class="headerlink" href="#help-message-help-h" title="Permanent link">🔗</a></h3>
+<p>Display a full summary of all available arguments, options, and usage examples.</p>
+<div class="sh bash highlight"><span class="filename">Terminal</span><pre><span></span><code>dfc<span class="w"> </span>--help
+</code></pre></div>
+<h2 id="guided-walkthrough">🎓 Guided Walkthrough<a class="headerlink" href="#guided-walkthrough" title="Permanent link">🔗</a></h2>
+<p>Follow these steps to explore the most important features of the <code>dfc</code> CLI.</p>
+<h3 id="1-create-a-workspace">🏗️ 1. Create a workspace<a class="headerlink" href="#1-create-a-workspace" title="Permanent link">🔗</a></h3>
+<p>Prepare a small environment with a few sample files to test the tool. Create a directory named <code>dfc_walkthrough</code> and add the following files:</p>
+<div class="py python highlight"><span class="filename">dfc_walkthrough/good_code.py</span><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">calculate_area</span><span class="p">(</span><span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    !!! note &quot;Summary&quot;</span>
+<span class="sd">        Calculate the area of a rectangle.</span>
+
+<span class="sd">    Params:</span>
+<span class="sd">        width (int): The width of the rectangle.</span>
+<span class="sd">        height (int): The height of the rectangle.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (int): The calculated area.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">width</span> <span class="o">*</span> <span class="n">height</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_perimeter</span><span class="p">(</span><span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    !!! note &quot;Summary&quot;</span>
+<span class="sd">        Calculate the perimeter of a rectangle.</span>
+
+<span class="sd">    Params:</span>
+<span class="sd">        width (int): The width of the rectangle.</span>
+<span class="sd">        height (int): The height of the rectangle.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (int): The calculated perimeter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">width</span> <span class="o">+</span> <span class="n">height</span><span class="p">)</span>
+</code></pre></div>
+<div class="py python highlight"><span class="filename">dfc_walkthrough/bad_code.py</span><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">calculate_area</span><span class="p">(</span><span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the area of a rectangle.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        width (int): The width of the rectangle.</span>
+<span class="sd">        height (int): The height of the rectangle.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (int): The calculated area.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">width</span> <span class="o">*</span> <span class="n">height</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_perimeter</span><span class="p">(</span><span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the perimeter of a rectangle.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        width (int): The width of the rectangle.</span>
+<span class="sd">        height (int): The height of the rectangle.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (int): The calculated perimeter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">width</span> <span class="o">+</span> <span class="n">height</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="2-identify-issues">🔍 2. Identify issues<a class="headerlink" href="#2-identify-issues" title="Permanent link">🔗</a></h3>
+<p>Run a standard check on the <code>bad_code.py</code> file to see the inconsistency reports from <code>dfc</code>.</p>
+<div class="sh bash highlight"><span class="filename">Terminal</span><pre><span></span><code>dfc<span class="w"> </span>bad_code.py
+</code></pre></div>
+<p>Expect <code>dfc</code> to identify missing summary admonitions and incorrectly named sections like <code>Args</code> (which should be <code>Params</code> by default).</p>
+<h3 id="3-utilise-the-table-view">📊 3. Utilise the table view<a class="headerlink" href="#3-utilise-the-table-view" title="Permanent link">🔗</a></h3>
+<p>Switch to the table format to get a more structured overview of the errors. Read multiple issues with ease using this layout.</p>
+<div class="sh bash highlight"><span class="filename">Terminal</span><pre><span></span><code>dfc<span class="w"> </span>--output<span class="o">=</span>table<span class="w"> </span>bad_code.py
+</code></pre></div>
+<h3 id="4-check-an-entire-directory">📂 4. Check an entire directory<a class="headerlink" href="#4-check-an-entire-directory" title="Permanent link">🔗</a></h3>
+<p>Instruct <code>dfc</code> to scan the whole directory. Find all <code>.py</code> files and report on each one automatically.</p>
+<div class="sh bash highlight"><span class="filename">Terminal</span><pre><span></span><code>dfc<span class="w"> </span>.
+</code></pre></div>
+<p>View results for both <code>good_code.py</code> (which should pass) and <code>bad_code.py</code> in the output.</p>
+<h3 id="5-standardise-for-ci">🤖 5. Standardise for CI<a class="headerlink" href="#5-standardise-for-ci" title="Permanent link">🔗</a></h3>
+<p>Prepare your commands for a CI environment. Use the <code>--quiet</code> and <code>--check</code> flags to ensure that the process fails if documentation is insufficient, without cluttering the logs.</p>
+<div class="sh bash highlight"><span class="filename">Terminal</span><pre><span></span><code>dfc<span class="w"> </span>--quiet<span class="w"> </span>--check<span class="w"> </span>.
+</code></pre></div>
+<div class="result">
+<p>Observe no output upon a successful check. Receive a concise summary if errors are present:</p>
+<div class="highlight"><pre><span></span><code>Found 6 error(s) in 2 functions over 1 file
+</code></pre></div>
+</div>
+<h2 id="watch-out">⚠️ Watch Out<a class="headerlink" href="#watch-out" title="Permanent link">🔗</a></h2>
+<p>Keep these nuances in mind to avoid common pitfalls:</p>
+<h3 id="shell-pattern-matching">🐚 Shell Pattern Matching<a class="headerlink" href="#shell-pattern-matching" title="Permanent link">🔗</a></h3>
+<p>Different shells (like <code>bash</code>, <code>zsh</code>, or <code>fish</code>) handle glob patterns (like <code>*</code>) differently. Always surround your exclusion patterns with quotes to ensure they are passed correctly to <code>dfc</code>.</p>
+<ul>
+<li><strong>Correct</strong>: <code>dfc --exclude '*/tests/*' .</code></li>
+<li><strong>Incorrect</strong>: <code>dfc --exclude */tests/* .</code></li>
+</ul>
+<h3 id="argument-order">📝 Argument Order<a class="headerlink" href="#argument-order" title="Permanent link">🔗</a></h3>
+<p>Move flags to the start of the command if errors occur (a common requirement for <code>Typer</code>-based tools):</p>
+<ul>
+<li><strong>Recommended</strong>: <code>dfc --output=table src/</code></li>
+<li><strong>Sometimes Unreliable</strong>: <code>dfc src/ --output=table</code></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.indexes", "navigation.top", "navigation.instant", "search.highlight", "search.suggest", "toc.follow", "content.action.edit", "content.action.view", "content.code.select", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

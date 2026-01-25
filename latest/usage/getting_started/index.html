@@ -1,0 +1,1741 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A Python CLI tool that validates docstring formatting and completeness using AST parsing. Configure validation rules via TOML and ensure consistent documentation across your codebase.">
+      
+      
+        <meta name="author" content="[Chris Mahoney](mailto:chris@mahoneyconsultingservices.com)">
+      
+      
+      
+        <link rel="prev" href="../overview/">
+      
+      
+        <link rel="next" href="../configuration/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/icons/1589516.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Getting Started - Docstring Format Checker</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CConsolas,+'Courier+New',+monospace:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Consolas, 'Courier New', monospace"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/style.css">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/admonitions.css">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/code_chunks.css">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/shortcodes.css">
+    
+      <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v6.4.2/css/all.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue-grey" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#getting-started-with-docstring-format-checker" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+          <aside class="md-banner md-banner--warning">
+            <div class="md-banner__inner md-grid md-typeset">
+              
+  You're not viewing the latest version.
+  <a href="../../..">
+    <strong>Click here to go to latest.</strong>
+  </a>
+
+            </div>
+            <script>var el=document.querySelector("[data-md-component=outdated]"),base=new URL("../.."),outdated=__md_get("__outdated",sessionStorage,base);!0===outdated&&el&&(el.hidden=!1)</script>
+          </aside>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Docstring Format Checker" class="md-header__button md-logo" aria-label="Docstring Format Checker" data-md-component="logo">
+      
+  <img src="../../assets/icons/1589516.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Docstring Format Checker
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Getting Started
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/data-science-extensions/docstring-format-checker" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    docstring-format-checker
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Usage
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../code/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Modules
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="https://data-science-extensions.com/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Data Science Extensions
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Docstring Format Checker" class="md-nav__button md-logo" aria-label="Docstring Format Checker" data-md-component="logo">
+      
+  <img src="../../assets/icons/1589516.svg" alt="logo">
+
+    </a>
+    Docstring Format Checker
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/data-science-extensions/docstring-format-checker" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    docstring-format-checker
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Usage
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📥 Installation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📥 Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-using-uv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install using uv
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#install-using-pip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install using pip
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#your-first-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🚀 Your First Check
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🚀 Your First Check">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-a-sample-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create a sample module
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-the-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the tool
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Get help
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuring-dfc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🛠️ Configuring dfc
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🛠️ Configuring dfc">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-a-configuration-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create a configuration file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#understand-the-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Understand the options
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-the-tool-again" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the tool again
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix-the-docstring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix the docstring
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting-and-watch-outs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        💡 Troubleshooting and Watch-outs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="💡 Troubleshooting and Watch-outs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#watch-out-order-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Watch-out: Order matters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pro-tip-floating-sections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pro-tip: Floating sections
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-pitfall-indentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Pitfall: Indentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🛤️ Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../command_line_interface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change Log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../code/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../code/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../code/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../code/core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../code/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exceptions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://data-science-extensions.com/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Science Extensions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📥 Installation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📥 Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-using-uv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install using uv
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#install-using-pip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install using pip
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#your-first-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🚀 Your First Check
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🚀 Your First Check">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-a-sample-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create a sample module
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-the-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the tool
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Get help
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuring-dfc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🛠️ Configuring dfc
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🛠️ Configuring dfc">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-a-configuration-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create a configuration file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#understand-the-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Understand the options
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-the-tool-again" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the tool again
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix-the-docstring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix the docstring
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting-and-watch-outs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        💡 Troubleshooting and Watch-outs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="💡 Troubleshooting and Watch-outs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#watch-out-order-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Watch-out: Order matters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pro-tip-floating-sections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pro-tip: Floating sections
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-pitfall-indentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Pitfall: Indentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🛤️ Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/data-science-extensions/docstring-format-checker/edit/main/docs/usage/getting_started.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/data-science-extensions/docstring-format-checker/raw/main/docs/usage/getting_started.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="getting-started-with-docstring-format-checker">Getting Started with <code>docstring-format-checker</code><a class="headerlink" href="#getting-started-with-docstring-format-checker" title="Permanent link">🔗</a></h1>
+<p>Welcome to <code>docstring-format-checker</code> (or <code>dfc</code> for short)! Utilise this guide to help you get up and run with the tool, from installation to advanced configuration. This guide targets developers who are new to Python or who want to standardise their project's documentation.</p>
+<h2 id="installation">📥 Installation<a class="headerlink" href="#installation" title="Permanent link">🔗</a></h2>
+<p>First, install the package using your preferred package manager. Use <code>uv</code> for its speed and reliability, but <code>pip</code>, <code>poetry</code>, and <code>pipenv</code> are all supported.</p>
+<h3 id="install-using-uv">Install using <code>uv</code><a class="headerlink" href="#install-using-uv" title="Permanent link">🔗</a></h3>
+<p>Execute the following command in your terminal:</p>
+<div class="sh bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Terminal</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>uv<span class="w"> </span>add<span class="w"> </span>docstring-format-checker
+</code></pre></div></td></tr></table></div>
+<h3 id="install-using-pip">Install using <code>pip</code><a class="headerlink" href="#install-using-pip" title="Permanent link">🔗</a></h3>
+<p>Alternatively, use the standard Python package manager:</p>
+<div class="sh bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Terminal</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>docstring-format-checker
+</code></pre></div></td></tr></table></div>
+<h2 id="your-first-check">🚀 Your First Check<a class="headerlink" href="#your-first-check" title="Permanent link">🔗</a></h2>
+<p>Walk through a simple example to see how <code>dfc</code> works.</p>
+<h3 id="create-a-sample-module">Create a sample module<a class="headerlink" href="#create-a-sample-module" title="Permanent link">🔗</a></h3>
+<p>Create a new file named <code>sample.py</code> with the following content. Include a function with a docstring that misses some common sections like a summary and standardised parameter names.</p>
+<div class="py python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">sample.py</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">calculate_area</span><span class="p">(</span><span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the area of a rectangle.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        width (int): The width of the rectangle.</span>
+<span class="sd">        height (int): The height of the rectangle.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (int): The calculated area.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">width</span> <span class="o">*</span> <span class="n">height</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_perimeter</span><span class="p">(</span><span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the perimeter of a rectangle.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        width (int): The width of the rectangle.</span>
+<span class="sd">        height (int): The height of the rectangle.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (int): The calculated perimeter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">width</span> <span class="o">+</span> <span class="n">height</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+<h3 id="run-the-tool">Run the tool<a class="headerlink" href="#run-the-tool" title="Permanent link">🔗</a></h3>
+<p>Now, run <code>dfc</code> against your new file:</p>
+<div class="sh bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Terminal</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>dfc<span class="w"> </span>--check<span class="w"> </span>sample.py
+</code></pre></div></td></tr></table></div>
+<div class="result">
+<p><code>dfc</code> notifies you that the docstring fails to meet the default standards:</p>
+<div class="highlight"><pre><span></span><code>  Line 1 - function &#39;calculate_area&#39;:
+    - Missing required section: &#39;summary&#39;
+    - Missing required section: &#39;params&#39;
+    - Section &#39;args&#39; found in docstring but not defined in configuration
+  Line 15 - function &#39;calculate_perimeter&#39;:
+    - Missing required section: &#39;summary&#39;
+    - Missing required section: &#39;params&#39;
+    - Section &#39;parameters&#39; found in docstring but not defined in configuration
+
+Found 6 error(s) in 2 functions over 1 file
+</code></pre></div>
+</div>
+<p>By default, <code>dfc</code> expects a summary formatted as an admonition (like <code>!!! note "Summary"</code>) and a section named <code>Params</code> instead of <code>Args</code>.</p>
+<h3 id="get-help">Get help<a class="headerlink" href="#get-help" title="Permanent link">🔗</a></h3>
+<p>If you ever feel unsure about the available commands or options, use the <code>--help</code> (or <code>-h</code>) flag:</p>
+<div class="sh bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Terminal</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>dfc<span class="w"> </span>--help
+</code></pre></div></td></tr></table></div>
+<div class="result">
+<p>This displays the help message, which includes usage examples and a configuration template:</p>
+<div class="highlight"><pre><span></span><code>     _                _        _                    __                            _             _               _
+  __| | ___   ___ ___| |_ _ __(_)_ __   __ _       / _| ___  _ __ _ __ ___   __ _| |_       ___| |__   ___  ___| | _____ _ __
+ / _` |/ _ \ / __/ __| __| &#39;__| | &#39;_ \ / _` |_____| |_ / _ \| &#39;__| &#39;_ ` _ \ / _` | __|____ / __| &#39;_ \ / _ \/ __| |/ / _ \ &#39;__|
+| (_| | (_) | (__\__ \ |_| |  | | | | | (_| |_____|  _| (_) | |  | | | | | | (_| | ||_____| (__| | | |  __/ (__|   &lt;  __/ |
+ \__,_|\___/ \___|___/\__|_|  |_|_| |_|\__, |     |_|  \___/|_|  |_| |_| |_|\__,_|\__|     \___|_| |_|\___|\___|_|\_\___|_|
+                                       |___/
+
+
+ Usage: dfc [OPTIONS] [PATHS]... COMMAND [ARGS]...
+
+ A CLI tool to check and validate Python docstring formatting and completeness.
+
+╭─ Arguments ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│   paths      [PATHS]...  Path(s) to Python file(s) or directory(s) for DFC to check                                                                                               │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --config   -f      TEXT  Path to configuration file (TOML format)                                                                                                                 │
+│ --exclude  -x      TEXT  Glob patterns to exclude (can be used multiple times)                                                                                                    │
+│ --output   -o      TEXT  Output format: &#39;table&#39; or &#39;list&#39; [default: list]                                                                                                         │
+│ --check    -c            Throw error (exit 1) if any issues are found                                                                                                             │
+│ --quiet    -q            Only output pass/fail confirmation, suppress errors unless failing                                                                                       │
+│ --example  -e      TEXT  Show examples: &#39;config&#39; for configuration example, &#39;usage&#39; for usage examples                                                                            │
+│ --version  -v            Show version and exit                                                                                                                                    │
+│ --help     -h            Show this message and exit                                                                                                                               │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+╭─ Usage Examples ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Execute the below commands in any terminal after installing the package.                                                                                                          │
+│                                                                                                                                                                                   │
+│ dfc myfile.py                   # Check a single Python file (list output)                                                                                                        │
+│ dfc myfile.py other_file.py     # Check multiple Python files                                                                                                                     │
+│ dfc src/                        # Check all Python files in src/ directory                                                                                                        │
+│ dfc -x src/app/__init__.py src/ # Check all Python files in src/ directory, excluding one init file                                                                               │
+│ dfc --output=table myfile.py    # Check with table output format                                                                                                                  │
+│ dfc -o list myfile.py           # Check with list output format (default)                                                                                                         │
+│ dfc --check myfile.py           # Check and exit with error if issues found                                                                                                       │
+│ dfc --quiet myfile.py           # Check quietly, only show pass/fail                                                                                                              │
+│ dfc --quiet --check myfile.py   # Check quietly and exit with error if issues found                                                                                               │
+│ dfc . --exclude &#39;*/tests/*&#39;     # Check current directory, excluding tests                                                                                                        │
+│ dfc . -c custom.toml            # Use custom configuration file                                                                                                                   │
+│ dfc --example=config            # Show example configuration                                                                                                                      │
+│ dfc -e usage                    # Show usage examples (this help)                                                                                                                 │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Configuration Example ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Place the below config in your `pyproject.toml` file.                                                                                                                             │
+│                                                                                                                                                                                   │
+│ [tool.dfc]                                                                                                                                                                        │
+│ # or [tool.docstring-format-checker]                                                                                                                                              │
+│ allow_undefined_sections = false                                                                                                                                                  │
+│ require_docstrings = true                                                                                                                                                         │
+│ check_private = true                                                                                                                                                              │
+│ validate_param_types = true                                                                                                                                                       │
+│ optional_style = &quot;validate&quot;  # &quot;silent&quot;, &quot;validate&quot;, or &quot;strict&quot;                                                                                                                  │
+│ sections = [                                                                                                                                                                      │
+│     { order = 1, name = &quot;summary&quot;,  type = &quot;free_text&quot;,          required = true, admonition = &quot;note&quot;, prefix = &quot;!!!&quot; },                                                          │
+│     { order = 2, name = &quot;details&quot;,  type = &quot;free_text&quot;,          required = false, admonition = &quot;abstract&quot;, prefix = &quot;???+&quot; },                                                    │
+│     { order = 3, name = &quot;params&quot;,   type = &quot;list_name_and_type&quot;, required = false },                                                                                              │
+│     { order = 4, name = &quot;raises&quot;,   type = &quot;list_type&quot;,          required = false },                                                                                              │
+│     { order = 5, name = &quot;returns&quot;,  type = &quot;list_name_and_type&quot;, required = false },                                                                                              │
+│     { order = 6, name = &quot;yields&quot;,   type = &quot;list_type&quot;,          required = false },                                                                                              │
+│     { order = 7, name = &quot;examples&quot;, type = &quot;free_text&quot;,          required = false, admonition = &quot;example&quot;, prefix = &quot;???+&quot; },                                                     │
+│     { order = 8, name = &quot;notes&quot;,    type = &quot;free_text&quot;,          required = false, admonition = &quot;note&quot;, prefix = &quot;???&quot; },                                                         │
+│ ]                                                                                                                                                                                 │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+</code></pre></div>
+</div>
+<h2 id="configuring-dfc">🛠️ Configuring <code>dfc</code><a class="headerlink" href="#configuring-dfc" title="Permanent link">🔗</a></h2>
+<p>To get the most out of <code>dfc</code>, define your documentation standards in a <code>pyproject.toml</code> file. Use this standard configuration file for Python projects.</p>
+<h3 id="create-a-configuration-file">Create a configuration file<a class="headerlink" href="#create-a-configuration-file" title="Permanent link">🔗</a></h3>
+<p>Create a <code>pyproject.toml</code> file in your root directory (or update your existing one) with the following content. Specify the section names you prefer:</p>
+<div class="toml highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">pyproject.toml</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">[tool.dfc]</span>
+<span class="n">require_docstrings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">check_private</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="n">validate_param_types</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">sections</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">order</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;summary&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;free_text&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">required</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="n">admonition</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;note&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">prefix</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;!!!&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">order</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;params&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;list_name_and_type&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">required</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">order</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;returns&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;list_name_and_type&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">required</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">},</span>
+<span class="p">]</span>
+</code></pre></div></td></tr></table></div>
+<h3 id="understand-the-options">Understand the options<a class="headerlink" href="#understand-the-options" title="Permanent link">🔗</a></h3>
+<p>In the above sample, we have provided three global options and three sections which contain 4 or more attributes each:</p>
+<ul>
+<li><code>require_docstrings</code>: When set to <code>true</code>, <code>dfc</code> reports an error for any public function, method, or class that lacks a docstring.</li>
+<li><code>validate_param_types</code>: Ensure that parameters in the docstring include type annotations (e.g., <code>width (int): ...</code>).</li>
+<li><code>sections</code>: This list defines the specific parts of a docstring that <code>dfc</code> should look for and validate. Each section has a <code>name</code>, <code>type</code>, and can be <code>required</code>.</li>
+</ul>
+<p>However, there are more options available to fine-tune the behaviour of <code>dfc</code>. The Global section allows five different options, and each section has the possibility of seven options. Here is a brief overview of some commonly used options:</p>
+<ul>
+<li>Global:<ul>
+<li><code>allow_undefined_sections</code>: When set to <code>false</code>, <code>dfc</code> reports an error if the docstring contains sections that are not defined in the configuration.</li>
+<li><code>require_docstrings</code>: When set to <code>true</code>, <code>dfc</code> reports an error for any public function, method, or class that lacks a docstring.</li>
+<li><code>check_private</code>: When set to <code>true</code>, <code>dfc</code> also checks private functions, methods, and classes (those prefixed with an underscore).</li>
+<li><code>validate_param_types</code>: Ensure that parameters in the docstring include type annotations (e.g., <code>width (int): ...</code>).</li>
+<li><code>optional_style</code>: Defines how optional sections are treated. Options include <code>silent</code>, <code>validate</code>, and <code>strict</code>.</li>
+</ul>
+</li>
+<li>Section:<ul>
+<li><code>name</code>: The name of the section as it should appear in the docstring.</li>
+<li><code>type</code>: The type of content expected in the section (e.g., <code>free_text</code>, <code>list_name_and_type</code>, <code>list_type</code>).</li>
+<li><code>order</code>: The order in which the section should appear in the docstring.</li>
+<li><code>admonition</code>: The type of admonition to use for the section (e.g., <code>note</code>, <code>abstract</code>, <code>example</code>).</li>
+<li><code>prefix</code>: The prefix used to denote the section in the docstring (e.g., <code>!!!</code>, <code>???+</code>, <code>???</code>).</li>
+<li><code>required</code>: Whether the section is mandatory (<code>true</code>) or optional (<code>false</code>).</li>
+<li><code>message</code>: A custom error message to display if the section is missing or incorrectly formatted.</li>
+</ul>
+</li>
+</ul>
+<p>Refer to the <a href="../configuration/">Configuration</a> page for a full list of available options and their descriptions.</p>
+<h3 id="run-the-tool-again">Run the tool again<a class="headerlink" href="#run-the-tool-again" title="Permanent link">🔗</a></h3>
+<p>Now that you have a configuration, run <code>dfc</code> on <code>sample.py</code> again:</p>
+<div class="sh bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Terminal</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>dfc<span class="w"> </span>--check<span class="w"> </span>sample.py
+</code></pre></div></td></tr></table></div>
+<div class="result">
+<p>Expected output:</p>
+<div class="highlight"><pre><span></span><code>  Line 1 - function &#39;calculate_area&#39;:
+    - Missing required section: &#39;summary&#39;
+    - Missing required section: &#39;params&#39;
+    - Section &#39;args&#39; found in docstring but not defined in configuration
+  Line 15 - function &#39;calculate_perimeter&#39;:
+    - Missing required section: &#39;summary&#39;
+    - Missing required section: &#39;params&#39;
+    - Section &#39;parameters&#39; found in docstring but not defined in configuration
+
+Found 6 error(s) in 2 functions over 1 file
+</code></pre></div>
+</div>
+<p><code>dfc</code> notifies you that the <code>summary</code> section is missing (because it expects a <code>Summary:</code> header), and the <code>params</code> section fails to match the docstring's <code>Args:</code> header.</p>
+<h3 id="fix-the-docstring">Fix the docstring<a class="headerlink" href="#fix-the-docstring" title="Permanent link">🔗</a></h3>
+<p>Update <code>calculate_area()</code> in <code>sample.py</code> to match the required format. Ensure you include type annotations in the signature and parenthesised types in the docstring:</p>
+<div class="py python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">sample.py</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">calculate_area</span><span class="p">(</span><span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    !!! note &quot;Summary&quot;</span>
+<span class="sd">        Calculate the area of a rectangle.</span>
+
+<span class="sd">    Params:</span>
+<span class="sd">        width (int): The width of the rectangle.</span>
+<span class="sd">        height (int): The height of the rectangle.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (int): The calculated area.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">width</span> <span class="o">*</span> <span class="n">height</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_perimeter</span><span class="p">(</span><span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    !!! note &quot;Summary&quot;</span>
+<span class="sd">        Calculate the perimeter of a rectangle.</span>
+
+<span class="sd">    Params:</span>
+<span class="sd">        width (int): The width of the rectangle.</span>
+<span class="sd">        height (int): The height of the rectangle.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (int): The calculated perimeter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">width</span> <span class="o">+</span> <span class="n">height</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+<p>Now run the check again:</p>
+<div class="sh bash highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Terminal</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>dfc<span class="w"> </span>--check<span class="w"> </span>sample.py
+</code></pre></div></td></tr></table></div>
+<div class="result">
+<div class="highlight"><pre><span></span><code>✅ All docstrings are valid!
+</code></pre></div>
+</div>
+<h2 id="troubleshooting-and-watch-outs">💡 Troubleshooting and Watch-outs<a class="headerlink" href="#troubleshooting-and-watch-outs" title="Permanent link">🔗</a></h2>
+<p>As you begin using <code>dfc</code>, keep these points in mind to ensure a smooth experience.</p>
+<h3 id="watch-out-order-matters"><strong>Watch-out</strong>: Order matters<a class="headerlink" href="#watch-out-order-matters" title="Permanent link">🔗</a></h3>
+<p>If you define an <code>order</code> for your sections in <code>pyproject.toml</code>, <code>dfc</code> enforces that specific order. If a <code>returns</code> section appears before a <code>params</code> section but the config says otherwise, <code>dfc</code> raises an error.</p>
+<h3 id="pro-tip-floating-sections"><strong>Pro-tip</strong>: Floating sections<a class="headerlink" href="#pro-tip-floating-sections" title="Permanent link">🔗</a></h3>
+<p>Omit the <code>order</code> attribute for sections like "Deprecation Warning" or "Notes" that might appear anywhere in the docstring. These are called "floating" sections.</p>
+<h3 id="common-pitfall-indentation"><strong>Common Pitfall</strong>: Indentation<a class="headerlink" href="#common-pitfall-indentation" title="Permanent link">🔗</a></h3>
+<p><code>dfc</code> uses AST parsing to understand your code, but it still expects standard Python indentation. Always correctly indent your docstrings relative to the function or class they describe.</p>
+<h2 id="next-steps">🛤️ Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">🔗</a></h2>
+<p>Now that you have the basics down, explore the <a href="../configuration/">Configuration</a> page for a full list of available options and section types. Integrate <code>dfc</code> into your CI/CD pipeline or use it as a pre-commit hook to automate your documentation checks.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.indexes", "navigation.top", "navigation.instant", "search.highlight", "search.suggest", "toc.follow", "content.action.edit", "content.action.view", "content.code.select", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
