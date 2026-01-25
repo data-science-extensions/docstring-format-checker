@@ -216,6 +216,7 @@ dfc --check src/
 ### 🔇 Quiet Mode (`--quiet` / `-q`)
 
 Suppress all detailed error messages. Report only a high-level summary if errors occur, or nothing at all if the check passes.
+
 ```sh {.sh .bash title="Terminal"}
 dfc --quiet --check src/
 ```
@@ -267,12 +268,12 @@ Prepare a small environment with a few sample files to test the tool. Create a d
 
 
 ```python {.py .python title="dfc_walkthrough/good_code.py"}
---8<--"docs/usage/examples/sample_good.py"
+--8<-- "docs/usage/examples/sample_good.py"
 ```
 
 
 ```python {.py .python title="dfc_walkthrough/bad_code.py"}
---8<--"docs/usage/examples/sample_bad.py"
+--8<-- "docs/usage/examples/sample_bad.py"
 ```
 
 
