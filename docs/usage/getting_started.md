@@ -28,7 +28,7 @@ pip install docstring-format-checker
 
 ## 🚀 Your First Check
 
-Walk through a simple example to see how `dfc` work.
+Walk through a simple example to see how `dfc` works.
 
 
 ### Create a sample module
