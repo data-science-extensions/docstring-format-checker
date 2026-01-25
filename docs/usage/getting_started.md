@@ -67,7 +67,7 @@ Found 6 error(s) in 2 functions over 1 file
 
 </div>
 
-By default, `dfc` expect a summary formatted as an admonition (like `!!! note "Summary"`) and a section named `Params` instead of `Args`.
+By default, `dfc` expects a summary formatted as an admonition (like `!!! note "Summary"`) and a section named `Params` instead of `Args`.
 
 
 ### Get help
