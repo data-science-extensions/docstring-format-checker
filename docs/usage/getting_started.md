@@ -249,7 +249,7 @@ dfc --check sample.py
 
 ## 💡 Troubleshooting and Watch-outs
 
-As you begin use `dfc`, keep these points in mind to ensure a smooth experience.
+As you begin using `dfc`, keep these points in mind to ensure a smooth experience.
 
 
 ### **Watch-out**: Order matters
