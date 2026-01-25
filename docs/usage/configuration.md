@@ -42,7 +42,7 @@ When enabled, `dfc` flags any public function, method, or class that lacks a doc
 
 ### 2. Check Private Members
 
-By default, `dfc` only check public members (those that do not start with an underscore `_`).
+By default, `dfc` only checks public members (those that do not start with an underscore `_`).
 
 |     Config      |   Type    | Required | Default |
 | :-------------: | :-------: | :------: | :-----: |
