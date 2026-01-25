@@ -70,7 +70,7 @@ Control how `dfc` handles sections that are not explicitly defined in your confi
 | :------------------------: | :-------: | :------: | :-----: |
 | `allow_undefined_sections` | `boolean` |    no    | `false` |
 
-If set to `false`, any section header found in a docstring that do not match a defined section name raise an error.
+If set to `false`, any section header found in a docstring that does not match a defined section name raises an error.
 
 | Option  | Description                                     |
 | ------- | ----------------------------------------------- |
