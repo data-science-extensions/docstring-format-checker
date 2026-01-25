@@ -221,7 +221,7 @@ Found 6 error(s) in 2 functions over 1 file
 
 </div>
 
-`dfc` notifies you that the `summary` section is missing (because it expect a `Summary:` header), and the `params` section fails to match the docstring's `Args:` header.
+`dfc` notifies you that the `summary` section is missing (because it expects a `Summary:` header), and the `params` section fails to match the docstring's `Args:` header.
 
 
 ### Fix the docstring

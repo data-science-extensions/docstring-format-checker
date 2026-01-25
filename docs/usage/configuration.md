@@ -258,7 +258,7 @@ Mark a section as mandatory for every docstring.
 
 ### 7. Custom Error Message
 
-Provide a more helpful error message when a section validator fail or a required section be missing.
+Provide a more helpful error message when a section validator fails or a required section is missing.
 
 |  Config   |   Type   | Required | Default |
 | :-------: | :------: | :------: | :-----: |
@@ -361,7 +361,7 @@ Omit the `order` attribute for sections that might appear anywhere, such as "Not
 
 ### **Pro-tip**: Disable Built-ins
 
-If you provide a `sections` list in your `pyproject.toml`, `dfc` completely replace the default configuration. This allow you to fully customise what sections be checked without any unexpected behavior from built-in defaults.
+If you provide a `sections` list in your `pyproject.toml`, `dfc` completely replaces the default configuration. This allows you to fully customise what sections are checked without any unexpected behavior from built-in defaults.
 
 
 ## 🔍 Configuration Discovery
