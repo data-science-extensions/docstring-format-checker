@@ -114,7 +114,7 @@ Standardise how optional parameters be described.
 | :--------------: | :------: | :------: | :----------: |
 | `optional_style` | `string` |    no    | `"validate"` |
 
-This setting control how `dfc` report issues when a parameter have a default value in the function signature.
+This setting controls how `dfc` reports issues when a parameter has a default value in the function signature.
 
 | Option       | Description                                                                                    |
 | ------------ | ---------------------------------------------------------------------------------------------- |
