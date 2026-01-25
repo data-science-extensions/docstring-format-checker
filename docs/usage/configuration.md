@@ -366,8 +366,8 @@ If you provide a `sections` list in your `pyproject.toml`, `dfc` completely repl
 
 ## 🔍 Configuration Discovery
 
-`dfc` automatically look for configuration in the following order:
+`dfc` automatically looks for configuration in the following order:
 
 1.  A path provided via the `--config` or `-f` command-line argument.
 2.  A `pyproject.toml` file in the current working directory containing a `[tool.dfc]` or `[tool.docstring-format-checker]` section.
-3.  The default built-in configuration if no file be found.
+3.  The default built-in configuration if no file is found.
