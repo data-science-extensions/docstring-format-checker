@@ -26,7 +26,7 @@ Enforce documentation across your entire project by setting `require_docstrings`
 | :------------------: | :-------: | :------: | :-----: |
 | `require_docstrings` | `boolean` |    no    | `true`  |
 
-When enabled, `dfc` flag any public function, method, or class that lack a docstring.
+When enabled, `dfc` flags any public function, method, or class that lacks a docstring.
 
 | Option  | Description                                         |
 | ------- | --------------------------------------------------- |
