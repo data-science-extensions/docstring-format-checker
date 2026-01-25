@@ -50,7 +50,7 @@ dfc --check sample.py
 
 <div class="result" markdown>
 
-`dfc` notify you that the docstring fail to meet the default standards:
+`dfc` notifies you that the docstring fails to meet the default standards:
 
 ```text
   Line 1 - function 'calculate_area':
