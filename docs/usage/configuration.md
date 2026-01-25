@@ -313,7 +313,7 @@ docs/usage/sample_config.py
 Found 3 error(s) in 3 functions over 1 file
 ```
 
-Notice how `dfc` now check private functions and enforce strict optional parameter naming.
+Notice how `dfc` now checks private functions and enforces strict optional parameter naming.
 
 </div>
 
