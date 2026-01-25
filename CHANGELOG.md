@@ -9,6 +9,244 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v1.11.4"
+
+    ## **v1.11.4**
+
+    <!-- md:tag v1.11.4 --><br>
+    <!-- md:date 2026-01-25 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v1.11.4](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.11.4) -->
+
+    ??? note "Release Notes"
+
+        ### 📋 Overview
+        
+        
+        Significantly expand the project documentation with comprehensive usage guides and detailed CLI walkthroughs. This release also introduces performance optimisations for file discovery on Linux systems, refines the integration instructions for pre-commit, and standardises the grammatical tone across the entire codebase.
+        
+        
+        ### ✨ New Features
+        
+        
+        #### 📘 Introduce comprehensive usage documentation
+        
+        
+        Create three new major documentation sections to assist developers at all experience levels.
+        
+        - Provide a clear installation path and a guided first check in the [getting_started.md](docs/usage/getting_started.md) guide.
+        - Detail every global and section-specific configuration option with practical examples and troubleshooting tips in the [configuration.md](docs/usage/configuration.md) page.
+        - Deliver an extensive walkthrough of command-line interactions, including sample terminal outputs and format comparisons, in the [command_line_interface.md](docs/usage/command_line_interface.md) guide.
+        
+        
+        #### 🚀 Optimise file discovery performance
+        
+        
+        Refactor the `get_all_files()` function in `scripts.py` to utilise the Linux `find` command for significantly faster file retrieval in large repositories. Maintain a robust fallback to the `Path.glob()` method to ensure cross-platform compatibility.
+        
+        
+        ### ⚙️ Technical Improvements
+        
+        
+        #### 🛡️ Refine file exclusion logic for documentation
+        
+        
+        Enhance the `check_blacken_docs()` and `run_blacken_docs()` functions to exclude documentation markdown files from the `blacken-docs` process. This ensures that intentional "bad" code examples used for demonstration purposes remain unfixed by the formatter, preserving their educational value.
+        
+        
+        #### 🔗 Improve pre-commit and installation guides
+        
+        
+        Update the [README.md](README.md) with modern installation instructions for every major package manager, referencing the latest `1.*` version. Introduce a dedicated section for pre-commit integration with an example configuration for `.pre-commit-config.yaml` to help users automate their docstring validation.
+        
+        
+        #### 🛠️ Clean up internal callbacks and metadata
+        
+        
+        Remove redundant parameter descriptions for `ctx`, `param`, and `value` within the `_show_usage_examples_callback()` and `_show_config_example_callback()` functions in `cli.py`. Update the `GlobalConfig()` and `SectionConfig()` dataclasses in `config.py` with descriptive `field()` metadata to improve IDE tooltip clarity.
+        
+        
+        ### ✍️ Documentation and Styling
+        
+        
+        #### 🎨 Enhance visual documentation styling
+        
+        
+        Introduce custom CSS styling in `code_chunks.css` to display the TOML logo icon next to configuration code blocks. Update the `mkdocs.yaml` configuration to enable the `content.code.select` and `content.code.copy` features, and standardise the code font to improve readability.
+        
+        
+        #### 📋 Standardise internal grammatical tone
+        
+        
+        Perform a comprehensive linguistic sweep to ensure that all internal docstrings and comments follow a consistent grammatical structure. Standardise descriptions of `dfc` behaviour to use the third-person singular (e.g., "reports", "fails", "checks") to provide a professional and unified tone throughout the project.
+        
+        
+        ### 💪 Pull Requests
+        
+        * Enhance documentation, introduce comprehensive usage guides, and improve file discovery performance by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/39
+        
+        
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.11.3...v1.11.4
+        
+
+    ??? abstract "Updates"
+
+        * [`38c36b2`](https://github.com/data-science-extensions/docstring-format-checker/commit/38c36b2bf32bd5e5d31d89756d6a87cd2a198937): Fix syntax typos
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`f2117ea`](https://github.com/data-science-extensions/docstring-format-checker/commit/f2117ead140f9f47ebff4cc7502ef755600e0e7d): Fix typo<br>
+            Subject-verb agreement error: "the process fail" should be "the process fails" (singular third-person verb form).
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`cff2338`](https://github.com/data-science-extensions/docstring-format-checker/commit/cff2338d9e580a327a77926ecb85d215cf34adeb): Fix typo<br>
+            The imperative verb "Call" creates an awkward construction. The sentence should use a passive construction or rephrase to something like "These are called 'floating' sections" or "We call these 'floating' sections".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`b327d3a`](https://github.com/data-science-extensions/docstring-format-checker/commit/b327d3a249119bb4ba8a71aa852cec28016f6c16): Fix typo<br>
+            The sentence structure is awkward. "Target developers" should be "This guide targets developers" or similar. The current phrasing reads as an incomplete imperative statement rather than a descriptive clause.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`8b4cfbb`](https://github.com/data-science-extensions/docstring-format-checker/commit/8b4cfbbb69842b2c1efd86cf3e186072c1a25048): Fix missing exclusion filter<br>
+            The filtering logic in `run_blacken_docs()` excludes `getting_started.md` and `configuration.md` but does not exclude command_line_interface.md, while `check_blacken_docs()` excludes all three files. This inconsistency could lead to `run_blacken_docs()` reformatting code examples in `command_line_interface.md` that are intentionally kept in a specific format for demonstration purposes, while `check_blacken_docs()` would pass. Ensure both functions exclude the same set of files to maintain consistency.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`f927189`](https://github.com/data-science-extensions/docstring-format-checker/commit/f9271899194776db18c254bcb6eb4c49fd1817b0): Fix typo<br>
+            Subject-verb agreement error: "if the check pass" should be "if the check passes" (singular third-person verb form).
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`ad23d0e`](https://github.com/data-science-extensions/docstring-format-checker/commit/ad23d0ec37ea32c18188fb1f36ade973bb79e777): Fix typo<br>
+            Subject-verb agreement error: "Ensure that `dfc` return" should be "Ensure that `dfc` returns" (singular third-person verb form requires the 's').
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`3c28f9b`](https://github.com/data-science-extensions/docstring-format-checker/commit/3c28f9b488ba2a9e893e245e72089f19eacb37f9): Fix broken links<br>
+            The link path `[pyproject.toml](docs/usage/examples/pyproject.toml)` is incorrect. From the location of `docs/usage/command_line_interface.md`, the relative path should be `examples/pyproject.toml` (without the `docs/usage/` prefix) or `../usage/examples/pyproject.toml` if using an absolute path from the docs root.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`29c7524`](https://github.com/data-science-extensions/docstring-format-checker/commit/29c7524e2df9f1101c8e61afcb5ca7293be5364c): Refine file exclusion criteria in `check_blacken_docs()` function<br>
+            - Exclude `command_line_interface.md` from the file checks<br>
+            - Maintain exclusions for `getting_started.md` and `configuration.md`
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`040fc72`](https://github.com/data-science-extensions/docstring-format-checker/commit/040fc72da76b08a1f789ec887bec57b5fa925bf2): Add command line interface documentation<br>
+            - Create `command_line_interface.md` for CLI usage details.<br>
+            - Update navigation in `mkdocs.yaml` to link to the new CLI documentation.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`81b3d91`](https://github.com/data-science-extensions/docstring-format-checker/commit/81b3d912d8f3dda79c40a7e6d5ecde4b75945004): Add the `CLI` usage page
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`9e9849b`](https://github.com/data-science-extensions/docstring-format-checker/commit/9e9849bebdd6537cc5d8b26e019259ceb888fa16): Enhance `README.md` with formatting and content updates<br>
+            - Add emojis to section headers for improved visual appeal<br>
+            - Update command examples to use consistent syntax with `--check` and `--example` flags<br>
+            - Correct grammatical errors and improve clarity in descriptions<br>
+            - Introduce new sections for usage examples and installation methods<br>
+            - Standardise section titles for better organisation
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`6d20d57`](https://github.com/data-science-extensions/docstring-format-checker/commit/6d20d57c3c4cbbcf47f5833b4316d0be7b06165f): Fix typos
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`f30a0b3`](https://github.com/data-science-extensions/docstring-format-checker/commit/f30a0b3c12e6a04001762af0fcfd927287610ec7): Update repository reference in pre-commit configuration<br>
+            - Change local repository reference to remote URL in `.pre-commit-config.yaml`<br>
+            - Update revision tag to `v1.11.3`<br>
+            - Modify entry command from `dfc check` to `dfc --check`
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`0e78deb`](https://github.com/data-science-extensions/docstring-format-checker/commit/0e78debd677aa1f9f7adda614ed94b3dfdc7b5d2): The verb "notify" should be "notifies" (third person singular) to agree with the subject "dfc", and "fail" should be "fails" to agree with the subject "section".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`bfa4d76`](https://github.com/data-science-extensions/docstring-format-checker/commit/bfa4d76f1323e02f7e0ce03e4b31cf8cfc3e8522): Update example in `getting_started.md` to correct file reference.<br>
+            - Change file reference from `--8 < --"docs/usage/examples/sample_good.py"` to `--8<-- "docs/usage/examples/sample_good.py"`.<br>
+            - Ensure clarity in the documentation for users.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`1411b5a`](https://github.com/data-science-extensions/docstring-format-checker/commit/1411b5a033b09a67b6d76fab4cb638a8fb7e73f4): Filter out specific files from `get_all_files()` in `run_blacken_docs()` and `check_blacken_docs()` functions.<br>
+            - Exclude `getting_started.md` and `configuration.md` from the list of files processed.<br>
+            - Ensure only relevant files are passed to the `blacken-docs` command.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`7be8880`](https://github.com/data-science-extensions/docstring-format-checker/commit/7be8880ada94a7843031b5afacffcf5c5e64f8cd): Implement file retrieval using `find` command with fallback to `Path.glob`<br>
+            - Add `get_all_files()` function to retrieve files with specified suffixes.<br>
+            - Exclude `.venv` and hidden directories from results.<br>
+            - Use `subprocess.check_output` to execute `find` command for performance.<br>
+            - Fallback to `Path.glob` if `find` command fails.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`f5a4b9d`](https://github.com/data-science-extensions/docstring-format-checker/commit/f5a4b9dfc27f20e75eca876079dbb1b26979ea4f): The verb "expect" should be "expects" (third person singular) to agree with the subject "dfc".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`9cb1671`](https://github.com/data-science-extensions/docstring-format-checker/commit/9cb167150bba1a354047be11a1d7b769ac253834): The verb "have" should be "has" (third person singular) to agree with the subject "type".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`85ac9bd`](https://github.com/data-science-extensions/docstring-format-checker/commit/85ac9bdec5b87d0552ba75a5455ba09f5765f9ee): The verb "use" should be "uses" (third person singular) to agree with the subject "dfc", and "expect" should be "expects".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`18dadfd`](https://github.com/data-science-extensions/docstring-format-checker/commit/18dadfd3f236a34e02ebce6a9553fded82b46fa3): The verb "begin" should be followed by the infinitive "using" or the gerund form "to use" should be changed to "begin using" for correct grammar.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`d4cb303`](https://github.com/data-science-extensions/docstring-format-checker/commit/d4cb3030d4a3911157122586035bc8a82ec355c4): The verb "work" should be plural "works" to agree with the singular subject "dfc".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`d242443`](https://github.com/data-science-extensions/docstring-format-checker/commit/d24244341e41f0fcdf996bc1803f7aaa093ea733): Both verbs need to be conjugated correctly: "notify" should be "notifies" and "fail" should be "fails" (third person singular) to agree with their respective subjects.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`26b9d80`](https://github.com/data-science-extensions/docstring-format-checker/commit/26b9d805720fe7c7e5f5049775ee0b6d9e666c4b): The verb "affect" should be "affects" (third person singular) to agree with the subject "Configuring these options", and "behave" should be "behaves" to agree with the subject "dfc".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`b8fbe7f`](https://github.com/data-science-extensions/docstring-format-checker/commit/b8fbe7fa399921409d3a562788eb732bcea6cab7): Multiple verbs need to be conjugated correctly: "enforce" should be "enforces", "appear" should be "appears", "say" should be "says", and "raise" should be "raises" (third person singular) to agree with their respective subjects.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`4ab9336`](https://github.com/data-science-extensions/docstring-format-checker/commit/4ab933663533651c75b9a49d943834dcc141bbb0): The verb "allow" should be "allows" (third person singular) to agree with the subject "This".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`3b8b915`](https://github.com/data-science-extensions/docstring-format-checker/commit/3b8b915d6cf2d1bb052f67b1e800dedd53ba1d65): The verb "be" should be "is" (singular) to agree with the subject "indicator", and "do" should be "does".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`65e9210`](https://github.com/data-science-extensions/docstring-format-checker/commit/65e9210c1fb8c5c5218d48c370cee2bc58a6f11d): Both verbs need to be conjugated correctly: "check" should be "checks" and "enforce" should be "enforces" (third person singular) to agree with the subject "dfc".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`0580188`](https://github.com/data-science-extensions/docstring-format-checker/commit/0580188258cc3138d96a04a111cb2d1937f90887): The verb "report" should be "reports" and "lack" should be "lacks" (third person singular) to agree with their respective subjects.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`350851e`](https://github.com/data-science-extensions/docstring-format-checker/commit/350851e9ba3870e429af08e886fed5a44653e70a): The verb "define" should be "defines" (third person singular) to agree with the subject "list", and "have" should be "has" to agree with the subject "section".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`f7f9469`](https://github.com/data-science-extensions/docstring-format-checker/commit/f7f9469030fbca146ca454936e94b1a18e77bac1): The verb "be" should be "are" (plural) to agree with the subject "parameters".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`77c4597`](https://github.com/data-science-extensions/docstring-format-checker/commit/77c45972ddddb865dd2b4ed44aa3c19ec4c0c26f): The verb "expect" should be "expects" (third person singular) to agree with the subject "dfc".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`6de6d17`](https://github.com/data-science-extensions/docstring-format-checker/commit/6de6d17b8479ad5cc6e8448da7b6db1a7b8526e6): Update docs/usage/configuration.md
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`c359d5e`](https://github.com/data-science-extensions/docstring-format-checker/commit/c359d5eaa451f6c794b48d97454a574adbd31333): The verb "fail" should be "fails" (third person singular) to agree with the subject "undocumented_function()", and "be" should be "are".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`d3e4a7b`](https://github.com/data-science-extensions/docstring-format-checker/commit/d3e4a7be35385d21d186557fd7c28cf794bf24cc): The verb "look" should be "looks" (third person singular) to agree with the subject "dfc".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`9c8f261`](https://github.com/data-science-extensions/docstring-format-checker/commit/9c8f261cdeba7806e4236a53ec396a5a195acce1): The verb "check" should be "checks" (third person singular) to agree with the subject "dfc".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`5baac82`](https://github.com/data-science-extensions/docstring-format-checker/commit/5baac82ac4cc9fbfac4027ca0a44f1e91d108d2b): Both verbs need to be conjugated correctly: "be" should be "are" (plural) to agree with the subject "These", and "follow" should be "follows" (third person singular) to agree with the subject "content".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`1973de2`](https://github.com/data-science-extensions/docstring-format-checker/commit/1973de2b30220b72833bec269d70184a3a9c4aff): The verb "have" should be "has" (third person singular) to agree with the subject "sections", and "ensure" should be "ensures" to agree with the subject "dfc".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`c38406e`](https://github.com/data-science-extensions/docstring-format-checker/commit/c38406edd3671f5072e70add020f335e33fb399a): The verb "control" should be "controls" (third person singular) to agree with the subject "setting", and "report" should be "reports", and "have" should be "has".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`0944ffa`](https://github.com/data-science-extensions/docstring-format-checker/commit/0944ffa5991a0375eb8b0f72c1cb6390d4f25a41): The verb "do" should be "does" (third person singular) to agree with the subject "section header", and "raise" should be "raises".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`8d903de`](https://github.com/data-science-extensions/docstring-format-checker/commit/8d903de17200abd63831b7b7c7fa95345c81b2b2): The verb "handle" should be "handles" (third person singular) to agree with the subject "dfc", and "be not" should be "are not" for correct grammar.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`c317548`](https://github.com/data-science-extensions/docstring-format-checker/commit/c31754851015511cb1d9961ef5f1788ccf3e687a): The verb "flag" should be "flags" (third person singular) to agree with the subject "dfc", and "lack" should be "lacks" to agree with its subject.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`ac0fa02`](https://github.com/data-science-extensions/docstring-format-checker/commit/ac0fa0236d4711239c9f1f84d3168cd61cb71e15): Both verbs need to be conjugated correctly: "display" should be "displays" and "include" should be "includes" (third person singular) to agree with their respective subjects.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`279f5b9`](https://github.com/data-science-extensions/docstring-format-checker/commit/279f5b9913d246d1005dbb779c645428967a4e14): The verb "miss" should be "misses" (third person singular) to agree with the subject "docstring".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`c13e5ff`](https://github.com/data-science-extensions/docstring-format-checker/commit/c13e5ff2c7139bbecfde7c68be1671af732b7454): The verb "appear" should be "appears" (third person singular) to agree with the subject "name of the section".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`b943fb0`](https://github.com/data-science-extensions/docstring-format-checker/commit/b943fb04f6908bedbd2aacecadb9b4cc30bcf0cf): The verb "offer" should be "offers" (third person singular) to agree with the subject "dfc".
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`7cf5d2f`](https://github.com/data-science-extensions/docstring-format-checker/commit/7cf5d2fde47101b64c35a6d6c1688c2542b2771b): Add comprehensive documentation and examples for configuration<br>
+            - Introduce `configuration.md` to detail global and section-specific configuration options.<br>
+            - Create example configuration files: `config_full.toml`, `config_global.toml`, `config_sections.toml`, and `pyproject.toml`.<br>
+            - Add sample Python files: `sample_bad.py`, `sample_good.py`, and `sample_config.py` to demonstrate usage.<br>
+            - Enhance `getting_started.md` with installation instructions and a walkthrough for first-time users.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`5ad7adc`](https://github.com/data-science-extensions/docstring-format-checker/commit/5ad7adce1becdd3838a34a77740a4030c9924c39): Add TOML logo to filename display in code chunks<br>
+            - Introduce styling for `.toml span.filename::before` to display the TOML logo.<br>
+            - Set dimensions and background properties for the logo.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`fb7a935`](https://github.com/data-science-extensions/docstring-format-checker/commit/fb7a935c698543b3fd1006c21ad67805d42ee1de): Enhance theme configuration in mkdocs.yaml<br>
+            - Add content.code.select and content.code.copy features to theme<br>
+            - Update font configuration for code to use Consolas and 'Courier New'
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`ef5f54e`](https://github.com/data-science-extensions/docstring-format-checker/commit/ef5f54e84540e1dc306cc9f35311486ba15a2119): Add Getting Started and Configuration sections to navigation<br>
+            - Introduce `usage/getting_started.md` for initial setup guidance.<br>
+            - Introduce `usage/configuration.md` for configuration options.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`ac74101`](https://github.com/data-science-extensions/docstring-format-checker/commit/ac7410150a0fd882831b0a05dc715fb1b11b5af5): Remove unnecessary parameter documentation from callback functions<br>
+            - Remove parameter descriptions for `ctx`, `param`, and `value` in `_show_usage_examples_callback()` function.<br>
+            - Remove parameter descriptions for `ctx`, `param`, and `value` in `_show_config_example_callback()` function.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`86feb2e`](https://github.com/data-science-extensions/docstring-format-checker/commit/86feb2e89fe4e2793daa69414636e014f21c54d4): Add integration instructions for Pre-commit<br>
+            - Include example configuration for `.pre-commit-config.yaml`<br>
+            - Document usage of the Docstring Format Checker hook
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`bda1a6d`](https://github.com/data-science-extensions/docstring-format-checker/commit/bda1a6dafd626a80ad7eaecc402265b88c676994): Update dependency version in README<br>
+            - Change dependency version for `docstring-format-checker` from `0.*` to `1.*` in installation instructions.<br>
+            - Update installation commands to reflect the new version in multiple sections.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`a485539`](https://github.com/data-science-extensions/docstring-format-checker/commit/a4855399333f5559d6929a6e0f0de7b84f2ac515): Add Data Science Extensions link to site navigation<br>
+            - Include a link to Data Science Extensions in the navigation section.<br>
+            - This enhances accessibility to external resources for users.
+            (by [chrimaho](https://github.com/chrimaho))
+
+
 !!! info "v1.11.3"
 
     ## **v1.11.3**
