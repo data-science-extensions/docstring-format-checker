@@ -170,16 +170,16 @@ Create a `pyproject.toml` file in your root directory (or update your existing o
 
 In the above sample, we have provided three global options and three sections which contain 4 or more attributes each:
 
-- `require_docstrings`: When set to `true`, `dfc` report an error for any public function, method, or class that lack a docstring.
+- `require_docstrings`: When set to `true`, `dfc` reports an error for any public function, method, or class that lacks a docstring.
 - `validate_param_types`: Ensure that parameters in the docstring include type annotations (e.g., `width (int): ...`).
 - `sections`: This list defines the specific parts of a docstring that `dfc` should look for and validate. Each section has a `name`, `type`, and can be `required`.
 
 However, there are more options available to fine-tune the behaviour of `dfc`. The Global section allows five different options, and each section has the possibility of seven options. Here is a brief overview of some commonly used options:
 
 - Global:
-    - `allow_undefined_sections`: When set to `false`, `dfc` report an error if the docstring contains sections that are not defined in the configuration.
-    - `require_docstrings`: When set to `true`, `dfc` report an error for any public function, method, or class that lack a docstring.
-    - `check_private`: When set to `true`, `dfc` also check private functions, methods, and classes (those prefixed with an underscore).
+    - `allow_undefined_sections`: When set to `false`, `dfc` reports an error if the docstring contains sections that are not defined in the configuration.
+    - `require_docstrings`: When set to `true`, `dfc` reports an error for any public function, method, or class that lacks a docstring.
+    - `check_private`: When set to `true`, `dfc` also checks private functions, methods, and classes (those prefixed with an underscore).
     - `validate_param_types`: Ensure that parameters in the docstring include type annotations (e.g., `width (int): ...`).
     - `optional_style`: Defines how optional sections are treated. Options include `silent`, `validate`, and `strict`.
 - Section:
