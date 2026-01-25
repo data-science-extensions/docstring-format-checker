@@ -64,7 +64,7 @@ Set `check_private` to `true` to include private functions and methods in the ch
 
 ### 3. Allow Undefined Sections
 
-Control how `dfc` handle sections that be not explicitly defined in your configuration.
+Control how `dfc` handles sections that are not explicitly defined in your configuration.
 
 |           Config           |   Type    | Required | Default |
 | :------------------------: | :-------: | :------: | :-----: |
