@@ -229,7 +229,7 @@ Found 6 error(s) in 2 functions over 1 file
 Update `calculate_area()` in `sample.py` to match the required format. Ensure you include type annotations in the signature and parenthesised types in the docstring:
 
 ```python {.py .python linenums="1" title="sample.py"}
---8 < --"docs/usage/examples/sample_good.py"
+--8<-- "docs/usage/examples/sample_good.py"
 ```
 
 Now run the check again:
