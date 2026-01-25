@@ -161,7 +161,7 @@ Define the expected format of the section content.
 | :----: | :------: | :------: | :--------: |
 | `type` | `string` |   yes    | _required_ |
 
-Each type have specific validation rules.
+Each type has specific validation rules.
 
 | Option                 | Description                                | Example         |
 | ---------------------- | ------------------------------------------ | --------------- |
