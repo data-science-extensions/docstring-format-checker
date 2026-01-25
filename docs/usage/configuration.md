@@ -144,7 +144,7 @@ Specify the name of the section as it appears in your docstrings.
 | :----: | :------: | :------: | :--------: |
 | `name` | `string` |   yes    | _required_ |
 
-`dfc` look for this exact string (case-insensitive) followed by a colon.
+`dfc` looks for this exact string (case-insensitive) followed by a colon.
 
 <div class="scroll-chunks" markdown>
 ```toml {.toml linenums="1" title="pyproject.toml" hl_lines="9 18 26 32 38"}
