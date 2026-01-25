@@ -215,8 +215,7 @@ dfc --check src/
 
 ### 🔇 Quiet Mode (`--quiet` / `-q`)
 
-Suppress all detailed error messages. Report only a high-level summary if errors occur, or nothing at all if the check pass.
-
+Suppress all detailed error messages. Report only a high-level summary if errors occur, or nothing at all if the check passes.
 ```sh {.sh .bash title="Terminal"}
 dfc --quiet --check src/
 ```
