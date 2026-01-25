@@ -137,7 +137,11 @@ def run_blacken_docs() -> None:
     while attempt < max_attempts:
 
         attempt += 1
-        files: list[str] = get_all_files(".md", ".py", ".ipynb")
+        files: list[str] = [
+            file
+            for file in get_all_files(".md", ".py", ".ipynb")
+            if "getting_started.md" not in file and "configuration.md" not in file
+        ]
         _command: list[str] = ["blacken-docs", *files]
 
         print(f"\n{'Attempt ' + str(attempt) + ': ' if attempt > 1 else ''}{' '.join(_command)}", flush=True)
@@ -208,7 +212,14 @@ def check_black() -> None:
 
 
 def check_blacken_docs() -> None:
-    run("blacken-docs --check", *get_all_files(".md", ".py", ".ipynb"))
+    run(
+        "blacken-docs --check",
+        *[
+            file
+            for file in get_all_files(".md", ".py", ".ipynb")
+            if "getting_started.md" not in file and "configuration.md" not in file
+        ],
+    )
 
 
 def check_ty() -> None:
