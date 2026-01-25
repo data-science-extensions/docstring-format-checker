@@ -264,7 +264,7 @@ Omit the `order` attribute for sections like "Deprecation Warning" or "Notes" th
 
 ### **Common Pitfall**: Indentation
 
-`dfc` use AST parsing to understand your code, but it still expect standard Python indentation. Always correctly indent your docstrings relative to the function or class they describe.
+`dfc` uses AST parsing to understand your code, but it still expects standard Python indentation. Always correctly indent your docstrings relative to the function or class they describe.
 
 
 ## 🛤️ Next Steps
