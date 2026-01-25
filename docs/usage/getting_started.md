@@ -259,7 +259,7 @@ If you define an `order` for your sections in `pyproject.toml`, `dfc` enforces t
 
 ### **Pro-tip**: Floating sections
 
-Omit the `order` attribute for sections like "Deprecation Warning" or "Notes" that might appear anywhere in the docstring. Call these sections "floating" sections.
+Omit the `order` attribute for sections like "Deprecation Warning" or "Notes" that might appear anywhere in the docstring. These are called "floating" sections.
 
 
 ### **Common Pitfall**: Indentation
