@@ -35,7 +35,7 @@
 </p>
 
 
-### Introduction
+### 📝 Introduction
 
 A powerful Python CLI tool that validates docstring formatting and completeness using AST parsing. Ensure consistent, high-quality documentation across your entire codebase with configurable validation rules and rich terminal output.
 
@@ -50,26 +50,26 @@ A powerful Python CLI tool that validates docstring formatting and completeness 
 - 🛡️ **100% test coverage** - Thoroughly tested and reliable
 
 
-### Quick Start
+### 🚀 Quick Start
 
 ```bash
 # Install
 uv add docstring-format-checker
 
 # Check a single file
-dfc check my_module.py
+dfc --check my_module.py
 
 # Check entire directory
-dfc check src/
+dfc --check src/
 
 # Generate example configuration
-dfc config-example
+dfc --example=config
 ```
 
 
-### Key URLs
+### 🔗 Key URLs
 
-For reference, these URL's are used:
+For reference, these URLs are used:
 
 | Type           | Source | URL                                                                    |
 | -------------- | ------ | ---------------------------------------------------------------------- |
@@ -78,7 +78,7 @@ For reference, these URL's are used:
 | Package Docs   | Pages  | https://data-science-extensions.com/toolboxes/docstring-format-checker |
 
 
-### Section Types
+### 📂 Section Types
 
 Configure validation for four types of docstring sections:
 
@@ -90,7 +90,7 @@ Configure validation for four types of docstring sections:
 | `list_name_and_type` | Name and type lists       | Parameters, returns with types |
 
 
-### Configuration
+### ⚙️ Configuration
 
 Create a `pyproject.toml` with your validation rules. The `order` attribute is optional; sections without an order (like "deprecation warning") can appear anywhere in the docstring.
 
@@ -131,26 +131,27 @@ required = false
 Or like this in a single block:
 
 ```toml
-[tool.dfc]                                                                                                                                                                                             │
-# or [tool.docstring-format-checker]                                                                                                                                                                   │
-allow_undefined_sections = false                                                                                                                                                                       │
-require_docstrings = true                                                                                                                                                                              │
-check_private = true                                                                                                                                                                                   │
-validate_param_types = true                                                                                                                                                                            │
-optional_style = "validate"  # "silent", "validate", or "strict"                                                                                                                                       │
-sections = [                                                                                                                                                                                           │
-    { order = 1, name = "summary",  type = "free_text",          required = true, admonition = "note", prefix = "!!!" },                                                                               │
-    { order = 2, name = "details",  type = "free_text",          required = false, admonition = "abstract", prefix = "???+" },                                                                         │
-    { order = 3, name = "params",   type = "list_name_and_type", required = false },                                                                                                                   │
-    { order = 4, name = "raises",   type = "list_type",          required = false },                                                                                                                   │
-    { order = 5, name = "returns",  type = "list_name_and_type", required = false },                                                                                                                   │
-    { order = 6, name = "yields",   type = "list_type",          required = false },                                                                                                                   │
-    { order = 7, name = "examples", type = "free_text",          required = false, admonition = "example", prefix = "???+" },                                                                          │
-    { order = 8, name = "notes",    type = "free_text",          required = false, admonition = "note", prefix = "???" },                                                                              │
+[tool.dfc]
+# or [tool.docstring-format-checker]
+allow_undefined_sections = false
+require_docstrings = true
+check_private = true
+validate_param_types = true
+optional_style = "validate"  # "silent", "validate", or "strict"
+sections = [
+    { order = 1, name = "summary",  type = "free_text",          required = true, admonition = "note", prefix = "!!!" },
+    { order = 2, name = "details",  type = "free_text",          required = false, admonition = "abstract", prefix = "???+" },
+    { order = 3, name = "params",   type = "list_name_and_type", required = false },
+    { order = 4, name = "raises",   type = "list_type",          required = false },
+    { order = 5, name = "returns",  type = "list_name_and_type", required = false },
+    { order = 6, name = "yields",   type = "list_type",          required = false },
+    { order = 7, name = "examples", type = "free_text",          required = false, admonition = "example", prefix = "???+" },
+    { order = 8, name = "notes",    type = "free_text",          required = false, admonition = "note", prefix = "???" },
 ]
 ```
 
-### Installation
+
+### 📥 Installation
 
 You can install and use this package multiple ways by using any of your preferred methods: [`pip`][pip], [`pipenv`][pipenv], [`poetry`][poetry], or [`uv`][uv].
 
@@ -278,23 +279,23 @@ You can install and use this package multiple ways by using any of your preferre
     ```
 
 
-### Usage Examples
-
-
-#### Basic Usage
+### 💡 Usage Examples
 
 ```bash
 # Check a single Python file
-dfc check src/my_module.py
+dfc --check src/my_module.py
+
+# Check multiple Python files
+dfc file1.py file2.py
 
 # Check entire directory recursively
-dfc check src/
+dfc --check src/
 
-# Check with verbose output
-dfc check --verbose src/
+# Check with table output format
+dfc --output=table src/
 
 # Generate example configuration file
-dfc config-example > pyproject.toml
+dfc --example=config > pyproject.toml
 ```
 
 
@@ -302,13 +303,16 @@ dfc config-example > pyproject.toml
 
 ```bash
 # Use custom config file location
-dfc check --config custom_config.toml src/
+dfc --config=custom_config.toml src/
 
-# Check specific function patterns
-dfc check --include-pattern "**/api/*.py" src/
+# Exclude specific files using glob patterns
+dfc src/ --exclude "**/test_*.py"
 
-# Exclude test files
-dfc check --exclude-pattern "**/test_*.py" src/
+# Stop on first failure (CI environments)
+dfc --check src/
+
+# Suppress non-error output
+dfc --quiet src/
 ```
 
 
@@ -326,7 +330,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v3
       - run: uv pip install docstring-format-checker
-      - run: dfc check src/
+      - run: dfc --check src/
 ```
 
 
@@ -344,39 +348,72 @@ repos:
 ```
 
 
-### Example Output
+### 📋 Example Output
 
-```
-📋 Docstring Format Checker Results
 
-✅ src/utils/helpers.py
-❌ src/models/user.py
-   └── Function 'create_user' missing required section: 'params'
-   └── Function 'delete_user' missing required section: 'returns'
+#### Standard List Output
 
-❌ src/api/endpoints.py
-   └── Method 'UserAPI.get_user' invalid section format: 'raises'
+The option `output=list` is the default:
 
-📊 Summary: 1/3 files passed (33.3%)
+```sh
+dfc --check src/models/user.py
 ```
 
+Or you can declare it explicitly:
 
-### Architecture
+```sh
+dfc --check --output=list src/models/user.py
+```
+
+Which returns:
+
+```text
+src/models/user.py
+  Line 12 - function 'create_user':
+    - Missing required section: 'params'
+  Line 45 - function 'delete_user':
+    - Missing required section: 'returns'
+
+Found 2 error(s) in 2 functions over 1 file
+```
+
+
+#### Table Output Format
+
+```sh
+dfc --check --output=table src/models/user.py
+```
+
+```text
+┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ File               ┃ Line ┃ Item        ┃ Type     ┃ Error                            ┃
+┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ src/models/user.py │   12 │ create_user │ function │ - Missing required section:      │
+│                    │      │             │          │ 'params'.                        │
+│                    │   45 │ delete_user │ function │ - Missing required section:      │
+│                    │      │             │          │ 'returns'.                       │
+└────────────────────┴──────┴─────────────┴──────────┴──────────────────────────────────┘
+
+Found 2 error(s) in 2 functions over 1 file
+```
+
+
+### 🏗️ Architecture
 
 The tool follows a clean, modular architecture:
 
-- **`core.py`** - `DocstringChecker` class with AST parsing and validation logic
-- **`config.py`** - Configuration loading and `SectionConfig` management
+- **`core.py`** - `DocstringChecker()` class with AST parsing and validation logic
+- **`config.py`** - Configuration loading and `SectionConfig()` management
 - **`cli.py`** - Typer-based CLI with dual entry points
 - **`utils/exceptions.py`** - Custom exception classes for structured error handling
 
 
-### Contribution
+### 🤝 Contribution
 
 Check the [CONTRIBUTING.md][github-contributing] file or [Contributing][docs-contributing] page.
 
 
-### Development
+### 🛠️ Development
 
 1. **Clone the repository:**
 
@@ -400,19 +437,19 @@ Check the [CONTRIBUTING.md][github-contributing] file or [Contributing][docs-con
 4. **Run CLI locally:**
 
     ```sh
-    uv run dfc check examples/example_code.py
+    uv run dfc --check examples/example_code.py
     ```
 
 
-### Build and Test
+### 🧪 Build and Test
 
-To ensure that the package is working as expected, please ensure that:
+To ensure that the package works as expected, ensure that:
 
-1. You write your code as per [PEP8][pep8] requirements.
-2. You write a [UnitTest][unittest] for each function/feature you include.
-3. The [CodeCoverage][codecov] is 100%.
-4. All [UnitTests][pytest] are passing.
-5. [MyPy][mypy] is passing 100%.
+1. Write code in accordance with [PEP8][pep8] requirements.
+2. Write a [UnitTest][unittest] for each function or feature included.
+3. Maintain [CodeCoverage][codecov] at 100%.
+4. Ensure all [UnitTests][pytest] pass.
+5. Ensure [MyPy][mypy] passes 100%.
 
 
 #### Testing
@@ -446,7 +483,7 @@ To ensure that the package is working as expected, please ensure that:
         ```
 
 
-### License
+### 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE][github-license] file for details.
 
