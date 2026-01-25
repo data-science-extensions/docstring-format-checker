@@ -13,7 +13,7 @@ Define your own standards and ensure consistency across your project with a `pyp
 
 ## 🌍 Global Configuration Options
 
-Configuring these options at the top-level of the `[tool.dfc]` section affect how `dfc` behave across all checked files.
+Configuring these options at the top-level of the `[tool.dfc]` section affects how `dfc` behaves across all checked files.
 
 There are five main global options you can set.
 
