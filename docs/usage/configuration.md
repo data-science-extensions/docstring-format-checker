@@ -108,7 +108,7 @@ When `true`, `dfc` expect the format `name (type): description`.
 
 ### 5. Optional Style
 
-Standardise how optional parameters be described.
+Standardise how optional parameters are described.
 
 |      Config      |   Type   | Required |   Default    |
 | :--------------: | :------: | :------: | :----------: |
