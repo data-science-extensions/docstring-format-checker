@@ -140,7 +140,9 @@ def run_blacken_docs() -> None:
         files: list[str] = [
             file
             for file in get_all_files(".md", ".py", ".ipynb")
-            if "getting_started.md" not in file and "configuration.md" not in file
+            if "getting_started.md" not in file
+            and "configuration.md" not in file
+            and "command_line_interface.md" not in file
         ]
         _command: list[str] = ["blacken-docs", *files]
 
