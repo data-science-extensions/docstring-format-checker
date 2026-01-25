@@ -92,7 +92,7 @@ Ensure that all parameters in your `Params` (or similar) section include type an
 | :--------------------: | :-------: | :------: | :-----: |
 | `validate_param_types` | `boolean` |    no    | `true`  |
 
-When `true`, `dfc` expect the format `name (type): description`.
+When `true`, `dfc` expects the format `name (type): description`.
 
 | Option  | Description                                                   |
 | ------- | ------------------------------------------------------------- |
