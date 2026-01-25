@@ -254,7 +254,7 @@ As you begin use `dfc`, keep these points in mind to ensure a smooth experience.
 
 ### **Watch-out**: Order matters
 
-If you define an `order` for your sections in `pyproject.toml`, `dfc` enforce that specific order. If a `returns` section appear before a `params` section but the config say otherwise, `dfc` raise an error.
+If you define an `order` for your sections in `pyproject.toml`, `dfc` enforces that specific order. If a `returns` section appears before a `params` section but the config says otherwise, `dfc` raises an error.
 
 
 ### **Pro-tip**: Floating sections
