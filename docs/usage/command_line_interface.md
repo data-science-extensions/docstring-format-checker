@@ -313,7 +313,7 @@ View results for both `good_code.py` (which should pass) and `bad_code.py` in th
 
 ### 🤖 5. Standardise for CI
 
-Prepare your commands for a CI environment. Use the `--quiet` and `--check` flags to ensure that the process fail if documentation is insufficient, without cluttering the logs.
+Prepare your commands for a CI environment. Use the `--quiet` and `--check` flags to ensure that the process fails if documentation is insufficient, without cluttering the logs.
 
 ```sh {.sh .bash title="Terminal"}
 dfc --quiet --check .
