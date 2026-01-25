@@ -342,7 +342,7 @@ docs/usage/sample_config.py
 Found 1 error(s) in 1 function over 1 file
 ```
 
-In this case, `my_function()` and `_private_function()` pass because they meet the basic requirements of the new section config, while `undocumented_function()` still fail because docstrings be required globally.
+In this case, `my_function()` and `_private_function()` pass because they meet the basic requirements of the new section config, while `undocumented_function()` still fails because docstrings are required globally.
 
 </div>
 
