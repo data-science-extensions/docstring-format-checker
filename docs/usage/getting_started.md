@@ -1,6 +1,6 @@
 # Getting Started with `docstring-format-checker`
 
-Welcome to `docstring-format-checker` (or `dfc` for short)! Utilise this guide to help you get up and run with the tool, from installation to advanced configuration. Target developers who are new to Python or those who want to standardise their project's documentation.
+Welcome to `docstring-format-checker` (or `dfc` for short)! Utilise this guide to help you get up and run with the tool, from installation to advanced configuration. This guide targets developers who are new to Python or who want to standardise their project's documentation.
 
 
 ## 📥 Installation
