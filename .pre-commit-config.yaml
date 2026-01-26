@@ -33,7 +33,7 @@ repos:
 
   # Linter
   - repo: https://github.com/psf/black
-    rev: "25.12.0"
+    rev: "26.1.0"
     hooks:
       - id: black
         language_version: python3.13
@@ -103,7 +103,7 @@ repos:
 
   # Check uv configs
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: "0.9.21"
+    rev: "0.9.26"
     hooks:
       - id: uv-lock
       - id: uv-sync
@@ -116,7 +116,7 @@ repos:
 
     - id: ty
       name: ty-check
-      entry: uv run ty check ./src/docstring_format_checker
+      entry: uv run ty check
       language: python
       types: [python]
       pass_filenames: true
