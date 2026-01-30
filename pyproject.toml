@@ -55,7 +55,7 @@ dev = [
     "blacken-docs==1.*",
     "codespell==2.*",
     "ipykernel==6.*; python_version<'3.10'",
-    "ipykernel==7.*; python_version>='3.10'",
+    "ipykernel>=7,<7; python_version>='3.10'",
     "isort==6.*; python_version<'3.10'",
     "isort==7.*; python_version>='3.10'",
     "prek==0.*",
