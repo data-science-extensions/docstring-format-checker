@@ -18,7 +18,7 @@ updates:
     assignees:
       - "chrimaho"
     commit-message:
-      prefix: "deps(actions): "
+      prefix: "🤖 deps(actions): "
 
   # Update Python dependencies
   - package-ecosystem: "pip"
@@ -31,4 +31,4 @@ updates:
     assignees:
       - "chrimaho"
     commit-message:
-      prefix: "deps(pip): "
+      prefix: "🤖 deps(pip): "
