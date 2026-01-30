@@ -82,7 +82,7 @@ docs = [
     "mkdocstrings==0.*; python_version<'3.10'",
     "mkdocstrings==1.*; python_version>='3.10'",
     "mkdocstrings-python==1.*; python_version<'3.10'",
-    "mkdocstrings-python==2.*; python_version>='3.10'",
+    "mkdocstrings-python>=2,<2; python_version>='3.10'",
     "pygithub==2.*",
 ]
 test = [
