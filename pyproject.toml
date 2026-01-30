@@ -72,7 +72,7 @@ docs = [
     # "black==25.*; python_version<'3.10'",
     # "black==26.*; python_version>='3.10'",
     "docstring-inheritance==2.*; python_version<'3.10'",
-    "docstring-inheritance==3.*; python_version>='3.10'",
+    "docstring-inheritance>=3,<3; python_version>='3.10'",
     "livereload==2.*",
     "mike==2.*",
     "mkdocs==1.*",
