@@ -61,7 +61,7 @@ dev = [
     "prek==0.*",
     "pycln==2.*",
     "pylint==3.*; python_version<'3.10'",
-    "pylint==4.*; python_version>='3.10'",
+    "pylint>=4,<4; python_version>='3.10'",
     "pyright==1.*",
     "pyupgrade==3.*",
     "uv==0.*",
