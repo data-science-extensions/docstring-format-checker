@@ -1,7 +1,7 @@
 name: CI
 on: [push, pull_request]
 env:
-  PACKAGE_NAME: docstring-format-checker
+  PACKAGE_NAME: ${{ github.event.repository.name }}
   UV_LINK_MODE: copy
   UV_NO_SYNC: true
   UV_INDEX_STRATEGY: unsafe-best-match
