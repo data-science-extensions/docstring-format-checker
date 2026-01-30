@@ -56,6 +56,7 @@ nav:
       - Getting Started: usage/getting_started.md
       - Configuration: usage/configuration.md
       - CLI: usage/command_line_interface.md
+      - FAQ: usage/faq.md
       - Contributing: usage/contributing.md
       - Change Log: usage/changelog.md
   - Modules:
