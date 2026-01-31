@@ -7,7 +7,7 @@ This page provides answers to common questions about using and configuring the `
 
 `docstring-format-checker` is primarily designed to support [**Google-style**][google-style] docstrings. This style is popular because it is highly readable and uses clear indentation to separate different sections like parameters and return values.
 
-However, the tool is not strictly limited to a single style. Because it is configuration-driven, you can **customise** the section names and types in your [pyproject.toml](pyproject.toml) to match your team's specific requirements. You can define your own sections using types like `free_text`, `list_name`, `list_type`, and `list_name_and_type`.
+However, the tool is not strictly limited to a single style. Because it is configuration-driven, you can **customise** the section names and types in your [`pyproject.toml`](pyproject.toml) to match your team's specific requirements. You can define your own sections using types like `free_text`, `list_name`, `list_type`, and `list_name_and_type`.
 
 
 ## 🧩 Why doesn't it support NumPy or reStructuredText (reST) styles?
@@ -21,7 +21,7 @@ While NumPy and reST are powerful, they often require significantly more complex
 
 No, `docstring-format-checker` is currently a **validator**, not a formatter. It will tell you exactly what is wrong and where, but it won't change the docs in your code.
 
-Think of it like `pylint` or `pyright`, it's designed to be used in your CI/CD pipelines or as a pre-commit hook to ensure that everyone on your team follows the same standards.
+Think of it like [`pylint`][pylint] or [`pyright`][pyright], it's designed to be used in your CI/CD pipelines or as a pre-commit hook to ensure that everyone on your team follows the same standards.
 
 
 ## 🌳 What is "AST parsing" and why should I care?
@@ -35,7 +35,7 @@ AST stands for **Abstract Syntax Tree**. Most simple tools use "Regular Expressi
 
 Both commands perform exactly the same actions. We provide `docstring-format-checker` as the primary command, and is descriptive for clarity and discoverability. However, because that can be quite a lot to type, we also provide `dfc` as a convenient short-hand alias for daily use in your terminal.
 
-Similarly, you can use either `[tool.dfc]` or `[tool.docstring-format-checker]` in your [pyproject.toml](pyproject.toml) file. The tool will look for `dfc` first, and then fall back to the longer name if the shorter one isn't found. This ensures your configuration remains tidy while still being descriptive.
+Similarly, you can use either `[tool.dfc]` or `[tool.docstring-format-checker]` in your [`pyproject.toml`](pyproject.toml) file. The tool will look for `dfc` first, and then fall back to the longer name if the shorter one isn't found. This ensures your configuration remains tidy while still being descriptive.
 
 
 ## 🤐 Can I skip private functions or specific files?
@@ -43,7 +43,7 @@ Similarly, you can use either `[tool.dfc]` or `[tool.docstring-format-checker]` 
 Absolutely! We recognise that you might not want to document every single helper function in your codebase.
 
 - **Private Items**: You can toggle `check_private = false` in your configuration to ignore anything starting with an underscore.
-- **Exclusions**: Use the `--exclude` flag or define exclusion patterns in your [pyproject.toml](pyproject.toml) to skip specific files or entire directories (like `src/tests/` or `migrations/`).
+- **Exclusions**: Use the `--exclude` flag or define exclusion patterns in your [`pyproject.toml`](pyproject.toml) to skip specific files or entire directories (like `src/tests/` or `migrations/`).
 
 
 ## 🛠️ How do I handle "Optional" types in my parameters?
@@ -70,4 +70,6 @@ dfc --check src/
 [google-style]: https://google.github.io/styleguide/pyguide.html
 [black]: https://black.readthedocs.io/en/
 [isort]: https://pycqa.github.io/isort/
+[pylint]: https://pylint.readthedocs.io/
+[pyright]: https://microsoft.github.io/pyright/#/
 [ast]: https://docs.python.org/3/library/ast.html
