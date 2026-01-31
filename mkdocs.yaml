@@ -53,12 +53,15 @@ nav:
   - Home: index.md
   - Usage:
       - Overview: usage/overview.md
-      - Getting Started: usage/getting_started.md
-      - Configuration: usage/configuration.md
-      - CLI: usage/command_line_interface.md
-      - FAQ: usage/faq.md
-      - Contributing: usage/contributing.md
-      - Change Log: usage/changelog.md
+      - Basic:
+        - Getting Started: usage/getting_started.md
+        - FAQ: usage/faq.md
+      - Advanced:
+        - Configuration: usage/configuration.md
+        - CLI: usage/command_line_interface.md
+      - General:
+        - Contributing: usage/contributing.md
+        - Change Log: usage/changelog.md
   - Modules:
       - code/index.md
       - CLI: code/cli.md
