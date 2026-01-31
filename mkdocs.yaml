@@ -62,6 +62,7 @@ nav:
       - General:
         - Contributing: usage/contributing.md
         - Change Log: usage/changelog.md
+        - License: usage/license.md
   - Modules:
       - code/index.md
       - CLI: code/cli.md
