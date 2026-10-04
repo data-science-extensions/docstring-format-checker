@@ -15,10 +15,8 @@ updates:
       interval: "weekly"
     labels:
       - "dependabot-actions"
-    reviewers:
-      - "chrimaho"
     assignees:
-      - "dependabot"
+      - "chrimaho"
     commit-message:
       prefix: "🤖 deps(actions): "
 
@@ -30,9 +28,7 @@ updates:
       interval: "weekly"
     labels:
       - "dependabot-python"
-    reviewers:
-      - "chrimaho"
     assignees:
-      - "dependabot"
+      - "chrimaho"
     commit-message:
       prefix: "🤖 deps(pip): "
