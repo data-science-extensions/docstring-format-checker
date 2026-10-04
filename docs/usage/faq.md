@@ -7,7 +7,7 @@ This page provides answers to common questions about using and configuring the `
 
 `docstring-format-checker` is primarily designed to support [**Google-style**][google-style] docstrings. This style is popular because it is highly readable and uses clear indentation to separate different sections like parameters and return values.
 
-However, the tool is not strictly limited to a single style. Because it is configuration-driven, you can **customise** the section names and types in your [`pyproject.toml`](pyproject.toml) to match your team's specific requirements. You can define your own sections using types like `free_text`, `list_name`, `list_type`, and `list_name_and_type`.
+However, the tool is not strictly limited to a single style. Because it is configuration-driven, you can **customise** the section names and types in your [`pyproject.toml`](examples/pyproject.toml) to match your team's specific requirements. You can define your own sections using types like `free_text`, `list_name`, `list_type`, and `list_name_and_type`.
 
 
 ## 🧩 Why doesn't it support NumPy or reStructuredText (reST) styles?
