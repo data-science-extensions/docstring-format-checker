@@ -29,7 +29,6 @@
     Configuration handling for the docstring format checker.
 """
 
-
 # ---------------------------------------------------------------------------- #
 #                                                                              #
 #     Setup                                                                 ####
@@ -531,7 +530,7 @@ def _parse_global_config(tool_config: dict[str, Any]) -> GlobalConfig:
         require_docstrings=tool_config.get("require_docstrings", True),
         check_private=tool_config.get("check_private", False),
         validate_param_types=tool_config.get("validate_param_types", True),
-        optional_style=optional_style,  # type:ignore
+        optional_style=optional_style,
     )
 
 
