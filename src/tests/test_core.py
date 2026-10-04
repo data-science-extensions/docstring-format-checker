@@ -39,7 +39,6 @@ from docstring_format_checker.utils.exceptions import (
     InvalidFileError,
 )
 
-
 # ---------------------------------------------------------------------------- #
 #                                                                              #
 #     Unit Tests                                                            ####
@@ -112,8 +111,7 @@ class TestDocstringChecker(TestCase):
         Test checking a file with proper docstrings.
         """
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def good_function():
                 """This function has a docstring."""
                 pass
@@ -124,8 +122,7 @@ class TestDocstringChecker(TestCase):
                 def good_method(self):
                     """This method has a docstring."""
                     pass
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -145,16 +142,14 @@ class TestDocstringChecker(TestCase):
         Test checking a file with missing docstrings.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def bad_function():
                 pass
 
             class BadClass:
                 def bad_method(self):
                     pass
-            """
-        )
+            """)
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -182,8 +177,7 @@ class TestDocstringChecker(TestCase):
         Test checking a file with detailed docstring requirements.
         """
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def detailed_function(param1: str, param2: int) -> bool:
                 """
                 !!! note "Summary"
@@ -203,8 +197,7 @@ class TestDocstringChecker(TestCase):
                     Example usage here.
                 """
                 return True
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -224,16 +217,14 @@ class TestDocstringChecker(TestCase):
         Test checking a file with incomplete detailed docstrings.
         """
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def incomplete_function(param1):
                 """
                 !!! note "Summary"
                     This is a summary.
                 """
                 return True
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -258,36 +249,24 @@ class TestDocstringChecker(TestCase):
 
             # Create test files
             temp_path = Path(temp_dir)
-            temp_path.joinpath("good.py").write_text(
-                dedent(
-                    '''
+            temp_path.joinpath("good.py").write_text(dedent('''
                     def good_function():
                         """
                         Good docstring.
                         """
                         pass
-                    '''
-                )
-            )
+                    '''))
 
-            temp_path.joinpath("bad.py").write_text(
-                dedent(
-                    """
+            temp_path.joinpath("bad.py").write_text(dedent("""
                     def bad_function():
                         pass
-                    """
-                )
-            )
+                    """))
 
             temp_path.joinpath("subdir").mkdir()
-            temp_path.joinpath("subdir", "nested.py").write_text(
-                dedent(
-                    """
+            temp_path.joinpath("subdir", "nested.py").write_text(dedent("""
                     def nested_function():
                         pass
-                    """
-                )
-            )
+                    """))
 
             # Check directory
             results: dict[str, list[DocstringError]] = self.simple_checker.check_directory(temp_path)
@@ -306,32 +285,20 @@ class TestDocstringChecker(TestCase):
 
             # Create test files
             temp_path = Path(temp_dir)
-            temp_path.joinpath("good.py").write_text(
-                dedent(
-                    '''
+            temp_path.joinpath("good.py").write_text(dedent('''
                     def good_function():
                         """Good docstring."""
                         pass
-                    '''
-                )
-            )
-            temp_path.joinpath("test_bad.py").write_text(
-                dedent(
-                    """
+                    '''))
+            temp_path.joinpath("test_bad.py").write_text(dedent("""
                     def bad_function():
                         pass
-                    """
-                )
-            )
+                    """))
 
-            temp_path.joinpath("regular_bad.py").write_text(
-                dedent(
-                    """
+            temp_path.joinpath("regular_bad.py").write_text(dedent("""
                     def bad_function():
                         pass
-                    """
-                )
-            )
+                    """))
 
             # Check directory with exclusions
             results: dict[str, list[DocstringError]] = self.simple_checker.check_directory(
@@ -348,12 +315,10 @@ class TestDocstringChecker(TestCase):
         Test handling of Python syntax errors.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def bad_syntax(
                 pass
-            """
-        )
+            """)
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -399,8 +364,7 @@ class TestDocstringChecker(TestCase):
         Test that private functions and classes are ignored.
         """
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def _private_function():
                 pass
 
@@ -416,8 +380,7 @@ class TestDocstringChecker(TestCase):
                 This should be checked.
                 """
                 pass
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -456,15 +419,13 @@ class TestDocstringChecker(TestCase):
         """
 
         empty_checker = DocstringChecker(_create_config([]))
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def function_with_docstring():
                 """
                 This has a docstring.
                 """
                 pass
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -509,8 +470,7 @@ class TestDocstringChecker(TestCase):
         Test checking nested class methods.
         """
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             class OuterClass:
                 """
                 Outer class docstring.
@@ -535,8 +495,7 @@ class TestDocstringChecker(TestCase):
 
                     def missing_docstring_inner(self):
                         pass
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -555,8 +514,7 @@ class TestDocstringChecker(TestCase):
         Test functions with decorators.
         """
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             @property
             def decorated_function():
                 """
@@ -568,8 +526,7 @@ class TestDocstringChecker(TestCase):
             @classmethod
             def multi_decorated():
                 pass
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -597,8 +554,7 @@ class TestDocstringChecker(TestCase):
 
         complex_checker = DocstringChecker(_create_config(complex_sections))
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def complex_function(param1, param2):
                 """
                 This is a summary.
@@ -624,8 +580,7 @@ class TestDocstringChecker(TestCase):
                 This function is missing sections.
                 """
                 return True
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -645,8 +600,7 @@ class TestDocstringChecker(TestCase):
         Test handling of malformed docstrings.
         """
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def function_with_weird_docstring():
                 """
                 This docstring has weird formatting
@@ -661,8 +615,7 @@ class TestDocstringChecker(TestCase):
                     This shouldn't be here
                 """
                 pass
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -680,8 +633,7 @@ class TestDocstringChecker(TestCase):
         Test handling of special method names.
         """
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             class TestClass:
                 """
                 Test class.
@@ -706,8 +658,7 @@ class TestDocstringChecker(TestCase):
                 def _protected_method(self):
                     # Protected method without docstring
                     pass
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -727,8 +678,7 @@ class TestDocstringChecker(TestCase):
         Test checking async functions.
         """
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             async def async_function():
                 """
                 This is an async function.
@@ -737,8 +687,7 @@ class TestDocstringChecker(TestCase):
 
             async def async_missing_docstring():
                 pass
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -757,8 +706,7 @@ class TestDocstringChecker(TestCase):
         Test that lambda functions are ignored.
         """
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             # Lambda functions should be ignored
             my_lambda = lambda x: x * 2
 
@@ -768,8 +716,7 @@ class TestDocstringChecker(TestCase):
                 """
                 lambda y: y + 1  # Nested lambda
                 pass
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -838,8 +785,7 @@ class TestDocstringChecker(TestCase):
 
         ordered_checker = DocstringChecker(_create_config(ordered_sections))
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def bad_order_function(param1):
                 """
                 This function has sections in wrong order.
@@ -852,8 +798,7 @@ class TestDocstringChecker(TestCase):
                         A parameter
                 """
                 return True
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -912,8 +857,7 @@ class TestDocstringChecker(TestCase):
 
         checker = DocstringChecker(_create_config(sections))
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def function_with_list_sections():
                 """
                 Summary of the function.
@@ -933,8 +877,7 @@ class TestDocstringChecker(TestCase):
                 Just a summary.
                 """
                 pass
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -960,16 +903,14 @@ class TestDocstringChecker(TestCase):
 
         checker = DocstringChecker(_create_config(sections))
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def function_without_docstring():
                 pass
 
             class ClassWithoutDocstring:
                 def method_without_docstring(self):
                     pass
-            """
-        )
+            """)
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -1004,8 +945,7 @@ class TestDocstringChecker(TestCase):
         checker = DocstringChecker(_create_config(sections))
 
         # Function with incomplete sections
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def incomplete_function(param1, param2):
                 """
                 This function has incomplete documentation.
@@ -1016,8 +956,7 @@ class TestDocstringChecker(TestCase):
                     # Missing param2 and type info
                 """
                 return "something"
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -1048,15 +987,13 @@ class TestDocstringChecker(TestCase):
 
         checker = DocstringChecker(_create_config(sections))
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def function_missing_authors():
                 """
                 Function without authors section.
                 """
                 pass
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -1085,16 +1022,14 @@ class TestDocstringChecker(TestCase):
 
         checker = DocstringChecker(_create_config(sections))
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def generator_without_yields():
                 """
                 Generator function without yields section.
                 """
                 yield 1
                 yield 2
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -1124,8 +1059,7 @@ class TestDocstringChecker(TestCase):
 
         checker = DocstringChecker(_create_config(sections))
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def function_with_both_returns_and_yields():
                 """
                 Function with both returns and yields sections.
@@ -1139,8 +1073,7 @@ class TestDocstringChecker(TestCase):
                         Some yielded value
                 """
                 return "test"
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -1168,12 +1101,10 @@ class TestDocstringChecker(TestCase):
 
         checker = DocstringChecker(_create_config(sections))
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def function_without_docstring():
                 return "test"
-            """
-        )
+            """)
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -1202,8 +1133,7 @@ class TestDocstringChecker(TestCase):
 
         checker = DocstringChecker(_create_config(sections))
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def function_with_examples():
                 """
                 Function with examples section.
@@ -1222,8 +1152,7 @@ class TestDocstringChecker(TestCase):
                 Function without examples section.
                 """
                 return "result"
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -1275,16 +1204,14 @@ class TestDocstringChecker(TestCase):
 
         checker = DocstringChecker(_create_config(custom_sections))
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function():
                 """
                 Unknown Custom Section:
                     This is a function with a custom section type that should validate successfully.
                 """
                 pass
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -1311,15 +1238,13 @@ class TestDocstringChecker(TestCase):
 
         checker = DocstringChecker(_create_config(summary_sections))
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function():
                 """
                 This is a simple docstring that should be accepted as summary.
                 """
                 pass
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -1346,16 +1271,14 @@ class TestDocstringChecker(TestCase):
 
         checker = DocstringChecker(_create_config(summary_sections))
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function():
                 """
                 Summary:
                     This is a formal summary section.
                 """
                 pass
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -1378,8 +1301,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = simple_checker()
 
         # Python content with @overload functions
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             from typing import overload, Union
 
             @overload
@@ -1407,8 +1329,7 @@ class TestDocstringChecker(TestCase):
                     A regular function with proper docstring.
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -1430,8 +1351,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = simple_checker()
 
         # Python content with @typing.overload functions
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             import typing
 
             @typing.overload
@@ -1452,8 +1372,7 @@ class TestDocstringChecker(TestCase):
                         Same type as input.
                 """
                 return x
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -1475,8 +1394,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = simple_checker()
 
         # Python content with @overload functions but missing docstring on implementation
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             from typing import overload, Union
 
             @overload
@@ -1486,8 +1404,7 @@ class TestDocstringChecker(TestCase):
             def example_function(x: Union[int, str]) -> Union[int, str]:
                 # Missing docstring here
                 return x
-            """
-        ).strip()
+            """).strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -1517,8 +1434,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content mixing overload and regular functions
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             from typing import overload, Union
 
             @overload
@@ -1536,8 +1452,7 @@ class TestDocstringChecker(TestCase):
             def bad_regular_function():
                 # This one is missing a docstring
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -1561,8 +1476,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = simple_checker()
 
         # Python content with async @overload functions
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             from typing import overload, Union
             import asyncio
 
@@ -1584,8 +1498,7 @@ class TestDocstringChecker(TestCase):
                         Same type as input.
                 """
                 return x
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -1607,8 +1520,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = simple_checker()
 
         # Python content with @overload methods in a class
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             from typing import overload, Union
 
             class ExampleClass:
@@ -1642,8 +1554,7 @@ class TestDocstringChecker(TestCase):
                         A regular method with proper docstring.
                     """
                     pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -1665,14 +1576,12 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = simple_checker()
 
         # Test direct @overload
-        overload_code: str = dedent(
-            """
+        overload_code: str = dedent("""
             from typing import overload
 
             @overload
             def func(x: int) -> int: ...
-        """
-        ).strip()
+        """).strip()
 
         tree = ast.parse(overload_code)
         func_node = tree.body[1]  # Second node is the function
@@ -1680,14 +1589,12 @@ class TestDocstringChecker(TestCase):
         assert checker._is_overload_function(func_node), "Should detect @overload decorator"
 
         # Test @typing.overload
-        typing_overload_code: str = dedent(
-            """
+        typing_overload_code: str = dedent("""
             import typing
 
             @typing.overload
             def func(x: int) -> int: ...
-        """
-        ).strip()
+        """).strip()
 
         tree = ast.parse(typing_overload_code)
         func_node = tree.body[1]  # Second node is the function
@@ -1695,12 +1602,10 @@ class TestDocstringChecker(TestCase):
         assert checker._is_overload_function(func_node), "Should detect @typing.overload decorator"
 
         # Test regular function without @overload
-        regular_code: str = dedent(
-            """
+        regular_code: str = dedent("""
             def func(x: int) -> int:
                 return x
-        """
-        ).strip()
+        """).strip()
 
         tree = ast.parse(regular_code)
         func_node = tree.body[0]  # First node is the function
@@ -1708,13 +1613,11 @@ class TestDocstringChecker(TestCase):
         assert not checker._is_overload_function(func_node), "Should not detect @overload on regular function"
 
         # Test function with other decorator
-        other_decorator_code: str = dedent(
-            """
+        other_decorator_code: str = dedent("""
             @property
             def func(self):
                 return self._value
-        """
-        ).strip()
+        """).strip()
 
         tree: Module = ast.parse(other_decorator_code)
         func_node: stmt = tree.body[0]  # First node is the function
@@ -1735,8 +1638,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content with correct admonitions
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function():
                 """
                 !!! note "Summary"
@@ -1746,8 +1648,7 @@ class TestDocstringChecker(TestCase):
                     This also has the correct admonition.
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -1772,8 +1673,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content with wrong admonition for details section
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function():
                 """
                 !!! note "Summary"
@@ -1783,8 +1683,7 @@ class TestDocstringChecker(TestCase):
                     This has wrong admonition (should be 'info').
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -1818,8 +1717,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content with only defined sections
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function(param1: str) -> bool:
                 """
                 !!! note "Summary"
@@ -1835,8 +1733,7 @@ class TestDocstringChecker(TestCase):
                     Some examples here.
                 """
                 return True
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -1862,8 +1759,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content with undefined sections
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function(param1: str) -> bool:
                 """
                 !!! note "Summary"
@@ -1882,8 +1778,7 @@ class TestDocstringChecker(TestCase):
                     Some additional notes (not in config).
                 """
                 return True
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -1920,8 +1815,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content with both wrong admonition AND undefined section
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function(param1: str) -> None:
                 """
                 !!! note "Summary"
@@ -1937,8 +1831,7 @@ class TestDocstringChecker(TestCase):
                     - Undefined section.
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -2023,8 +1916,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content with admonition sections ending with colons (wrong)
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function():
                 """
                 !!! note "Summary:"
@@ -2034,8 +1926,7 @@ class TestDocstringChecker(TestCase):
                     This also should not end with colon.
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -2067,8 +1958,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content with non-admonition sections missing colons (wrong)
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function(param1: str) -> bool:
                 """
                 Summary
@@ -2081,8 +1971,7 @@ class TestDocstringChecker(TestCase):
                     (bool): A return value.
                 """
                 return True
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -2114,8 +2003,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content with wrong case sections
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function(param1: str) -> bool:
                 """
                 summary:
@@ -2128,8 +2016,7 @@ class TestDocstringChecker(TestCase):
                     (bool): A return value.
                 """
                 return True
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -2165,8 +2052,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content with missing parentheses in list_type sections
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function() -> bool:
                 """
                 Summary:
@@ -2184,8 +2070,7 @@ class TestDocstringChecker(TestCase):
                     This should trigger undefined section error.
                 """
                 return True
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -2217,8 +2102,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content with missing parentheses in list_name_and_type sections
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function(param1: str, param2: int) -> bool:
                 """
                 Summary:
@@ -2235,8 +2119,7 @@ class TestDocstringChecker(TestCase):
                         Should be result (bool):
                 """
                 return True
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -2273,8 +2156,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Python content following all the new validation rules correctly
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function(param1: str, param2: int) -> bool:
                 """
                 !!! note "Summary"
@@ -2303,8 +2185,7 @@ class TestDocstringChecker(TestCase):
                     True
                 """
                 return True
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -2330,16 +2211,14 @@ class TestDocstringChecker(TestCase):
         ]
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function():
                 """
                 Unknown Custom Section:
                     This should trigger the default return True path.
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -2360,8 +2239,7 @@ class TestDocstringChecker(TestCase):
         ]
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
-        python_content: str = dedent(
-            r'''
+        python_content: str = dedent(r'''
             def test_function():
                 """
                 Summary:
@@ -2389,8 +2267,7 @@ class TestDocstringChecker(TestCase):
                     Should be ignored due to backticks.
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -2411,16 +2288,14 @@ class TestDocstringChecker(TestCase):
         ]
         checker = DocstringChecker(_create_config(summary_sections))
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function():
                 """
                 This is a simple summary without formal admonition format.
                 It should be accepted as valid summary content.
                 """
                 pass
-            '''
-        )
+            ''')
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -2537,8 +2412,7 @@ class TestDocstringChecker(TestCase):
         checker = DocstringChecker(_create_config(custom_sections))
 
         # Test docstring with sections containing special characters that should be skipped
-        test_docstring: str = dedent(
-            """
+        test_docstring: str = dedent("""
             Summary:
                 Basic content
 
@@ -2553,8 +2427,7 @@ class TestDocstringChecker(TestCase):
 
             Valid_Section:
                 This should be detected
-            """
-        )
+            """)
 
         # Check undefined sections - should skip the special character ones
         undefined_errors: list[str] = checker._check_undefined_sections(test_docstring)
@@ -2611,8 +2484,7 @@ class TestDocstringChecker(TestCase):
         checker = DocstringChecker(_create_config(custom_sections))
 
         # Test docstring with empty section names and code language markers
-        test_docstring: str = dedent(
-            """
+        test_docstring: str = dedent("""
             Summary:
                 Basic content
 
@@ -2630,8 +2502,7 @@ class TestDocstringChecker(TestCase):
 
             Valid_Section:
                 This should be detected
-            """
-        )
+            """)
 
         # Check undefined sections - should skip the code language markers
         undefined_errors: list[str] = checker._check_undefined_sections(test_docstring)
@@ -2658,40 +2529,34 @@ class TestDocstringChecker(TestCase):
         checker = DocstringChecker(_create_config([examples_section]))
 
         # Test docstring with the exact pattern that should trigger
-        docstring_with_examples: str = dedent(
-            """
+        docstring_with_examples: str = dedent("""
             This is a test function.
 
             ???+ example "Examples"
                 This is an example.
-            """
-        )
+            """)
 
         # This should match the examples pattern
         result: bool = checker._check_free_text_section(docstring_with_examples, examples_section)
         assert result is True
 
         # Test docstring without the examples pattern
-        docstring_without_examples: str = dedent(
-            """
+        docstring_without_examples: str = dedent("""
             This is a test function.
 
             Some other content but no examples section.
-            """
-        )
+            """)
 
         result = checker._check_free_text_section(docstring_without_examples, examples_section)
         assert result is False
 
         # Test with case variations to ensure case insensitive matching
-        docstring_case_variant: str = dedent(
-            """
+        docstring_case_variant: str = dedent("""
             This is a test function.
 
             ???+ EXAMPLE "Examples"
                 This is an example.
-            """
-        )
+            """)
 
         result = checker._check_free_text_section(docstring_case_variant, examples_section)
         assert result is True
@@ -2704,8 +2569,7 @@ class TestDocstringChecker(TestCase):
         checker = DocstringChecker(_create_config(custom_sections))
 
         # Test docstring with admonition sections that will be found by the regex but filtered out by special chars
-        test_docstring: str = dedent(
-            """
+        test_docstring: str = dedent("""
             Regular section here.
 
             !!! note "Summary"
@@ -2725,8 +2589,7 @@ class TestDocstringChecker(TestCase):
 
             !!! note "Valid_Section"
                 This should be detected
-            """
-        )
+            """)
 
         # Check undefined sections - the special character ones should be skipped by the continue statement
         undefined_errors: list[str] = checker._check_undefined_sections(test_docstring)
@@ -2756,14 +2619,12 @@ class TestDocstringChecker(TestCase):
         checker = DocstringChecker(_create_config([examples_section]))
 
         # This should match the regex pattern
-        docstring_with_examples: str = dedent(
-            """
+        docstring_with_examples: str = dedent("""
             This is a test function.
 
             ???+ example "Examples"
                 This is an example.
-            """
-        )
+            """)
 
         # This should return True
         result: bool = checker._check_free_text_section(docstring_with_examples, examples_section)
@@ -2817,8 +2678,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Test with content that has description lines with specific words that should be skipped
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function():
                 """
                 Summary:
@@ -2832,8 +2692,7 @@ class TestDocstringChecker(TestCase):
                     param2: Missing parenthesized type (should trigger error)
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -2873,8 +2732,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Simple content that should definitely trigger the parentheses error
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function():
                 """
                 Summary:
@@ -2884,8 +2742,7 @@ class TestDocstringChecker(TestCase):
                     simple_param_name: This should trigger parentheses validation error
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -2913,8 +2770,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Test case where we have a clear parameter line that lacks parentheses
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function():
                 """
                 Summary:
@@ -2924,8 +2780,7 @@ class TestDocstringChecker(TestCase):
                     x: Parameter without parentheses - should error
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -2955,8 +2810,7 @@ class TestDocstringChecker(TestCase):
 
         # Create a parameter line that will pass all the filter conditions but fail the regex
         # This should hit the exact line we're targeting (core.py:998)
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function():
                 """
                 Summary:
@@ -2966,8 +2820,7 @@ class TestDocstringChecker(TestCase):
                     some_param: description without parentheses
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -2999,8 +2852,7 @@ class TestDocstringChecker(TestCase):
         # - Line has colon but no parentheses
         # - Line doesn't contain filter words ("default", "output", "format", "show", "example")
         # - Line fails the regex r"\([^)]+\):"
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function():
                 """
                 Summary:
@@ -3010,8 +2862,7 @@ class TestDocstringChecker(TestCase):
                     param: missing parentheses here
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -3042,8 +2893,7 @@ class TestDocstringChecker(TestCase):
         ]
         checker = DocstringChecker(_create_config(sections))
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function(param1, param2):
                 """
                 Test function for hitting continue statement.
@@ -3054,8 +2904,7 @@ class TestDocstringChecker(TestCase):
                     normal_param: Should trigger parentheses error
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -3095,8 +2944,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
         # Test case 1: Description on separate lines (should pass)
-        python_content_1: str = dedent(
-            '''
+        python_content_1: str = dedent('''
             def test_function():
                 """
                 Test function for raises validation.
@@ -3106,12 +2954,10 @@ class TestDocstringChecker(TestCase):
                         If any of the inputs parsed to the parameters of this function are not the correct type. Uses the [`@typeguard.typechecked`](https://typeguard.readthedocs.io/en/stable/api.html#typeguard.typechecked) decorator.
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         # Test case 2: Description on same line (should pass)
-        python_content_2: str = dedent(
-            '''
+        python_content_2: str = dedent('''
             def test_function_same_line():
                 """
                 Test function for raises validation on same line.
@@ -3120,12 +2966,10 @@ class TestDocstringChecker(TestCase):
                     (TypeCheckError): If any of the inputs parsed to the parameters of this function are not the correct type.
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         # Test case 3: Invalid format (should fail)
-        python_content_3: str = dedent(
-            '''
+        python_content_3: str = dedent('''
             def test_function_invalid():
                 """
                 Test function for invalid raises format.
@@ -3134,8 +2978,7 @@ class TestDocstringChecker(TestCase):
                     TypeCheckError: This should trigger an error because type is not parenthesized.
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -3180,8 +3023,7 @@ class TestDocstringChecker(TestCase):
         ]
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def function_with_malformed_type():
                 """
                 Summary of the function.
@@ -3191,8 +3033,7 @@ class TestDocstringChecker(TestCase):
                     BadFormatError: This is malformed - no parentheses.
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
             temp_file.write(python_content)
@@ -3229,8 +3070,7 @@ class TestDocstringChecker(TestCase):
         ]
         checker: DocstringChecker = DocstringChecker(_create_config(sections, optional_style="silent"))
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def function_with_description_lines():
                 """
                 Summary of the function.
@@ -3253,8 +3093,7 @@ class TestDocstringChecker(TestCase):
                         Defaults to: `False`.
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
             temp_file.write(python_content)
@@ -3284,8 +3123,7 @@ class TestDocstringChecker(TestCase):
         ]
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def function_with_indented_descriptions():
                 """
                 Summary of the function.
@@ -3296,8 +3134,7 @@ class TestDocstringChecker(TestCase):
                         This line should be ignored: it has multiple words.
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
             temp_file.write(python_content)
@@ -3325,8 +3162,7 @@ class TestDocstringChecker(TestCase):
         ]
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def function_with_multiple_word_descriptions():
                 """
                 Summary of the function.
@@ -3336,8 +3172,7 @@ class TestDocstringChecker(TestCase):
                         This description line has multiple words before colon: should be skipped.
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
             temp_file.write(python_content)
@@ -3368,8 +3203,7 @@ class TestDocstringChecker(TestCase):
         ]
         checker: DocstringChecker = DocstringChecker(_create_config(sections))
 
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def function_with_same_level_multiple_words():
                 """
                 Summary of the function.
@@ -3380,8 +3214,7 @@ class TestDocstringChecker(TestCase):
                     multiple words here should be skipped: this has too many words.
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
             temp_file.write(python_content)
@@ -3418,8 +3251,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = DocstringChecker(config)
 
         # Create a test file with function missing the required list_name section
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def test_function(param1, param2):
                 '''
                 This function is missing the Parameters section.
@@ -3430,8 +3262,7 @@ class TestDocstringChecker(TestCase):
                     Return value.
                 '''
                 return "test"
-            """
-        )
+            """)
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
             temp_file.write(python_content)
@@ -3470,8 +3301,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = DocstringChecker(config)
 
         # Create docstring that doesn't have proper parentheses sections
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def test_function():
                 '''
                 This function has malformed section content.
@@ -3482,8 +3312,7 @@ class TestDocstringChecker(TestCase):
                     Description without proper format that should trigger None return
                 '''
                 pass
-            """
-        )
+            """)
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
             temp_file.write(python_content)
@@ -3525,13 +3354,11 @@ class TestDocstringChecker(TestCase):
         checker.sections_config[0].type = "invalid_type"  # type: ignore
 
         # Create test content
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def test_function():
                 '''Missing test section.'''
                 pass
-            """
-        )
+            """)
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
             temp_file.write(python_content)
@@ -3566,8 +3393,7 @@ class TestDocstringChecker(TestCase):
         checker: DocstringChecker = DocstringChecker(config)
 
         # Create a test file with function that HAS the required list_name section
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def test_function(param1, param2):
                 '''
                 This function has the Parameters section.
@@ -3580,8 +3406,7 @@ class TestDocstringChecker(TestCase):
                     Second parameter.
                 '''
                 return "test"
-            """
-        )
+            """)
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
             temp_file.write(python_content)
@@ -3649,8 +3474,7 @@ class TestDocstringChecker(TestCase):
         assert result3 is None  # Should hit line 1097 (doesn't match pattern, has space)
 
         # Also test the full file scenario
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def test_function():
                 '''
                 Test function.
@@ -3662,8 +3486,7 @@ class TestDocstringChecker(TestCase):
                 This has parentheses.
                 '''
                 pass
-            """
-        )
+            """)
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
             temp_file.write(python_content)
@@ -3731,8 +3554,7 @@ class TestUnorderedSections(TestCase):
         Test unordered section appearing before ordered sections.
         """
         checker: DocstringChecker = self._create_unordered_checker()
-        docstring: str = dedent(
-            """
+        docstring: str = dedent("""
             !!! deprecation "Deprecation Warning"
                 This function is deprecated.
 
@@ -3742,8 +3564,7 @@ class TestUnorderedSections(TestCase):
             Params:
                 x (int): The input.
                 y (int): Another input.
-            """
-        ).strip()
+            """).strip()
         errors: list[DocstringError] = self._check_docstring(checker, docstring)
         assert len(errors) == 0, f"Expected no errors, got: {[e.message for e in errors]}"
 
@@ -3752,8 +3573,7 @@ class TestUnorderedSections(TestCase):
         Test unordered section appearing between ordered sections.
         """
         checker: DocstringChecker = self._create_unordered_checker()
-        docstring: str = dedent(
-            """
+        docstring: str = dedent("""
             !!! note "Summary"
                 A simple function.
 
@@ -3763,8 +3583,7 @@ class TestUnorderedSections(TestCase):
             Params:
                 x (int): The input.
                 y (int): Another input.
-            """
-        ).strip()
+            """).strip()
         errors: list[DocstringError] = self._check_docstring(checker, docstring)
         assert len(errors) == 0, f"Expected no errors, got: {[e.message for e in errors]}"
 
@@ -3773,8 +3592,7 @@ class TestUnorderedSections(TestCase):
         Test unordered section appearing after ordered sections.
         """
         checker: DocstringChecker = self._create_unordered_checker()
-        docstring: str = dedent(
-            """
+        docstring: str = dedent("""
             !!! note "Summary"
                 A simple function.
 
@@ -3784,8 +3602,7 @@ class TestUnorderedSections(TestCase):
 
             !!! deprecation "Deprecation Warning"
                 This function is deprecated.
-            """
-        ).strip()
+            """).strip()
         errors: list[DocstringError] = self._check_docstring(checker, docstring)
         assert len(errors) == 0, f"Expected no errors, got: {[e.message for e in errors]}"
 
@@ -3794,8 +3611,7 @@ class TestUnorderedSections(TestCase):
         Test multiple unordered sections in various positions.
         """
         checker: DocstringChecker = self._create_unordered_checker()
-        docstring: str = dedent(
-            """
+        docstring: str = dedent("""
             !!! todo "Todo"
                 Fix this later.
 
@@ -3811,8 +3627,7 @@ class TestUnorderedSections(TestCase):
 
             Custom List:
                 - Item 1
-            """
-        ).strip()
+            """).strip()
         errors: list[DocstringError] = self._check_docstring(checker, docstring)
         assert len(errors) == 0, f"Expected no errors, got: {[e.message for e in errors]}"
 
@@ -3821,8 +3636,7 @@ class TestUnorderedSections(TestCase):
         Test unordered section appearing inside a parameter description.
         """
         checker: DocstringChecker = self._create_unordered_checker()
-        docstring: str = dedent(
-            """
+        docstring: str = dedent("""
             !!! note "Summary"
                 A simple function.
 
@@ -3832,8 +3646,7 @@ class TestUnorderedSections(TestCase):
                     !!! deprecation "Deprecation Warning"
                         This parameter is deprecated.
                 y (int): Another input.
-            """
-        ).strip()
+            """).strip()
         errors: list[DocstringError] = self._check_docstring(checker, docstring)
         assert len(errors) == 0, f"Expected no errors, got: {[e.message for e in errors]}"
 
@@ -3842,8 +3655,7 @@ class TestUnorderedSections(TestCase):
         Test unordered sections of different types (free_text, list_name).
         """
         checker: DocstringChecker = self._create_unordered_checker()
-        docstring: str = dedent(
-            """
+        docstring: str = dedent("""
             !!! note "Summary"
                 A simple function.
 
@@ -3853,8 +3665,7 @@ class TestUnorderedSections(TestCase):
             Params:
                 x (int): The input.
                 y (int): Another input.
-            """
-        ).strip()
+            """).strip()
         errors: list[DocstringError] = self._check_docstring(checker, docstring)
         assert len(errors) == 0, f"Expected no errors, got: {[e.message for e in errors]}"
 
@@ -3869,12 +3680,10 @@ class TestUnorderedSections(TestCase):
         config = Config(global_config=GlobalConfig(), sections=sections)
         checker: DocstringChecker = DocstringChecker(config)
 
-        docstring: str = dedent(
-            """
+        docstring: str = dedent("""
             !!! note "Summary"
                 A simple function.
-            """
-        ).strip()
+            """).strip()
         errors: list[DocstringError] = self._check_docstring(checker, docstring)
         assert any(
             "Missing required section: 'mandatory unordered'" in err.message for err in errors
@@ -3885,8 +3694,7 @@ class TestUnorderedSections(TestCase):
         Test that unordered sections are matched case-insensitively.
         """
         checker: DocstringChecker = self._create_unordered_checker()
-        docstring: str = dedent(
-            """
+        docstring: str = dedent("""
             !!! note "Summary"
                 A simple function.
 
@@ -3896,8 +3704,7 @@ class TestUnorderedSections(TestCase):
             Params:
                 x (int): The input.
                 y (int): Another input.
-            """
-        ).strip()
+            """).strip()
         errors: list[DocstringError] = self._check_docstring(checker, docstring)
         assert len(errors) == 0, f"Expected no errors, got: {[e.message for e in errors]}"
 
@@ -3906,8 +3713,7 @@ class TestUnorderedSections(TestCase):
         Test that unordered sections don't mask order errors in ordered sections.
         """
         checker: DocstringChecker = self._create_unordered_checker()
-        docstring: str = dedent(
-            """
+        docstring: str = dedent("""
             Params:
                 x (int): The input.
                 y (int): Another input.
@@ -3917,8 +3723,7 @@ class TestUnorderedSections(TestCase):
 
             !!! note "Summary"
                 A simple function.
-            """
-        ).strip()
+            """).strip()
         errors: list[DocstringError] = self._check_docstring(checker, docstring)
         # Summary (order 1) appears after Params (order 2)
         assert any(
@@ -3949,8 +3754,7 @@ class TestParameterTypeValidation(TestCase):
         Test that matching parameter types pass validation.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example_function(name: str, age: int, active: bool) -> None:
                 '''
                 Example function with parameters.
@@ -3964,8 +3768,7 @@ class TestParameterTypeValidation(TestCase):
                         The active flag.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -3991,8 +3794,7 @@ class TestParameterTypeValidation(TestCase):
         Test that mismatched parameter types are detected.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example_function(name: str, age: int) -> None:
                 '''
                 Example function with parameters.
@@ -4004,8 +3806,7 @@ class TestParameterTypeValidation(TestCase):
                         The age parameter - WRONG TYPE.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -4033,8 +3834,7 @@ class TestParameterTypeValidation(TestCase):
         Test parameter type validation with Optional types.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             from typing import Optional
 
             def example_function(name: Optional[str], age: int) -> None:
@@ -4048,8 +3848,7 @@ class TestParameterTypeValidation(TestCase):
                         The age parameter.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -4075,8 +3874,7 @@ class TestParameterTypeValidation(TestCase):
         Test parameter type validation with Union types.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             from typing import Union
 
             def example_function(value: Union[str, int], flag: bool) -> None:
@@ -4090,8 +3888,7 @@ class TestParameterTypeValidation(TestCase):
                         The flag parameter.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -4117,8 +3914,7 @@ class TestParameterTypeValidation(TestCase):
         Test parameter type validation with list types.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example_function(items: list[str], counts: list[int]) -> None:
                 '''
                 Example function with list parameters.
@@ -4130,8 +3926,7 @@ class TestParameterTypeValidation(TestCase):
                         The counts list.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -4157,8 +3952,7 @@ class TestParameterTypeValidation(TestCase):
         Test parameter type validation with dict types.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example_function(config: dict[str, int]) -> None:
                 '''
                 Example function with dict parameter.
@@ -4168,8 +3962,7 @@ class TestParameterTypeValidation(TestCase):
                         The config dictionary.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -4195,8 +3988,7 @@ class TestParameterTypeValidation(TestCase):
         Test handling when parameter has no type annotation in signature.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example_function(name, age: int) -> None:
                 '''
                 Example function with missing annotation.
@@ -4208,8 +4000,7 @@ class TestParameterTypeValidation(TestCase):
                         The age parameter.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -4236,8 +4027,7 @@ class TestParameterTypeValidation(TestCase):
         Test that validation is skipped when validate_param_types is False.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example_function(name: str, age: int) -> None:
                 '''
                 Example function with parameters.
@@ -4249,8 +4039,7 @@ class TestParameterTypeValidation(TestCase):
                         The age parameter - WRONG TYPE.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -4276,8 +4065,7 @@ class TestParameterTypeValidation(TestCase):
         Test that 'self' parameter is properly ignored in methods.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             class ExampleClass:
                 def method(self, name: str, age: int) -> None:
                     '''
@@ -4290,8 +4078,7 @@ class TestParameterTypeValidation(TestCase):
                             The age parameter.
                     '''
                     pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -4317,8 +4104,7 @@ class TestParameterTypeValidation(TestCase):
         Test that type matching is case-insensitive.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example_function(name: str) -> None:
                 '''
                 Example function with parameter.
@@ -4328,8 +4114,7 @@ class TestParameterTypeValidation(TestCase):
                         The name parameter.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -4355,8 +4140,7 @@ class TestParameterTypeValidation(TestCase):
         Test parameter type validation with complex nested types.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             from typing import Optional, Union
 
             def example_function(data: Optional[Union[str, list[int]]]) -> None:
@@ -4368,8 +4152,7 @@ class TestParameterTypeValidation(TestCase):
                         The data parameter.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -4395,8 +4178,7 @@ class TestParameterTypeValidation(TestCase):
         Test that all parameter type mismatches in a function are detected.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example_function(name: str, age: int, active: bool) -> None:
                 '''
                 Example function with parameters.
@@ -4410,8 +4192,7 @@ class TestParameterTypeValidation(TestCase):
                         The active flag - WRONG TYPE.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -4437,15 +4218,13 @@ class TestParameterTypeValidation(TestCase):
         Test that functions without Params section are handled correctly.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example_function(name: str) -> None:
                 '''
                 Example function without Params section.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=False),
@@ -4471,8 +4250,7 @@ class TestParameterTypeValidation(TestCase):
         Test parameter with type annotation but empty type in docstring parentheses.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def create_user(username: str, email: str) -> None:
                 '''
                 Create a new user.
@@ -4482,8 +4260,7 @@ class TestParameterTypeValidation(TestCase):
                     email (str): User's email address.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=False),
@@ -4512,8 +4289,7 @@ class TestParameterTypeValidation(TestCase):
         Test scenario where all parameter types match - empty mismatches list.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def validate_items(name: str, count: int, active: bool) -> None:
                 '''
                 Validate items.
@@ -4524,8 +4300,7 @@ class TestParameterTypeValidation(TestCase):
                     active (bool): Whether items are active.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=False),
@@ -4557,8 +4332,7 @@ class TestParameterTypeValidation(TestCase):
         Test _extract_param_types_from_docstring when docstring has no Params section (line 926).
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def process_data(value: str) -> str:
                 '''
                 Process data without Params section.
@@ -4567,8 +4341,7 @@ class TestParameterTypeValidation(TestCase):
                     (str): Processed value.
                 '''
                 return value.upper()
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Returns", type="list_type", required=False),
@@ -4594,8 +4367,7 @@ class TestParameterTypeValidation(TestCase):
         Test parameter extraction stops at next section (line 947 - break statement).
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def calculate(x: int, y: int) -> int:
                 '''
                 Calculate sum.
@@ -4608,8 +4380,7 @@ class TestParameterTypeValidation(TestCase):
                     (int): Sum of values.
                 '''
                 return x + y
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=False),
@@ -4636,8 +4407,7 @@ class TestParameterTypeValidation(TestCase):
         Test _compare_param_types when param in signature not in docstring (line 1002 - continue).
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def create_item(name: str, value: int, active: bool) -> None:
                 '''
                 Create item.
@@ -4647,8 +4417,7 @@ class TestParameterTypeValidation(TestCase):
                     value (int): Item value.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=False),
@@ -4674,8 +4443,7 @@ class TestParameterTypeValidation(TestCase):
         Test error for param with signature annotation but no docstring type (line 1048).
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def update_record(record_id: int, status: str) -> None:
                 '''
                 Update record.
@@ -4685,8 +4453,7 @@ class TestParameterTypeValidation(TestCase):
                     status: Current status value.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=False),
@@ -4721,14 +4488,12 @@ class TestParameterTypeValidation(TestCase):
         checker: DocstringChecker = DocstringChecker(config)
 
         # Docstring without Params section
-        docstring: str = dedent(
-            """
+        docstring: str = dedent("""
             Process data.
 
             Returns:
                 (str): Result.
-            """
-        )
+            """)
 
         # This should hit line 926 - early return when no Params section
         result: dict[str, str] = checker._extract_param_types_from_docstring(docstring)
@@ -4747,8 +4512,7 @@ class TestParameterTypeValidation(TestCase):
         checker: DocstringChecker = DocstringChecker(config)
 
         # Docstring with Params followed by Returns
-        docstring: str = dedent(
-            """
+        docstring: str = dedent("""
             Calculate value.
 
             Params:
@@ -4757,8 +4521,7 @@ class TestParameterTypeValidation(TestCase):
 
             Returns:
                 (int): Sum of values.
-            """
-        )
+            """)
 
         # This should hit line 947 - break when encountering Returns:
         result: dict[str, str] = checker._extract_param_types_from_docstring(docstring)
@@ -4796,26 +4559,22 @@ class TestParameterTypeValidation(TestCase):
         checker: DocstringChecker = DocstringChecker(config)
 
         # Create a function node with type annotations
-        code: str = dedent(
-            """
+        code: str = dedent("""
             def update_status(record_id: int, status: str) -> None:
                 pass
-            """
-        )
+            """)
 
         tree: Module = ast.parse(code)
         node: stmt = tree.body[0]
         assert isinstance(node, ast.FunctionDef)
 
         # Docstring where 'status' is documented but without type
-        docstring: str = dedent(
-            """
+        docstring: str = dedent("""
             Update status.
 
             Params:
                 record_id (int): Record identifier.
-            """
-        )
+            """)
 
         # This should hit line 1048 - error for param with annotation but no docstring type
         error: Optional[str] = checker._validate_param_types(docstring, node)
@@ -4836,16 +4595,14 @@ class TestParameterTypeValidation(TestCase):
         )
         checker = DocstringChecker(config)
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             @property
             def some_property(self):
                 '''
                 Summary text.
                 '''
                 return "value"
-            """
-        )
+            """)
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
             temp_file.write(python_content)
@@ -4880,16 +4637,14 @@ class TestParameterTypeValidation(TestCase):
         )
         checker = DocstringChecker(config)
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def test_function():
                 '''
                 !!! note "Summary"
                     This is a summary with admonition.
                 '''
                 pass
-            """
-        )
+            """)
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
             temp_file.write(python_content)
@@ -4916,15 +4671,13 @@ class TestParameterTypeValidation(TestCase):
         )
         checker = DocstringChecker(config)
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def test_function():
                 '''
                 Summary.
                 '''
                 return "value"
-            """
-        )
+            """)
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
             temp_file.write(python_content)
@@ -4951,15 +4704,13 @@ class TestParameterTypeValidation(TestCase):
         )
         checker = DocstringChecker(config)
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def test_function():
                 '''
                 Summary.
                 '''
                 raise ValueError("error")
-            """
-        )
+            """)
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
             temp_file.write(python_content)
@@ -4986,15 +4737,13 @@ class TestParameterTypeValidation(TestCase):
         )
         checker = DocstringChecker(config)
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def test_function():
                 '''
                 Summary.
                 '''
                 yield "value"
-            """
-        )
+            """)
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
             temp_file.write(python_content)
@@ -5021,16 +4770,14 @@ class TestParameterTypeValidation(TestCase):
         )
         checker = DocstringChecker(config)
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             class TestClass:
                 '''
                 Summary.
                 '''
                 def __init__(self):
                     self.value = 1
-            """
-        )
+            """)
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
             temp_file.write(python_content)
@@ -5064,16 +4811,14 @@ class TestParameterTypeValidation(TestCase):
         )
         checker = DocstringChecker(config)
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def test_function(arg1: int):
                 '''
                 !!! note "Params"
                     arg1 (int): First argument.
                 '''
                 pass
-            """
-        )
+            """)
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
             temp_file.write(python_content)
@@ -5094,8 +4839,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test detailed error when parameter exists in signature but not in docstring.
         """
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example_function(name: str, age: int, city: str) -> None:
                 '''
                 Example function with parameters.
@@ -5107,8 +4851,7 @@ class TestParameterTypeValidation(TestCase):
                         The age parameter.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -5135,8 +4878,7 @@ class TestParameterTypeValidation(TestCase):
         Test detailed error when parameter exists in docstring but not in signature.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example_function(name: str, age: int) -> None:
                 '''
                 Example function with parameters.
@@ -5150,8 +4892,7 @@ class TestParameterTypeValidation(TestCase):
                         The city parameter - DOES NOT EXIST IN SIGNATURE.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -5178,8 +4919,7 @@ class TestParameterTypeValidation(TestCase):
         Test detailed error when parameters mismatch in both directions.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example_function(name: str, age: int, email: str) -> None:
                 '''
                 Example function with parameters.
@@ -5193,8 +4933,7 @@ class TestParameterTypeValidation(TestCase):
                         The city parameter - DOES NOT EXIST IN SIGNATURE.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -5222,8 +4961,7 @@ class TestParameterTypeValidation(TestCase):
         Test detailed error when multiple parameters missing in docstring.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example_function(name: str, age: int, city: str, country: str) -> None:
                 '''
                 Example function with parameters.
@@ -5235,8 +4973,7 @@ class TestParameterTypeValidation(TestCase):
                         The age parameter.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -5265,8 +5002,7 @@ class TestParameterTypeValidation(TestCase):
         Test detailed error helps identify typos in parameter names.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example_function(interpolation_nodes: list, values: list) -> None:
                 '''
                 Example function with parameters.
@@ -5278,8 +5014,7 @@ class TestParameterTypeValidation(TestCase):
                         The values parameter.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -5307,15 +5042,13 @@ class TestParameterTypeValidation(TestCase):
         Test _check_params_section returns True when function has no parameters.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example_function() -> None:
                 '''
                 Example function with no parameters.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=False),
@@ -5349,15 +5082,13 @@ class TestParameterTypeValidation(TestCase):
         Test _check_params_section returns False when Params section is missing.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example_function(name: str, age: int) -> None:
                 '''
                 Example function with parameters but no Params section.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=False),
@@ -5393,8 +5124,7 @@ class TestParameterTypeValidation(TestCase):
         Test _check_params_section returns False when a parameter is not documented.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example_function(name: str, age: int) -> None:
                 '''
                 Example function with parameters.
@@ -5404,8 +5134,7 @@ class TestParameterTypeValidation(TestCase):
                         The name parameter.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=False),
@@ -5428,15 +5157,13 @@ class TestParameterTypeValidation(TestCase):
             assert isinstance(func_node, ast.FunctionDef)
 
             # Test the _check_params_section method directly
-            docstring: str = dedent(
-                """
+            docstring: str = dedent("""
                 Example function with parameters.
 
                 Params:
                     name (str):
                         The name parameter.
-                """
-            )
+                """)
             result: bool = checker._check_params_section(docstring, func_node)
             assert result is False  # age parameter is not documented
 
@@ -5448,8 +5175,7 @@ class TestParameterTypeValidation(TestCase):
         Test _check_params_section returns True when all parameters are documented.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example_function(name: str, age: int) -> None:
                 '''
                 Example function with parameters.
@@ -5461,8 +5187,7 @@ class TestParameterTypeValidation(TestCase):
                         The age parameter.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=False),
@@ -5485,8 +5210,7 @@ class TestParameterTypeValidation(TestCase):
             assert isinstance(func_node, ast.FunctionDef)
 
             # Test the _check_params_section method directly
-            docstring: str = dedent(
-                """
+            docstring: str = dedent("""
                 Example function with parameters.
 
                 Params:
@@ -5494,8 +5218,7 @@ class TestParameterTypeValidation(TestCase):
                         The name parameter.
                     age (int):
                         The age parameter.
-                """
-            )
+                """)
             result: bool = checker._check_params_section(docstring, func_node)
             assert result is True
 
@@ -5510,8 +5233,7 @@ class TestParameterTypeValidation(TestCase):
         in the output and comparisons were failing.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def process_items(names: list[str], counts: list[int]) -> None:
                 '''
                 Process items with mismatched types.
@@ -5523,8 +5245,7 @@ class TestParameterTypeValidation(TestCase):
                         List of counts - MISSING TYPE PARAMETER.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -5565,8 +5286,7 @@ class TestParameterTypeValidation(TestCase):
         Test detection when signature has dict[str, int] but docstring only has dict.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def configure_system(settings: dict[str, int]) -> None:
                 '''
                 Configure system with settings.
@@ -5576,8 +5296,7 @@ class TestParameterTypeValidation(TestCase):
                         System settings - MISSING TYPE PARAMETERS.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -5614,8 +5333,7 @@ class TestParameterTypeValidation(TestCase):
         but docstring has list[dict] (missing inner type parameters).
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             from typing import Literal
 
             def process_data(items: list[dict[str, int]]) -> None:
@@ -5627,8 +5345,7 @@ class TestParameterTypeValidation(TestCase):
                         Data items - MISSING INNER TYPE PARAMETERS.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -5666,8 +5383,7 @@ class TestParameterTypeValidation(TestCase):
         but docstring has list[dict[Literal["coeff", "ts"], list]]
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             from typing import Literal, Union
 
             number = Union[float, int]
@@ -5683,8 +5399,7 @@ class TestParameterTypeValidation(TestCase):
                         Exogenous variables - MISSING [number] TYPE PARAMETER.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -5726,8 +5441,7 @@ class TestParameterTypeValidation(TestCase):
         This confirms the fix doesn't create false positives.
         """
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def process_names(names: list[str], ids: list[int]) -> None:
                 '''
                 Process names and IDs.
@@ -5739,8 +5453,7 @@ class TestParameterTypeValidation(TestCase):
                         List of IDs.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -5766,8 +5479,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test 'silent' mode: strips ', optional' from docstring without validation.
         """
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             from typing import Optional
 
             def process_data(name: str, age: Optional[int] = None):
@@ -5781,8 +5493,7 @@ class TestParameterTypeValidation(TestCase):
                         The user age.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -5805,8 +5516,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test 'silent' mode: allows ', optional' on required parameters (strips without error).
         """
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def fetch_user(user_id: int):
                 '''
                 Fetch user by ID.
@@ -5816,8 +5526,7 @@ class TestParameterTypeValidation(TestCase):
                         The user identifier.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -5841,8 +5550,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test 'validate' mode: allows ', optional' on parameters with defaults.
         """
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             from typing import Optional
 
             def process_data(name: str, age: Optional[int] = None):
@@ -5856,8 +5564,7 @@ class TestParameterTypeValidation(TestCase):
                         The user age.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -5880,8 +5587,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test 'validate' mode: errors when ', optional' appears on required parameter.
         """
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def fetch_user(user_id: int):
                 '''
                 Fetch user by ID.
@@ -5891,8 +5597,7 @@ class TestParameterTypeValidation(TestCase):
                         The user identifier.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -5916,8 +5621,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test 'validate' mode: allows missing ', optional' on parameters with defaults.
         """
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             from typing import Optional
 
             def process_data(name: str, age: Optional[int] = None):
@@ -5931,8 +5635,7 @@ class TestParameterTypeValidation(TestCase):
                         The user age.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -5956,8 +5659,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test 'strict' mode: requires ', optional' for parameters with defaults.
         """
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             from typing import Optional
 
             def process_data(name: str, age: Optional[int] = None):
@@ -5971,8 +5673,7 @@ class TestParameterTypeValidation(TestCase):
                         The user age.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -5996,8 +5697,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test 'strict' mode: allows ', optional' when parameter has default.
         """
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             from typing import Optional
 
             def process_data(name: str, age: Optional[int] = None):
@@ -6011,8 +5711,7 @@ class TestParameterTypeValidation(TestCase):
                         The user age.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -6035,8 +5734,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test 'strict' mode: errors when ', optional' appears on required parameter.
         """
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def fetch_user(user_id: int):
                 '''
                 Fetch user by ID.
@@ -6046,8 +5744,7 @@ class TestParameterTypeValidation(TestCase):
                         The user identifier.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -6071,8 +5768,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test that ', OPTIONAL' (uppercase) suffix is handled correctly.
         """
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             from typing import Optional
 
             def fetch_user(user_id: int, timeout: Optional[float] = None):
@@ -6086,8 +5782,7 @@ class TestParameterTypeValidation(TestCase):
                         Request timeout in seconds.
                 '''
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -6112,8 +5807,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test that positional-only parameters (before /) are properly extracted and validated.
         """
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def test_function(a: int, b: str, /, c: float) -> None:
                 '''
                 Test function with positional-only parameters.
@@ -6127,8 +5821,7 @@ class TestParameterTypeValidation(TestCase):
                         Regular parameter.
                 '''
                 pass
-            """
-        ).strip()
+            """).strip()
 
         checker: DocstringChecker = simple_checker()
 
@@ -6147,8 +5840,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test that *args parameters are properly extracted and validated.
         """
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def test_function(a: int, *args: str) -> None:
                 '''
                 Test function with *args.
@@ -6160,8 +5852,7 @@ class TestParameterTypeValidation(TestCase):
                         Variable positional arguments.
                 '''
                 pass
-            """
-        ).strip()
+            """).strip()
 
         checker: DocstringChecker = simple_checker()
 
@@ -6180,8 +5871,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test that **kwargs parameters are properly extracted and validated.
         """
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def test_function(a: int, **kwargs: str) -> None:
                 '''
                 Test function with **kwargs.
@@ -6193,8 +5883,7 @@ class TestParameterTypeValidation(TestCase):
                         Variable keyword arguments.
                 '''
                 pass
-            """
-        ).strip()
+            """).strip()
 
         checker: DocstringChecker = simple_checker()
 
@@ -6213,8 +5902,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test that all parameter types work together correctly.
         """
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def test_function(a: int, b: str, /, c: float, *args: int, d: bool, **kwargs: str) -> None:
                 '''
                 Test function with all parameter types.
@@ -6234,8 +5922,7 @@ class TestParameterTypeValidation(TestCase):
                         Variable keyword arguments.
                 '''
                 pass
-            """
-        ).strip()
+            """).strip()
 
         checker: DocstringChecker = simple_checker()
 
@@ -6257,8 +5944,7 @@ class TestParameterTypeValidation(TestCase):
         This is the original issue - @overload functions have different signatures,
         but only the final implementation should be checked against the docstring.
         """
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             from typing import overload, Literal, Optional
 
             @overload
@@ -6293,8 +5979,7 @@ class TestParameterTypeValidation(TestCase):
                         Log level when mode is log.
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         checker: DocstringChecker = simple_checker()
 
@@ -6318,12 +6003,10 @@ class TestParameterTypeValidation(TestCase):
         # ## Python StdLib Imports ----
         import ast
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example(a: int, *, b: str = "default", c: int, d: float = 3.14):
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -6353,12 +6036,10 @@ class TestParameterTypeValidation(TestCase):
         # ## Python StdLib Imports ----
         import ast
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example(a: int = 1, /, b: int = 2, *, c: int = 3):
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -6386,12 +6067,10 @@ class TestParameterTypeValidation(TestCase):
         # ## Python StdLib Imports ----
         import ast
 
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def example(x, y=1, /, z=2):
                 pass
-            """
-        )
+            """)
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -6415,8 +6094,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test formatting of optional suffix errors when there's only one error.
         """
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def test_function(a: int = 5) -> None:
                 '''
                 Test function.
@@ -6426,8 +6104,7 @@ class TestParameterTypeValidation(TestCase):
                         Missing optional suffix.
                 '''
                 pass
-            """
-        ).strip()
+            """).strip()
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -6453,8 +6130,7 @@ class TestParameterTypeValidation(TestCase):
         """
         Test formatting of optional suffix errors when there are multiple errors.
         """
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def test_function(a: int = 5, b: str = "default", c: float = 1.0) -> None:
                 '''
                 Test function.
@@ -6468,8 +6144,7 @@ class TestParameterTypeValidation(TestCase):
                         Missing optional suffix.
                 '''
                 pass
-            """
-        ).strip()
+            """).strip()
 
         sections: list[SectionConfig] = [
             SectionConfig(order=1, name="Params", type="list_name_and_type", required=True),
@@ -6502,8 +6177,7 @@ class TestParameterMismatch(TestCase):
     def test_param_mismatch_with_asterisks(self) -> None:
         checker = DocstringChecker(DEFAULT_CONFIG)
 
-        code = dedent(
-            """
+        code = dedent("""
             def my_func(*args, **kwargs):
                 '''
                 !!! note "Summary"
@@ -6516,8 +6190,7 @@ class TestParameterMismatch(TestCase):
                         Kwargs.
                 '''
                 pass
-            """
-        )
+            """)
         tree = ast.parse(code)
         func_node = tree.body[0]
         assert isinstance(func_node, (ast.FunctionDef, ast.AsyncFunctionDef))
@@ -6536,8 +6209,7 @@ class TestParameterMismatch(TestCase):
     def test_normal_param_mismatch(self) -> None:
         checker = DocstringChecker(DEFAULT_CONFIG)
 
-        code = dedent(
-            """
+        code = dedent("""
             def my_func(a, b):
                 '''
                 !!! note "Summary"
@@ -6550,8 +6222,7 @@ class TestParameterMismatch(TestCase):
                         C.
                 '''
                 pass
-            """
-        )
+            """)
         tree = ast.parse(code)
         func_node = tree.body[0]
         assert isinstance(func_node, (ast.FunctionDef, ast.AsyncFunctionDef))

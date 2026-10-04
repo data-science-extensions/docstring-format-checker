@@ -24,7 +24,6 @@
     This module defines custom exceptions for handling various error scenarios
 """
 
-
 # ---------------------------------------------------------------------------- #
 #                                                                              #
 #     Main Section                                                          ####

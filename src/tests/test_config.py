@@ -39,7 +39,6 @@ from docstring_format_checker.utils.exceptions import (
     InvalidTypeValuesError,
 )
 
-
 # ---------------------------------------------------------------------------- #
 #                                                                              #
 #     Unit Tests                                                            ####
@@ -78,8 +77,7 @@ class TestConfig(TestCase):
         Test loading configuration from a TOML file.
         """
 
-        toml_content: str = dedent(
-            """
+        toml_content: str = dedent("""
             [tool.dfc]
 
             [[tool.dfc.sections]]
@@ -93,8 +91,7 @@ class TestConfig(TestCase):
             name = "params"
             type = "list_name_and_type"
             required = true
-            """
-        )
+        """)
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -117,8 +114,7 @@ class TestConfig(TestCase):
         Test loading configuration with multiple sections that don't have an order value.
         """
 
-        toml_content: str = dedent(
-            """
+        toml_content: str = dedent("""
             [tool.dfc]
 
             [[tool.dfc.sections]]
@@ -136,8 +132,7 @@ class TestConfig(TestCase):
             name = "warning"
             type = "free_text"
             required = false
-            """
-        )
+        """)
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -162,8 +157,7 @@ class TestConfig(TestCase):
         Test that explicitly providing duplicate order values still raises an error.
         """
 
-        toml_content: str = dedent(
-            """
+        toml_content: str = dedent("""
             [tool.dfc]
 
             [[tool.dfc.sections]]
@@ -177,8 +171,7 @@ class TestConfig(TestCase):
             type = "free_text"
             order = 1
             required = false
-            """
-        )
+        """)
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -196,16 +189,14 @@ class TestConfig(TestCase):
         Test loading configuration from an alternative TOML table name.
         """
 
-        toml_content: str = dedent(
-            """
+        toml_content: str = dedent("""
             [tool.docstring-format-checker]
             [[tool.docstring-format-checker.sections]]
             order = 1
             name = "test"
             type = "free_text"
             required = true
-            """
-        )
+        """)
 
         with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -241,7 +232,7 @@ class TestConfig(TestCase):
 
         # Invalid type should raise error
         with pytest.raises(InvalidTypeValuesError, match="Invalid section type"):
-            SectionConfig(order=1, name="test", type="invalid_type", required=True)  # type:ignore
+            SectionConfig(order=1, name="test", type="invalid_type", required=True)  # type: ignore
 
     def test_06_find_config_file(self) -> None:
         """
@@ -258,21 +249,17 @@ class TestConfig(TestCase):
 
             # Create pyproject.toml with dfc config
             pyproject: Path = subdir.joinpath("pyproject.toml")
-            pyproject.write_text(
-                dedent(
-                    """
-                    [tool.dfc]
-                    [[tool.dfc.sections]]
-                    order = 1
-                    name = "test"
-                    type = "free_text"
-                    required = true
-                    """
-                )
-            )
+            pyproject.write_text(dedent("""
+                [tool.dfc]
+                [[tool.dfc.sections]]
+                order = 1
+                name = "test"
+                type = "free_text"
+                required = true
+            """))
 
             # Search from subdirectory should find the config
-            found1: Path = find_config_file(subdir)  # type:ignore
+            found1: Path = find_config_file(subdir)  # type: ignore
             assert found1.resolve() == pyproject.resolve()
 
             # Search from non-existent path should return None
@@ -307,17 +294,13 @@ class TestConfig(TestCase):
             # Create a temporary config file
             temp_path = Path(temp_dir)
             config_file: Path = temp_path.joinpath("no_tool_section.toml")
-            config_file.write_text(
-                dedent(
-                    """
-                    [build-system]
-                    requires = ["setuptools", "wheel"]
+            config_file.write_text(dedent("""
+                [build-system]
+                requires = ["setuptools", "wheel"]
 
-                    [tool.other]
-                    setting = "value"
-                    """
-                ).strip()
-            )
+                [tool.other]
+                setting = "value"
+            """).strip())
 
             # Should return default config when no dfc section found
             config: Config = load_config(str(config_file))
@@ -337,14 +320,10 @@ class TestConfig(TestCase):
             # Create a temporary config file
             temp_path = Path(temp_dir)
             config_file: Path = temp_path.joinpath("no_sections.toml")
-            config_file.write_text(
-                dedent(
-                    """
-                    [tool.dfc]
-                    some_setting = "value"
-                    """
-                ).strip()
-            )
+            config_file.write_text(dedent("""
+                [tool.dfc]
+                some_setting = "value"
+            """).strip())
 
             # Should return default config when no sections found
             config: Config = load_config(str(config_file))
@@ -364,36 +343,28 @@ class TestConfig(TestCase):
             # Test invalid section creation through load_config with bad data
             temp_path = Path(temp_dir)
             config_file1: Path = temp_path.joinpath("missing_fields.toml")
-            config_file1.write_text(
-                dedent(
-                    """
-                    [tool.dfc]
+            config_file1.write_text(dedent("""
+                [tool.dfc]
 
-                    [[tool.dfc.sections]]
-                    name = "test"
-                    # Missing order, type, required
-                    """
-                ).strip()
-            )
+                [[tool.dfc.sections]]
+                name = "test"
+                # Missing order, type, required
+            """).strip())
 
             with raises(InvalidConfigError, match="Invalid section configuration"):
                 load_config(str(config_file1))
 
             # Test section with invalid type through config loading
             config_file2: Path = temp_path.joinpath("invalid_type.toml")
-            config_file2.write_text(
-                dedent(
-                    """
-                    [tool.dfc]
+            config_file2.write_text(dedent("""
+                [tool.dfc]
 
-                    [[tool.dfc.sections]]
-                    order = 1
-                    name = "test"
-                    type = "invalid_type"
-                    required = true
-                    """
-                ).strip()
-            )
+                [[tool.dfc.sections]]
+                order = 1
+                name = "test"
+                type = "invalid_type"
+                required = true
+            """).strip())
 
             with raises(InvalidConfigError, match="Invalid section configuration"):
                 load_config(str(config_file2))
@@ -412,22 +383,18 @@ class TestConfig(TestCase):
             # Create pyproject.toml file with dfc config
             temp_path = Path(temp_dir)
             pyproject_config: Path = temp_path.joinpath("pyproject.toml")
-            pyproject_config.write_text(
-                dedent(
-                    """
-                    [tool.dfc]
+            pyproject_config.write_text(dedent("""
+                [tool.dfc]
 
-                    [[tool.dfc.sections]]
-                    order = 1
-                    name = "summary"
-                    type = "free_text"
-                    required = true
-                    """
-                ).strip()
-            )
+                [[tool.dfc.sections]]
+                order = 1
+                name = "summary"
+                type = "free_text"
+                required = true
+            """).strip())
 
             # Should find pyproject.toml
-            found1: Path = find_config_file(temp_path)  # type:ignore
+            found1: Path = find_config_file(temp_path)  # type: ignore
             assert found1.resolve() == pyproject_config.resolve()
 
             # Test when no config exists
@@ -445,19 +412,15 @@ class TestConfig(TestCase):
             # Create a temporary config file
             temp_path = Path(temp_dir)
             config_file: Path = temp_path.joinpath("version_compat.toml")
-            config_file.write_text(
-                dedent(
-                    """
-                    [tool.dfc]
+            config_file.write_text(dedent("""
+                [tool.dfc]
 
-                    [[tool.dfc.sections]]
-                    order = 1
-                    name = "summary"
-                    type = "free_text"
-                    required = true
-                    """
-                ).strip()
-            )
+                [[tool.dfc.sections]]
+                order = 1
+                name = "summary"
+                type = "free_text"
+                required = true
+            """).strip())
 
             # This should work regardless of Python version
             config: Config = load_config(str(config_file))
@@ -500,22 +463,18 @@ class TestConfig(TestCase):
 
                 # Create a pyproject.toml with dfc config
                 pyproject_path = Path("pyproject.toml")
-                pyproject_path.write_text(
-                    dedent(
-                        """
-                        [tool.dfc]
+                pyproject_path.write_text(dedent("""
+                    [tool.dfc]
 
-                        [[tool.dfc.sections]]
-                        order = 1
-                        name = "summary"
-                        type = "free_text"
-                        required = true
-                        """
-                    ).strip()
-                )
+                    [[tool.dfc.sections]]
+                    order = 1
+                    name = "summary"
+                    type = "free_text"
+                    required = true
+                """).strip())
 
                 # Call find_config_file with no arguments (uses cwd)
-                found: Path = find_config_file()  # type:ignore
+                found: Path = find_config_file()  # type: ignore
                 assert found.resolve() == pyproject_path.resolve()
 
             finally:
@@ -681,8 +640,7 @@ class TestConfig(TestCase):
         This ensures line 306 in config.py is covered by testing the empty string branch.
         """
 
-        config_content = dedent(
-            """
+        config_content = dedent("""
             [tool.dfc]
             [[tool.dfc.sections]]
             order = 1
@@ -690,8 +648,7 @@ class TestConfig(TestCase):
             type = "free_text"
             required = true
             admonition = ""
-            """
-        ).strip()
+        """).strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(config_content)
@@ -725,15 +682,13 @@ class TestConfig(TestCase):
         # Test the case where config has tool section but neither 'dfc' nor 'docstring-format-checker'
         # This tests line 384 in config.py which was uncovered
 
-        content: str = dedent(
-            """
+        content: str = dedent("""
             [tool.other-tool]
             some_option = true
 
             [tool.another-tool]
             value = "test"
-            """
-        ).strip()
+        """).strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(content)
@@ -759,15 +714,13 @@ class TestConfig(TestCase):
         # Test the case where config has no tool section at all
         # This should trigger line 384: return None when "tool" not in config_data
 
-        content: str = dedent(
-            """
+        content: str = dedent("""
             [build-system]
             requires = ["setuptools"]
 
             [project]
             name = "test-project"
-            """
-        ).strip()
+        """).strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(content)

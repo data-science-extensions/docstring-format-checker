@@ -54,7 +54,6 @@ from docstring_format_checker.utils.exceptions import (
     InvalidTypeValuesError,
 )
 
-
 if sys.version_info >= (3, 11):
     # ## Python StdLib Imports ----
     import tomllib

@@ -11,7 +11,6 @@ from importlib.metadata import metadata
 from docstring_format_checker.config import DEFAULT_CONFIG, load_config
 from docstring_format_checker.core import DocstringChecker, SectionConfig
 
-
 ### Define package metadata ----
 _metadata = metadata("docstring-format-checker")
 __name__: str = _metadata["Name"]

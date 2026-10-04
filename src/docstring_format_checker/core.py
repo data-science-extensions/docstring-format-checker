@@ -23,7 +23,6 @@
     Core docstring checking functionality.
 """
 
-
 # ---------------------------------------------------------------------------- #
 #                                                                              #
 #     Setup                                                                 ####
@@ -50,7 +49,6 @@ from docstring_format_checker.utils.exceptions import (
     DocstringError,
     InvalidFileError,
 )
-
 
 ## --------------------------------------------------------------------------- #
 ##  Exports                                                                 ####

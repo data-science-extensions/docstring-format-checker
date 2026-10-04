@@ -29,7 +29,6 @@ from docstring_format_checker.config import (
 from docstring_format_checker.core import DocstringChecker
 from docstring_format_checker.utils.exceptions import DocstringError
 
-
 # ---------------------------------------------------------------------------- #
 #                                                                              #
 #     Test Global Config Features                                           ####
@@ -47,8 +46,7 @@ class TestGlobalConfigFeatures(TestCase):
         Test loading global config flags from TOML file.
         """
 
-        toml_content: str = dedent(
-            """
+        toml_content: str = dedent("""
             [tool.dfc]
             allow_undefined_sections = true
             require_docstrings = false
@@ -59,8 +57,7 @@ class TestGlobalConfigFeatures(TestCase):
             name = "summary"
             type = "free_text"
             required = true
-            """
-        ).strip()
+            """).strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(toml_content)
@@ -94,8 +91,7 @@ class TestGlobalConfigFeatures(TestCase):
         Test that default global config values are used when not specified in TOML.
         """
 
-        toml_content: str = dedent(
-            """
+        toml_content: str = dedent("""
             [tool.dfc]
 
             [[tool.dfc.sections]]
@@ -103,8 +99,7 @@ class TestGlobalConfigFeatures(TestCase):
             name = "summary"
             type = "free_text"
             required = true
-            """
-        ).strip()
+            """).strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(toml_content)
@@ -137,8 +132,7 @@ class TestGlobalConfigFeatures(TestCase):
         checker = DocstringChecker(config)
 
         # Create a Python file with an undefined section
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function():
                 """
                 !!! note "Summary"
@@ -148,8 +142,7 @@ class TestGlobalConfigFeatures(TestCase):
                     This section is not defined in config.
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(python_content)
@@ -180,8 +173,7 @@ class TestGlobalConfigFeatures(TestCase):
         checker = DocstringChecker(config)
 
         # Create a Python file with an undefined section
-        python_content: str = dedent(
-            '''
+        python_content: str = dedent('''
             def test_function():
                 """
                 !!! note "Summary"
@@ -191,8 +183,7 @@ class TestGlobalConfigFeatures(TestCase):
                     This section is not defined in config.
                 """
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(python_content)
@@ -222,12 +213,10 @@ class TestGlobalConfigFeatures(TestCase):
         checker = DocstringChecker(config)
 
         # Create a Python file with a function missing docstring
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def test_function():
                 pass
-            """
-        ).strip()
+            """).strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(python_content)
@@ -258,12 +247,10 @@ class TestGlobalConfigFeatures(TestCase):
         checker = DocstringChecker(config)
 
         # Create a Python file with a function missing docstring
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def test_function():
                 pass
-            """
-        ).strip()
+            """).strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(python_content)
@@ -293,15 +280,13 @@ class TestGlobalConfigFeatures(TestCase):
         checker = DocstringChecker(config)
 
         # Create a Python file with private functions missing docstrings
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def _private_function():
                 pass
 
             def __dunder_function__():
                 pass
-            """
-        ).strip()
+            """).strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(python_content)
@@ -330,15 +315,13 @@ class TestGlobalConfigFeatures(TestCase):
         checker = DocstringChecker(config)
 
         # Create a Python file with private functions missing docstrings
-        python_content: str = dedent(
-            """
+        python_content: str = dedent("""
             def _private_function():
                 pass
 
             def __dunder_function__():
                 pass
-            """
-        ).strip()
+            """).strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(python_content)
@@ -372,8 +355,7 @@ class TestGlobalConfigFeatures(TestCase):
         checker = DocstringChecker(config)
 
         # Create a Python file with private function with undefined section
-        python_content = dedent(
-            '''
+        python_content = dedent('''
             def _private_function():
                 """
                 !!! note "Summary"
@@ -386,8 +368,7 @@ class TestGlobalConfigFeatures(TestCase):
 
             def public_function_no_docstring():
                 pass
-            '''
-        ).strip()
+            ''').strip()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(python_content)
