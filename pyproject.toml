@@ -157,7 +157,6 @@ import_heading_localfolder = "## Local Module Imports ----"
 profile = "black"
 split_on_trailing_comma = true
 combine_as_imports = true
-lines_after_imports = 1
 
 [tool.codespell]
 ignore-words-list = "demog"
