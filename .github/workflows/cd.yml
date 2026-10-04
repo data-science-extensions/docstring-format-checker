@@ -302,7 +302,9 @@ jobs:
 
       - name: Install Package
         id: install-package
-        run: uv add  --no-cache "${{ env.PACKAGE_NAME }}==${{ env.VERSION }}"
+        run: |
+          uv add --no-cache "${{ env.PACKAGE_NAME }}==${{ env.VERSION }}"
+          uv sync --no-cache
 
       - name: Checkout smoke-test fixtures
         uses: actions/checkout@v6
