@@ -207,7 +207,7 @@ jobs:
           echo 'Package deployed to PyPI 👉 https://pypi.org/project/${{ env.PACKAGE_NAME }}/'
           uvx pip install --dry-run --no-deps --no-cache ${{ env.PACKAGE_NAME }}
 
-  install-package:
+  install-package-pip:
 
     needs: deploy-package
     if: ${{ always() && needs.deploy-package.result == 'success' }}
@@ -231,6 +231,117 @@ jobs:
       - name: Install Package
         id: install-package
         run: pip install --no-cache --verbose --no-python-version-warning "${{ env.PACKAGE_NAME }}==${{ env.VERSION }}"
+
+      - name: Checkout smoke-test fixtures
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.14' }}
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          path: dfc-smoke-fixtures
+          sparse-checkout: |
+            src/tests/post_deployment.toml
+            src/tests/post_deployment_valid.py
+            src/tests/post_deployment_invalid.py
+          sparse-checkout-cone-mode: false
+
+      - name: Smoke-test installed package with pip
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.14' }}
+        shell: bash
+        run: |
+          dfc --config "$GITHUB_WORKSPACE/dfc-smoke-fixtures/src/tests/post_deployment.toml" --check \
+            "$GITHUB_WORKSPACE/dfc-smoke-fixtures/src/tests/post_deployment_valid.py"
+
+          set +e
+          dfc --config "$GITHUB_WORKSPACE/dfc-smoke-fixtures/src/tests/post_deployment.toml" --check \
+            "$GITHUB_WORKSPACE/dfc-smoke-fixtures/src/tests/post_deployment_invalid.py" \
+            > "$RUNNER_TEMP/dfc-invalid-output.txt" 2>&1
+          status=$?
+          set -e
+
+          if [[ "$status" -eq 0 ]]; then
+            echo "DFC unexpectedly accepted the invalid fixture."
+            exit 1
+          fi
+
+          for expected in "Missing docstring for function" "Parameter type mismatch"; do
+            if ! grep -Fq "$expected" "$RUNNER_TEMP/dfc-invalid-output.txt"; then
+              cat "$RUNNER_TEMP/dfc-invalid-output.txt"
+              echo "DFC did not report the expected diagnostic: $expected"
+              exit 1
+            fi
+          done
+
+  install-package-uv:
+
+    needs: deploy-package
+    if: ${{ always() && needs.deploy-package.result == 'success' }}
+    strategy:
+      matrix:
+        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
+      fail-fast: false
+      max-parallel: 30
+    name: Install Package with '${{ matrix.os }}' and Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+      - name: Set up UV
+        id: setup-uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        id: setup-python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Initialize UV
+        id: init-uv
+        run: uv init
+
+      - name: Install Package
+        id: install-package
+        run: |
+          uv add --no-cache "${{ env.PACKAGE_NAME }}==${{ env.VERSION }}"
+          uv sync --no-cache
+
+      - name: Checkout smoke-test fixtures
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          path: dfc-smoke-fixtures
+          sparse-checkout: |
+            src/tests/post_deployment.toml
+            src/tests/post_deployment_valid.py
+            src/tests/post_deployment_invalid.py
+          sparse-checkout-cone-mode: false
+
+      - name: Smoke-test installed package with uv
+        shell: bash
+        run: |
+          uv run --no-cache dfc --config "$GITHUB_WORKSPACE/dfc-smoke-fixtures/src/tests/post_deployment.toml" --check \
+            "$GITHUB_WORKSPACE/dfc-smoke-fixtures/src/tests/post_deployment_valid.py"
+
+          set +e
+          uv run --no-cache dfc --config "$GITHUB_WORKSPACE/dfc-smoke-fixtures/src/tests/post_deployment.toml" --check \
+            "$GITHUB_WORKSPACE/dfc-smoke-fixtures/src/tests/post_deployment_invalid.py" \
+            > "$RUNNER_TEMP/dfc-invalid-output.txt" 2>&1
+          status=$?
+          set -e
+
+          if [[ "$status" -eq 0 ]]; then
+            echo "DFC unexpectedly accepted the invalid fixture."
+            exit 1
+          fi
+
+          for expected in "Missing docstring for function" "Parameter type mismatch"; do
+            if ! grep -Fq "$expected" "$RUNNER_TEMP/dfc-invalid-output.txt"; then
+              cat "$RUNNER_TEMP/dfc-invalid-output.txt"
+              echo "DFC did not report the expected diagnostic: $expected"
+              exit 1
+            fi
+          done
 
   build-docs:
 

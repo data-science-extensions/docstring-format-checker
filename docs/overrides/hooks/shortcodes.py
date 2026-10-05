@@ -34,7 +34,6 @@ from mkdocs.structure.files import File, Files
 from mkdocs.structure.pages import Page
 from toolbox_python.collection_types import str_list
 
-
 ## --------------------------------------------------------------------------- #
 ##  Exports                                                                 ####
 ## --------------------------------------------------------------------------- #

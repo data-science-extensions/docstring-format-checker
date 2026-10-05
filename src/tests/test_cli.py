@@ -36,7 +36,6 @@ from docstring_format_checker.core import DocstringChecker
 from docstring_format_checker.utils.exceptions import DocstringError
 from tests.setup import clean
 
-
 ## --------------------------------------------------------------------------- #
 ##  Test Class                                                              ####
 ## --------------------------------------------------------------------------- #
@@ -118,27 +117,23 @@ class TestCLI(TestCase):
             # Create a temporary Python file
             temp_path = Path(temp_dir)
             py_file: Path = temp_path.joinpath("test.py")
-            py_file.write_text(
-                dedent(
-                    '''
-                    def good_function() -> None:
-                        """
-                        !!! note "Summary"
-                            This function has a good docstring.
+            py_file.write_text(dedent('''
+                def good_function() -> None:
+                    """
+                    !!! note "Summary"
+                        This function has a good docstring.
 
-                        ???+ abstract "Details"
-                            More detailed information here.
+                    ???+ abstract "Details"
+                        More detailed information here.
 
-                        Params:
-                            None
+                    Params:
+                        None
 
-                        Returns:
-                            None
-                        """
-                        pass
-                    '''
-                ).strip()
-            )
+                    Returns:
+                        None
+                    """
+                    pass
+            ''').strip())
 
             # Should succeed with default config
             result: Result = self.runner.invoke(app, [str(py_file)])
@@ -158,18 +153,14 @@ class TestCLI(TestCase):
             # Create a temporary Python file
             temp_path = Path(temp_dir)
             py_file: Path = temp_path.joinpath("test.py")
-            py_file.write_text(
-                dedent(
-                    """
-                    def bad_function() -> None:
-                        pass
+            py_file.write_text(dedent("""
+                def bad_function() -> None:
+                    pass
 
-                    class BadClass:
-                        def bad_method(self) -> None:
-                            return None
-                    """
-                ).strip()
-            )
+                class BadClass:
+                    def bad_method(self) -> None:
+                        return None
+            """).strip())
 
             # Should fail due to missing docstrings
             result: Result = self.runner.invoke(app, [str(py_file)])
@@ -189,14 +180,10 @@ class TestCLI(TestCase):
             # Create a Python file with missing docstrings
             temp_path = Path(temp_dir)
             py_file: Path = temp_path.joinpath("test.py")
-            py_file.write_text(
-                dedent(
-                    """
-                    def function_without_docstring() -> None:
-                        pass
-                    """
-                ).strip()
-            )
+            py_file.write_text(dedent("""
+                def function_without_docstring() -> None:
+                    pass
+            """).strip())
 
             # Should find issues in the directory
             result: Result = self.runner.invoke(app, [str(temp_path)])
@@ -239,18 +226,14 @@ class TestCLI(TestCase):
             # Create a temporary Python file
             temp_path = Path(temp_dir)
             py_file: Path = temp_path.joinpath("test.py")
-            py_file.write_text(
-                dedent(
-                    '''
-                    def good_function() -> None:
-                        """
-                        !!! note "Summary"
-                            This function has a good docstring.
-                        """
-                        pass
-                    '''
-                ).strip()
-            )
+            py_file.write_text(dedent('''
+                def good_function() -> None:
+                    """
+                    !!! note "Summary"
+                        This function has a good docstring.
+                    """
+                    pass
+            ''').strip())
 
             # Should succeed without any output
             result: Result = self.runner.invoke(app, ["--quiet", str(py_file)])
@@ -291,18 +274,14 @@ class TestCLI(TestCase):
             # Create a temporary config file
             temp_path = Path(temp_dir)
             config_file: Path = temp_path.joinpath("test_config.toml")
-            config_file.write_text(
-                dedent(
-                    """
-                    [tool.dfc]
-                    [[tool.dfc.sections]]
-                    order = 1
-                    name = "summary"
-                    type = "free_text"
-                    required = true
-                    """
-                ).strip()
-            )
+            config_file.write_text(dedent("""
+                [tool.dfc]
+                [[tool.dfc.sections]]
+                order = 1
+                name = "summary"
+                type = "free_text"
+                required = true
+            """).strip())
 
             # Create a temporary Python file
             py_file: Path = temp_path.joinpath("test.py")
@@ -466,20 +445,16 @@ class TestCLI(TestCase):
 
             # Create a config file in the same directory
             config_file: Path = temp_path.joinpath("pyproject.toml")
-            config_file.write_text(
-                dedent(
-                    """
-                    [tool.dfc]
+            config_file.write_text(dedent("""
+                [tool.dfc]
 
-                    [[tool.dfc.sections]]
-                    order = 1
-                    name = "summary"
-                    type = "free_text"
-                    required = true
-                    admonition = "note"
-                """
-                ).strip()
-            )
+                [[tool.dfc.sections]]
+                order = 1
+                name = "summary"
+                type = "free_text"
+                required = true
+                admonition = "note"
+            """).strip())
 
             # Test that config is auto-discovered
             # The main goal is code coverage, not functional correctness
@@ -563,16 +538,12 @@ class TestCLI(TestCase):
             # Create multiple files with multiple functions each
             for i in range(2):
                 py_file = temp_path / f"test_{i}.py"
-                py_file.write_text(
-                    dedent(
-                        """
-                        def func1(): pass
-                        def func2(): pass
-                        class TestClass:
-                            def method1(self): pass
-                        """
-                    )
-                )
+                py_file.write_text(dedent("""
+                    def func1(): pass
+                    def func2(): pass
+                    class TestClass:
+                        def method1(self): pass
+                """))
 
             result: Result = self.runner.invoke(app, ["--quiet", str(temp_path)])
             assert result.exit_code == 1
@@ -587,9 +558,7 @@ class TestCLI(TestCase):
         """
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
             # Create content that would generate compound errors
-            temp_file.write(
-                dedent(
-                    '''
+            temp_file.write(dedent('''
                 def test_function(param1, param2):
                     """
                     Test function.
@@ -599,9 +568,7 @@ class TestCLI(TestCase):
                         param2: Missing type information
                     """
                     pass
-                '''
-                ).strip()
-            )
+                ''').strip())
             temp_file.flush()
             temp_file_name = temp_file.name
 
@@ -644,24 +611,20 @@ class TestCLI(TestCase):
             # Create a Python file with proper structure
             temp_path = Path(temp_dir)
             py_file: Path = temp_path.joinpath("test.py")
-            py_file.write_text(
-                dedent(
-                    '''
-                    def func() -> None:
-                        """
-                        !!! note "Summary"
-                            Valid docstring.
+            py_file.write_text(dedent('''
+                def func() -> None:
+                    """
+                    !!! note "Summary"
+                        Valid docstring.
 
-                        Params:
-                            None
+                    Params:
+                        None
 
-                        Returns:
-                            None
-                        """
-                        pass
-                    '''
-                ).strip()
-            )
+                    Returns:
+                        None
+                    """
+                    pass
+            ''').strip())
 
             # Should show success message for valid docstrings
             result: Result = self.runner.invoke(app, ["--output=table", str(temp_path)])
@@ -767,18 +730,14 @@ class TestCLI(TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             py_file: Path = temp_path.joinpath("test.py")
-            py_file.write_text(
-                dedent(
-                    '''
-                    def good_function() -> None:
-                        """
-                        !!! note "Summary"
-                            This function has a good docstring.
-                        """
-                        pass
-                    '''
-                ).strip()
-            )
+            py_file.write_text(dedent('''
+                def good_function() -> None:
+                    """
+                    !!! note "Summary"
+                        This function has a good docstring.
+                    """
+                    pass
+            ''').strip())
 
             result: Result = self.runner.invoke(app, ["--check", str(py_file)])
             assert result.exit_code == 0
@@ -867,18 +826,14 @@ class TestCLI(TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             py_file: Path = temp_path.joinpath("test.py")
-            py_file.write_text(
-                dedent(
-                    '''
-                    def good_function() -> None:
-                        """
-                        !!! note "Summary"
-                            This function has a good docstring.
-                        """
-                        pass
-                    '''
-                ).strip()
-            )
+            py_file.write_text(dedent('''
+                def good_function() -> None:
+                    """
+                    !!! note "Summary"
+                        This function has a good docstring.
+                    """
+                    pass
+            ''').strip())
 
             result: Result = self.runner.invoke(app, ["--quiet", str(py_file)])
             assert result.exit_code == 0
@@ -891,14 +846,10 @@ class TestCLI(TestCase):
         Test that -c works as short alias for --check.
         """
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
-            f.write(
-                dedent(
-                    """
-                    def bad_function():
-                        pass
-                    """
-                ).strip()
-            )
+            f.write(dedent("""
+                def bad_function():
+                    pass
+            """).strip())
             f.flush()
             temp_file_name = f.name
 
@@ -916,24 +867,20 @@ class TestCLI(TestCase):
         Test that -f works as short alias for --config.
         """
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
-            f.write(
-                dedent(
-                    """
-                    def good_function():
-                        '''
-                        !!! note "Summary"
-                            A good function.
+            f.write(dedent("""
+                def good_function():
+                    '''
+                    !!! note "Summary"
+                        A good function.
 
-                        Params:
-                            None.
+                    Params:
+                        None.
 
-                        Returns:
-                            (None): Nothing.
-                        '''
-                        pass
-                    """
-                ).strip()
-            )
+                    Returns:
+                        (None): Nothing.
+                    '''
+                    pass
+            """).strip())
             f.flush()
             temp_file_name = f.name
 
@@ -1022,23 +969,19 @@ class TestCLI(TestCase):
 
             # Create a Python file in the temp directory with proper default config format
             py_file: Path = temp_path.joinpath("test_file.py")
-            py_file.write_text(
-                dedent(
-                    '''
-                    def example_function():
-                        """!!! note "Summary"
-                        A simple function.
+            py_file.write_text(dedent('''
+                def example_function():
+                    """!!! note "Summary"
+                    A simple function.
 
-                        Params:
-                            None
+                    Params:
+                        None
 
-                        Returns:
-                            None
-                        """
-                        pass
-                    '''
-                )
-            )
+                    Returns:
+                        None
+                    """
+                    pass
+            '''))
 
             # Change to the temp directory to ensure no config is found
             original_cwd: Path = Path.cwd()
@@ -1067,27 +1010,21 @@ class TestCLI(TestCase):
 
             # Create a pyproject.toml file with simple content
             config_file: Path = temp_path.joinpath("pyproject.toml")
-            config_content: str = dedent(
-                """
+            config_content: str = dedent("""
                 [tool.docstring-format-checker]
                 sections = [
                     {name = "Summary", required = true, order = 1, type = "free_text"}
                 ]
-                """
-            )
+            """)
             config_file.write_text(config_content)
 
             # Create a Python file in the temp directory
             py_file: Path = temp_path.joinpath("test_file.py")
-            py_file.write_text(
-                dedent(
-                    '''
-                    def example_function():
-                        """A simple function."""
-                        pass
-                    '''
-                )
-            )
+            py_file.write_text(dedent('''
+                def example_function():
+                    """A simple function."""
+                    pass
+            '''))
 
             # Change to the temp directory so the config is auto-discovered
             original_cwd: Path = Path.cwd()
@@ -1127,15 +1064,11 @@ class TestCLI(TestCase):
         """Test list output with compound errors where line_number is 0 to hit cli.py:451."""
 
         with tempfile.NamedTemporaryFile(mode="w+", suffix=".py", delete=False) as test_file:
-            test_file.write(
-                dedent(
-                    '''
+            test_file.write(dedent('''
                 def test_function():
                     """Summary here."""
                     pass
-                '''
-                ).strip()
-            )
+            ''').strip())
             test_file.flush()
             temp_file_name = test_file.name
 
@@ -1174,34 +1107,26 @@ class TestCLI(TestCase):
         try:
             # Create first file
             with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file1:
-                temp_file1.write(
-                    dedent(
-                        '''
-                        def example_function():
-                            """
-                            !!! note "Summary"
-                                This is a valid example function.
-                            """
-                            pass
-                        '''
-                    ).strip()
-                )
+                temp_file1.write(dedent('''
+                    def example_function():
+                        """
+                        !!! note "Summary"
+                            This is a valid example function.
+                        """
+                        pass
+                ''').strip())
                 temp_file1_name = temp_file1.name
 
             # Create second file
             with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file2:
-                temp_file2.write(
-                    dedent(
-                        '''
-                        def another_function():
-                            """
-                            !!! note "Summary"
-                                This is another valid example function.
-                            """
-                            pass
-                        '''
-                    ).strip()
-                )
+                temp_file2.write(dedent('''
+                    def another_function():
+                        """
+                        !!! note "Summary"
+                            This is another valid example function.
+                        """
+                        pass
+                ''').strip())
                 temp_file2_name = temp_file2.name
 
             result: Result = self.runner.invoke(app, [temp_file1_name, temp_file2_name])
@@ -1222,33 +1147,25 @@ class TestCLI(TestCase):
         try:
             # Create first file with valid docstring
             with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file1:
-                temp_file1.write(
-                    dedent(
-                        '''
-                        def valid_function():
-                            """
-                            !!! note "Summary"
-                                This is a valid function.
-                            """
-                            pass
-                        '''
-                    ).strip()
-                )
+                temp_file1.write(dedent('''
+                    def valid_function():
+                        """
+                        !!! note "Summary"
+                            This is a valid function.
+                        """
+                        pass
+                ''').strip())
                 temp_file1_name = temp_file1.name
 
             # Create second file with invalid docstring
             with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file2:
-                temp_file2.write(
-                    dedent(
-                        '''
-                        def invalid_function():
-                            """
-                            This is missing the required admonition.
-                            """
-                            pass
-                        '''
-                    ).strip()
-                )
+                temp_file2.write(dedent('''
+                    def invalid_function():
+                        """
+                        This is missing the required admonition.
+                        """
+                        pass
+                ''').strip())
                 temp_file2_name = temp_file2.name
 
             result: Result = self.runner.invoke(app, [temp_file1_name, temp_file2_name])
@@ -1269,33 +1186,25 @@ class TestCLI(TestCase):
         try:
             # Create two files with valid docstrings
             with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file1:
-                temp_file1.write(
-                    dedent(
-                        '''
-                        def function_one():
-                            """
-                            !!! note "Summary"
-                                First function.
-                            """
-                            pass
-                        '''
-                    ).strip()
-                )
+                temp_file1.write(dedent('''
+                    def function_one():
+                        """
+                        !!! note "Summary"
+                            First function.
+                        """
+                        pass
+                ''').strip())
                 temp_file1_name = temp_file1.name
 
             with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file2:
-                temp_file2.write(
-                    dedent(
-                        '''
-                        def function_two():
-                            """
-                            !!! note "Summary"
-                                Second function.
-                            """
-                            pass
-                        '''
-                    ).strip()
-                )
+                temp_file2.write(dedent('''
+                    def function_two():
+                        """
+                        !!! note "Summary"
+                            Second function.
+                        """
+                        pass
+                ''').strip())
                 temp_file2_name = temp_file2.name
 
             result: Result = self.runner.invoke(app, ["--check", temp_file1_name, temp_file2_name])
@@ -1315,18 +1224,14 @@ class TestCLI(TestCase):
         try:
             # Create one valid file
             with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
-                temp_file.write(
-                    dedent(
-                        '''
-                        def valid_function():
-                            """
-                            !!! note "Summary"
-                                This is a valid function.
-                            """
-                            pass
-                        '''
-                    ).strip()
-                )
+                temp_file.write(dedent('''
+                    def valid_function():
+                        """
+                        !!! note "Summary"
+                            This is a valid function.
+                        """
+                        pass
+                ''').strip())
                 temp_file_name = temp_file.name
 
             # Include a nonexistent file
@@ -1348,18 +1253,14 @@ class TestCLI(TestCase):
         try:
             # Create a temporary file
             with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
-                temp_file.write(
-                    dedent(
-                        '''
-                        def file_function():
-                            """
-                            !!! note "Summary"
-                                Function in a file.
-                            """
-                            pass
-                        '''
-                    ).strip()
-                )
+                temp_file.write(dedent('''
+                    def file_function():
+                        """
+                        !!! note "Summary"
+                            Function in a file.
+                        """
+                        pass
+                ''').strip())
                 temp_file_name = temp_file.name
 
             # Create a temporary directory with a Python file
@@ -1368,18 +1269,14 @@ class TestCLI(TestCase):
             temp_dir_name = temp_dir
 
             dir_file_path = Path(temp_dir) / "dir_file.py"
-            dir_file_path.write_text(
-                dedent(
-                    '''
-                    def dir_function():
-                        """
-                        !!! note "Summary"
-                            Function in a directory.
-                        """
-                        pass
-                    '''
-                ).strip()
-            )
+            dir_file_path.write_text(dedent('''
+                def dir_function():
+                    """
+                    !!! note "Summary"
+                        Function in a directory.
+                    """
+                    pass
+            ''').strip())
 
             result: Result = self.runner.invoke(app, [temp_file_name, temp_dir_name])
             assert result.exit_code == 0
@@ -1401,33 +1298,25 @@ class TestCLI(TestCase):
         try:
             # Create files with valid docstrings
             with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file1:
-                temp_file1.write(
-                    dedent(
-                        '''
-                        def function_one():
-                            """
-                            !!! note "Summary"
-                                First function.
-                            """
-                            pass
-                        '''
-                    ).strip()
-                )
+                temp_file1.write(dedent('''
+                    def function_one():
+                        """
+                        !!! note "Summary"
+                            First function.
+                        """
+                        pass
+                ''').strip())
                 temp_file1_name = temp_file1.name
 
             with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file2:
-                temp_file2.write(
-                    dedent(
-                        '''
-                        def function_two():
-                            """
-                            !!! note "Summary"
-                                Second function.
-                            """
-                            pass
-                        '''
-                    ).strip()
-                )
+                temp_file2.write(dedent('''
+                    def function_two():
+                        """
+                        !!! note "Summary"
+                            Second function.
+                        """
+                        pass
+                ''').strip())
                 temp_file2_name = temp_file2.name
 
             result: Result = self.runner.invoke(app, ["--output=table", temp_file1_name, temp_file2_name])
@@ -1448,33 +1337,25 @@ class TestCLI(TestCase):
         try:
             # Create files with valid docstrings
             with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file1:
-                temp_file1.write(
-                    dedent(
-                        '''
-                        def function_one():
-                            """
-                            !!! note "Summary"
-                                First function.
-                            """
-                            pass
-                        '''
-                    ).strip()
-                )
+                temp_file1.write(dedent('''
+                    def function_one():
+                        """
+                        !!! note "Summary"
+                            First function.
+                        """
+                        pass
+                ''').strip())
                 temp_file1_name = temp_file1.name
 
             with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file2:
-                temp_file2.write(
-                    dedent(
-                        '''
-                        def function_two():
-                            """
-                            !!! note "Summary"
-                                Second function.
-                            """
-                            pass
-                        '''
-                    ).strip()
-                )
+                temp_file2.write(dedent('''
+                    def function_two():
+                        """
+                        !!! note "Summary"
+                            Second function.
+                        """
+                        pass
+                ''').strip())
                 temp_file2_name = temp_file2.name
 
             result: Result = self.runner.invoke(app, ["--quiet", temp_file1_name, temp_file2_name])

@@ -33,7 +33,6 @@ from github.GithubObject import NotSet
 from github.GitRelease import GitRelease
 from github.Repository import Repository
 
-
 ## --------------------------------------------------------------------------- #
 ##  Constants                                                               ####
 ## --------------------------------------------------------------------------- #

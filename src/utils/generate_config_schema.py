@@ -36,7 +36,6 @@ import black
 # ## Local First Party Imports ----
 from docstring_format_checker.config import GlobalConfig, SectionConfig
 
-
 if sys.version_info >= (3, 11):
     # ## Python StdLib Imports ----
     import tomllib

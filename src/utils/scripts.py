@@ -28,7 +28,6 @@ from pathlib import Path
 from textwrap import dedent
 from typing import Union
 
-
 ## --------------------------------------------------------------------------- #
 ##  Constants                                                               ####
 ## --------------------------------------------------------------------------- #
@@ -269,14 +268,12 @@ def check_docstrings() -> None:
 
 
 def check_complexity() -> None:
-    notes: str = dedent(
-        """
+    notes: str = dedent("""
         Notes from: https://rohaquinlop.github.io/complexipy/#running-the-analysis
         - Complexity <= 5: Simple, easy to understand
         - Complexity 6-15: Moderate, acceptable for most cases
         - Complexity >= 15: Complex, consider refactoring into simpler functions
-        """
-    )
+        """)
     print(notes)
     run(f"complexipy ./src/{DIRECTORY_NAME}")
 

@@ -29,7 +29,6 @@
     Command-line interface for the docstring format checker.
 """
 
-
 # ---------------------------------------------------------------------------- #
 #                                                                              #
 #     Setup                                                                 ####
@@ -65,7 +64,6 @@ from docstring_format_checker.config import (
     load_config,
 )
 from docstring_format_checker.core import DocstringChecker, DocstringError
-
 
 ## --------------------------------------------------------------------------- #
 ##  Exports                                                                 ####
@@ -204,8 +202,7 @@ def _show_usage_examples_callback() -> None:
             Nothing is returned.
     """
 
-    examples_content: str = dedent(
-        f"""
+    examples_content: str = dedent(f"""
         Execute the below commands in any terminal after installing the package.
 
         {_blue("dfc myfile.py")}                   {_green("# Check a single Python file (list output)")}
@@ -221,8 +218,7 @@ def _show_usage_examples_callback() -> None:
         {_blue("dfc . -c custom.toml")}            {_green("# Use custom configuration file")}
         {_blue("dfc --example=config")}            {_green("# Show example configuration")}
         {_blue("dfc -e usage")}                    {_green("# Show usage examples (this help)")}
-        """
-    ).strip()
+        """).strip()
 
     panel = Panel(
         examples_content,
@@ -245,8 +241,7 @@ def _show_config_example_callback() -> None:
             Nothing is returned.
     """
 
-    example_config: str = dedent(
-        r"""
+    example_config: str = dedent(r"""
         Place the below config in your `pyproject.toml` file.
 
         [blue]\[tool.dfc][/blue]
@@ -266,8 +261,7 @@ def _show_config_example_callback() -> None:
             [blue]{ order = 7, name = "examples", type = "free_text",          required = false, admonition = "example", prefix = "???+" },[/blue]
             [blue]{ order = 8, name = "notes",    type = "free_text",          required = false, admonition = "note", prefix = "???" },[/blue]
         [blue]][/blue]
-        """
-    ).strip()
+        """).strip()
 
     panel = Panel(
         example_config,

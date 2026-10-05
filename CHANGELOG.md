@@ -1507,7 +1507,7 @@
                 require_docstrings=tool_config.get("require_docstrings", True),
                 check_private=tool_config.get("check_private", False),
                 validate_param_types=tool_config.get("validate_param_types", True),
-                optional_style=optional_style,  # type:ignore
+                optional_style=optional_style,  # type: ignore
             )
         ```
         
@@ -1905,8 +1905,7 @@
         ```python
         # In src/docstring_format_checker/cli.py
         def _show_config_example_callback() -> None:
-            example_config: str = dedent(
-                r"""
+            example_config: str = dedent(r"""
                 Place the below config in your `pyproject.toml` file.
 
                 [blue]\[tool.dfc][/blue]
@@ -1918,8 +1917,7 @@
                 [blue]optional_style = "validate"[/blue]  [green]# "silent", "validate", or "strict"[/green]
                 [blue]sections = [[/blue]
                     ...
-                """
-            ).strip()
+                """).strip()
             ...
         ```
         
@@ -4619,6 +4617,7 @@
         ```python
         # Matches (0-4 spaces) - Actual section headers
         "Params:"  # 0 spaces ✓
+
         "  Returns:"  # 2 spaces ✓
         "    Raises:"  # 4 spaces ✓
 
@@ -5079,6 +5078,7 @@
         ```python
         # Matches:
         "param1 (str):"  # → ("param1", "str")
+
         "param2 (Optional[int]):"  # → ("param2", "Optional[int]")
         "data (list[dict[str, Any]]):"  # → ("data", "list[dict[str, Any]]")
 

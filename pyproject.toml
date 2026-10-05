@@ -49,9 +49,9 @@ dfc = "docstring_format_checker.cli:entry_point"
 
 [dependency-groups]
 dev = [
-    "black==25.*",
-    # "black==25.*; python_version<'3.10'",
-    # "black==26.*; python_version>='3.10'",
+    # "black==26.*",
+    "black==25.*; python_version<'3.10'",
+    "black==26.*; python_version>='3.10'",
     "blacken-docs==1.*",
     "codespell==2.*",
     "ipykernel==6.*; python_version<'3.10'",
@@ -68,9 +68,9 @@ dev = [
     "pip>=25,<27",
 ]
 docs = [
-    "black==25.*",
-    # "black==25.*; python_version<'3.10'",
-    # "black==26.*; python_version>='3.10'",
+    # "black==26.*",
+    "black==25.*; python_version<'3.10'",
+    "black==26.*; python_version>='3.10'",
     "docstring-inheritance==2.*; python_version<'3.10'",
     "docstring-inheritance==3.*; python_version>='3.10'",
     "livereload==2.*",
@@ -157,7 +157,6 @@ import_heading_localfolder = "## Local Module Imports ----"
 profile = "black"
 split_on_trailing_comma = true
 combine_as_imports = true
-lines_after_imports = 2
 
 [tool.codespell]
 ignore-words-list = "demog"
@@ -216,5 +215,5 @@ sections = [
 ]
 
 [build-system]
-requires = ["uv_build>=0.9.28,<0.13.0"]
+requires = ["uv_build>=0.12.23,<0.13"]
 build-backend = "uv_build"
