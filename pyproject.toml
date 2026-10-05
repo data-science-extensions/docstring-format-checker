@@ -96,7 +96,7 @@ test = [
     "pytest-sugar==1.*",
     "pytest-xdist==3.*",
     "requests==2.*",
-    "complexipy==5.*",
+    "complexipy>=5,<9",
 ]
 
 [tool.black]
