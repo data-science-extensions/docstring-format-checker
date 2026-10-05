@@ -9,9 +9,221 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v1.11.5"
+
+    ## **v1.11.5 - Post-deployment smoke tests, release workflow hardening, and dependency refresh**
+
+    <!-- md:tag v1.11.5 --><br>
+    <!-- md:date 2026-10-05 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v1.11.5](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.11.5) -->
+
+    ??? note "Release Notes"
+
+        ### What's Changed
+        * Enhanced Repository Configs and Automations and Update Dependencies in `actions` and `pip` Configs by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/40
+        * deps(actions): bump actions/checkout from 4 to 6 by @dependabot[bot] in https://github.com/data-science-extensions/docstring-format-checker/pull/41
+        * deps(pip): update uv-build requirement from <0.9.0,>=0.8.17 to >=0.8.17,<0.10.0 by @dependabot[bot] in https://github.com/data-science-extensions/docstring-format-checker/pull/44
+        * Documentation Update and Navigation Improvements by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/50
+        * Updates by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/58
+        * Update Dependabot configuration for actions and Python dependencies by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/64
+        * 🤖 deps(actions): Bump actions/setup-python from 6 to 7 by @dependabot[bot] in https://github.com/data-science-extensions/docstring-format-checker/pull/63
+        * 🤖 deps(pip): Update uv-build requirement from <0.10.0,>=0.9.28 to >=0.9.28,<0.13.0 by @dependabot[bot] in https://github.com/data-science-extensions/docstring-format-checker/pull/62
+        * 🤖 deps(pip): Update isort requirement from ==7.* to >=7,<10 by @dependabot[bot] in https://github.com/data-science-extensions/docstring-format-checker/pull/60
+        * 🤖 deps(actions): Bump codecov/codecov-action from 5 to 7 by @dependabot[bot] in https://github.com/data-science-extensions/docstring-format-checker/pull/59
+        * 🤖 deps(actions): Bump actions/download-artifact from 7 to 8 by @dependabot[bot] in https://github.com/data-science-extensions/docstring-format-checker/pull/54
+        * 🤖 deps(actions): Bump actions/upload-artifact from 6 to 7 by @dependabot[bot] in https://github.com/data-science-extensions/docstring-format-checker/pull/53
+        * 🤖 deps(actions): Bump softprops/action-gh-release from 2 to 3 by @dependabot[bot] in https://github.com/data-science-extensions/docstring-format-checker/pull/57
+        * 🤖 deps(pip): Update pip requirement from ==25.* to >=25,<27 by @dependabot[bot] in https://github.com/data-science-extensions/docstring-format-checker/pull/51
+        * Add post-deployment DFC smoke tests by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/89
+        * Upgrade GitHub Actions and Improve Release Workflow Reliability by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/90
+        
+        
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.11.4...v1.11.5
+
+    ??? abstract "Updates"
+
+        * [`d35f175`](https://github.com/data-science-extensions/docstring-format-checker/commit/d35f1757357aa3498d598c054eb0e0c89a8bb9e9): Update CI Workflows to Use Latest Actions Versions<br>
+            - Update `actions/checkout` from `v6` to `v7` in `.github/workflows/cd.yml`.<br>
+            - Update `actions/setup-python` from `v6` to `v7` in `.github/workflows/cd.yml`.<br>
+            - Update `actions/checkout` from `v6` to `v7` in `.github/workflows/codeql.yml`.<br>
+            - Modify release trigger types in `.github/workflows/cd.yml` for clarity.<br>
+            - Ensure concurrent deployment settings are correctly configured in `.github/workflows/cd.yml`.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`87f7637`](https://github.com/data-science-extensions/docstring-format-checker/commit/87f76376a74cab5e42b8cad8303888f1da9ef7b9): Remove tracked skills files
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`f905dfc`](https://github.com/data-science-extensions/docstring-format-checker/commit/f905dfcffe590e9025e39c7479c1d09b4f001a48): Update `.gitignore` to include `.github/skills/*` directory<br>
+            - Add `.github/skills/*` to the list of ignored files
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`f7cefbd`](https://github.com/data-science-extensions/docstring-format-checker/commit/f7cefbd36e9a0ae8918420b72225046b1759b8ff): Add SKILL files for Cleanup, Documentation, Pull Request, and Release processes<br>
+            - Introduce a `cleanup` SKILL for auditing and fixing linting, typing, testing, and documentation issues.<br>
+            - Introduce a `docs` SKILL for auditing and improving Python docstrings and Markdown documentation.<br>
+            - Introduce a `pull-request` SKILL for generating comprehensive pull request descriptions.<br>
+            - Introduce a `release` SKILL for drafting release descriptions based on commits since the previous tag.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`f4a0382`](https://github.com/data-science-extensions/docstring-format-checker/commit/f4a0382827a79012bc549d42c46caa82f4a9c952): Update Python version matrix in CI configuration<br>
+            - Modify the Python version matrix to include versions 3.9 and 3.10<br>
+            - Ensure compatibility with a broader range of Python versions
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`606ba00`](https://github.com/data-science-extensions/docstring-format-checker/commit/606ba00260e801128146c858441e7761454da7e8): Update CI configuration for Python version checks<br>
+            - Modify the name of the step that runs checks on current Python versions.<br>
+            - Add conditional execution for running checks based on Python version.<br>
+            - Rename the step for running unit tests to specify it applies to end of life Python versions (3.9 and 3.10).
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`b1f9077`](https://github.com/data-science-extensions/docstring-format-checker/commit/b1f90776f2ebfe718dce50d705bf8126958f7917): Modify package installation to include sync command<br>
+            Updated the install package step to include a sync command.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`70b0b5a`](https://github.com/data-science-extensions/docstring-format-checker/commit/70b0b5a1e8fa1194ec60214a1cfd66a1caea8253): Update CI configuration for improved checks and testing<br>
+            - Upgrade `actions/checkout` from `v6` to `v7`<br>
+            - Add conditional execution for checks based on Python version<br>
+            - Introduce a new step to run unit tests with `uv run ./src/utils/scripts.py check-pytest`
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`a465d38`](https://github.com/data-science-extensions/docstring-format-checker/commit/a465d38b4347940eaee1d61d1b05c44dfae0efdf): Add smoke tests and configuration for docstring validation<br>
+            - Introduce `post_deployment.toml` for DFC configuration.<br>
+            - Add `post_deployment_valid.py` with examples of valid docstrings.<br>
+            - Include `post_deployment_invalid.py` with examples of invalid docstrings.<br>
+            - Update CI workflow to include smoke tests for installed packages.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`d34c835`](https://github.com/data-science-extensions/docstring-format-checker/commit/d34c835ea4cbe56894299b23636a7de521b520e5): Fix formatting
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`1214684`](https://github.com/data-science-extensions/docstring-format-checker/commit/1214684815fa805740ff966359a66f8259b2bca7): Update `isort` config to align with `black` config
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`910ed92`](https://github.com/data-science-extensions/docstring-format-checker/commit/910ed9261a489d2d47abe3f39f288a6fb888513b): Update `uv_build` dependency version in `pyproject.toml`<br>
+            - Change `uv_build` version requirement from `>=0.9.28,<0.10.0` to `>=0.12.23,<0.13`
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`e83907e`](https://github.com/data-science-extensions/docstring-format-checker/commit/e83907e76150d5336f4ceff1f7c33243c7447705): Reformat code to match `black` verision `v26` formatting<br>
+            - Remove unnecessary blank lines in `test_global_config.py`.<br>
+            - Simplify string formatting in `test_global_config.py` by using `dedent()` more efficiently.<br>
+            - Clean up imports in `changelog.py`, `generate_config_schema.py`, and `scripts.py` by removing extra blank lines.<br>
+            - Improve readability of notes in `check_complexity()` function in `scripts.py`.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`17181ca`](https://github.com/data-science-extensions/docstring-format-checker/commit/17181ca79816c3ac9bca3f17e250475fe1cc1e27): 🤖 deps(pip): Update isort requirement from ==7.* to >=7,<10<br>
+            Updates the requirements on [isort](https://github.com/PyCQA/isort) to permit the latest version.<br>
+            - [Release notes](https://github.com/PyCQA/isort/releases)<br>
+            - [Changelog](https://github.com/PyCQA/isort/blob/main/CHANGELOG.md)<br>
+            - [Commits](https://github.com/PyCQA/isort/compare/7.0.0...9.0.2)<br>
+            ---<br>
+            updated-dependencies:<br>
+            - dependency-name: isort<br>
+            dependency-version: 9.0.2<br>
+            dependency-type: direct:development<br>
+            ...<br>
+            Signed-off-by: dependabot[bot] <support@github.com>
+            (by [dependabot[bot]](https://github.com/apps/dependabot))
+        * [`85c9c01`](https://github.com/data-science-extensions/docstring-format-checker/commit/85c9c01f074129be80b92500b654416f66677788): 🤖 deps(pip): Update uv-build requirement<br>
+            Updates the requirements on [uv-build](https://github.com/astral-sh/uv) to permit the latest version.<br>
+            - [Release notes](https://github.com/astral-sh/uv/releases)<br>
+            - [Changelog](https://github.com/astral-sh/uv/blob/main/CHANGELOG.md)<br>
+            - [Commits](https://github.com/astral-sh/uv/compare/0.9.28...0.12.21)<br>
+            ---<br>
+            updated-dependencies:<br>
+            - dependency-name: uv-build<br>
+            dependency-version: 0.12.21<br>
+            dependency-type: direct:development<br>
+            ...<br>
+            Signed-off-by: dependabot[bot] <support@github.com>
+            (by [dependabot[bot]](https://github.com/apps/dependabot))
+        * [`505a79c`](https://github.com/data-science-extensions/docstring-format-checker/commit/505a79c8ff0113e80616b6cafcf4781e1d9da558): Update Dependabot configuration for actions and Python dependencies<br>
+            - Remove `reviewers` field from both actions and Python updates<br>
+            - Change `assignees` from `dependabot` to `chrimaho` for both updates
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`f0e7d55`](https://github.com/data-science-extensions/docstring-format-checker/commit/f0e7d557689165773d09ec2383592c1bd0d4b0e0): Fix example file path in FAQ section<br>
+            Updated the reference to the example pyproject.toml file for clarity.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`85393a7`](https://github.com/data-science-extensions/docstring-format-checker/commit/85393a743a6ed746267c5d53cbfba77804e5b4cb): Refactor `config.py` to resolve `ty` errors<br>
+            - Remove unnecessary comment for the `optional_style` parameter in the `_parse_global_config()` function.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`81f74f4`](https://github.com/data-science-extensions/docstring-format-checker/commit/81f74f463e7d15a41c14b75a9be678ae5304fbaf): 🤖 deps(pip): Update pip requirement from ==25.* to >=25,<27<br>
+            Updates the requirements on [pip](https://github.com/pypa/pip) to permit the latest version.<br>
+            - [Changelog](https://github.com/pypa/pip/blob/main/NEWS.rst)<br>
+            - [Commits](https://github.com/pypa/pip/compare/25.0...26.0)<br>
+            ---<br>
+            updated-dependencies:<br>
+            - dependency-name: pip<br>
+            dependency-version: '26.0'<br>
+            dependency-type: direct:development<br>
+            ...<br>
+            Signed-off-by: dependabot[bot] <support@github.com>
+            (by [dependabot[bot]](https://github.com/apps/dependabot))
+        * [`9c39546`](https://github.com/data-science-extensions/docstring-format-checker/commit/9c395461db7b70569613f8e2248fd3fc9fca0045): Fix typos
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`73690c1`](https://github.com/data-science-extensions/docstring-format-checker/commit/73690c16301a41a06bd38bcd9137b59a0fa6788a): Add License section to docs<br>
+            - Include `usage/license.md` in the documentation navigation.<br>
+            - Create a new `license.md` file to display licensing information.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`c1deeff`](https://github.com/data-science-extensions/docstring-format-checker/commit/c1deeffb46b9c0cfef068372458d73c0010549fa): Refactor navigation structure in documentation<br>
+            - Introduce a hierarchical structure for the navigation menu.<br>
+            - Group related topics under 'Basic', 'Advanced', and 'General'.<br>
+            - Update paths for 'Getting Started', 'FAQ', 'Configuration', 'CLI', 'Contributing', and 'Change Log'.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`50c1659`](https://github.com/data-science-extensions/docstring-format-checker/commit/50c1659d61807dfb616b170217605626f6e62a5e): Add Frequently Asked Questions (FAQ) section to documentation<br>
+            - Provide answers to common questions about using and configuring the `docstring-format-checker` package.<br>
+            - Explain supported docstring styles and customization options.<br>
+            - Clarify the tool's focus on Google-style docstrings and AST parsing.<br>
+            - Describe the validation capabilities and usage in CI/CD pipelines.<br>
+            - Include details on handling optional types and excluding private functions.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`ecde9b2`](https://github.com/data-science-extensions/docstring-format-checker/commit/ecde9b2ba0c582c354ed734c343315d6552465c7): Add FAQ page to docs<br>
+            - Include `usage/faq.md` in the navigation structure for `mkdocs.yaml`.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`5755085`](https://github.com/data-science-extensions/docstring-format-checker/commit/575508572fdfc9fc7555d66713ee8e41d7924f5a): Update assignees and reviewers in Dependabot configuration<br>
+            - Change `assignees` to include `"dependabot"` for both GitHub Actions and Python dependencies.<br>
+            - Update `reviewers` to include `"chrimaho"` for both GitHub Actions and Python dependencies.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`564223e`](https://github.com/data-science-extensions/docstring-format-checker/commit/564223e745ca157627805b26a44301402b3c606a): Update `uv_build` dependency version<br>
+            - Change `uv_build` requirement to `>=0.9.28,<0.10.0`<br>
+            - Match to the docs from `uv`: https://docs.astral.sh/uv/concepts/build-backend/#using-the-uv-build-backend
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`6ad8034`](https://github.com/data-science-extensions/docstring-format-checker/commit/6ad803477aab0d2e58df83612d36dbf5b60cca67): Update commit message prefixes for Dependabot actions<br>
+            - Add robot emoji 🤖 to the commit message prefix for GitHub Actions<br>
+            - Add robot emoji 🤖 to the commit message prefix for Python dependencies
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`56a98d3`](https://github.com/data-science-extensions/docstring-format-checker/commit/56a98d35c317ac4bbc6cc1628aca60cedd737743): deps(pip): update uv-build requirement<br>
+            Updates the requirements on [uv-build](https://github.com/astral-sh/uv) to permit the latest version.<br>
+            - [Release notes](https://github.com/astral-sh/uv/releases)<br>
+            - [Changelog](https://github.com/astral-sh/uv/blob/main/CHANGELOG.md)<br>
+            - [Commits](https://github.com/astral-sh/uv/compare/0.8.17...0.9.28)<br>
+            ---<br>
+            updated-dependencies:<br>
+            - dependency-name: uv-build<br>
+            dependency-version: 0.9.28<br>
+            dependency-type: direct:development<br>
+            ...<br>
+            Signed-off-by: dependabot[bot] <support@github.com>
+            (by [dependabot[bot]](https://github.com/apps/dependabot))
+        * [`3bf71d3`](https://github.com/data-science-extensions/docstring-format-checker/commit/3bf71d3e0ecc285ed8ee5629b0ee571fbdf0b4d6): Add prompts directory to .gitignore<br>
+            - Include `.github/prompts/*` to ignore prompt files
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`1331d49`](https://github.com/data-science-extensions/docstring-format-checker/commit/1331d49c15bd20e7b5e397145dca4946cf23d895): Update black dependency specifications for compatibility<br>
+            - Remove conditional version specifications for `black` in the `dev` and `docs` groups.<br>
+            - Standardise `black` versioning to `black==25.*` for all Python versions.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`846ab24`](https://github.com/data-science-extensions/docstring-format-checker/commit/846ab247b5d555b15b58298ecb530f00fc5e7ab6): Update environment variables for CI and CD workflows<br>
+            - Change `PACKAGE_NAME` to use dynamic repository name from GitHub context<br>
+            - Update `REPOSITORY_NAME` to use dynamic repository reference from GitHub context
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`2e0a09b`](https://github.com/data-science-extensions/docstring-format-checker/commit/2e0a09bb4680b22241a07ee474f3cd2f180d38af): Update Dependabot configuration for GitHub Actions and Python dependencies<br>
+            - Add support for GitHub Actions updates with `deps(actions): ` prefix<br>
+            - Include Python dependencies updates with `deps(pip): ` prefix<br>
+            - Ensure both ecosystems target the `main` branch and have weekly update schedules
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`45e9153`](https://github.com/data-science-extensions/docstring-format-checker/commit/45e9153abcc6895e75840502b493a487f8a5d3b1): Update dependency specifications for Python version compatibility<br>
+            - Adjust `black` and `ipykernel` versions based on Python version<br>
+            - Replace `pre-commit` with `prek` in development dependencies<br>
+            - Update `docstring-inheritance` and `mkdocstrings` versions for compatibility<br>
+            - Modify `pytest` version for Python 3.10 compatibility
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`e21fa94`](https://github.com/data-science-extensions/docstring-format-checker/commit/e21fa94c2956ef330348f2c71e5d87e1324b04de): Add CodeQL workflow for advanced code analysis<br>
+            - Create a new workflow file for CodeQL analysis<br>
+            - Configure triggers for push and pull request events on the main branch<br>
+            - Set up job to analyze multiple programming languages<br>
+            - Include steps for checking out the repository and initializing CodeQL<br>
+            - Provide instructions for manual build steps if required
+            (by [chrimaho](https://github.com/chrimaho))
+
+
 !!! info "v1.11.4"
 
-    ## **v1.11.4**
+    ## **v1.11.4 - Expanded usage guides, performance optimisations, and linguistic standardisation**
 
     <!-- md:tag v1.11.4 --><br>
     <!-- md:date 2026-01-25 --><br>
@@ -249,7 +461,7 @@
 
 !!! info "v1.11.3"
 
-    ## **v1.11.3**
+    ## **v1.11.3 - Automated JSON Schema Generation and Enhanced Metadata**
 
     <!-- md:tag v1.11.3 --><br>
     <!-- md:date 2026-01-24 --><br>
