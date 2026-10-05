@@ -1,0 +1,9 @@
+[tool.dfc]
+require_docstrings = true
+check_private = false
+validate_param_types = true
+sections = [
+    { order = 1, name = "summary", type = "free_text", required = true, admonition = "note", prefix = "!!!" },
+    { order = 2, name = "params", type = "list_name_and_type", required = true },
+    { order = 3, name = "returns", type = "list_name_and_type", required = true },
+]
