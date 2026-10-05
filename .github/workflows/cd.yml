@@ -4,18 +4,18 @@ on:
   # Only trigger when a new release is published
   release:
     types:
-      # - published  #<-- Trigger when new release is published, regardless of status of pre-release flag
+      - published  #<-- Trigger when new release is published, regardless of status of pre-release flag
       # - prereleased  #<-- Trigger when release is published and the pre-release flag is checked
-      - released  #<-- Trigger when release is published and the pre-release flag is not checked
+      # - released  #<-- Trigger when release is published and the pre-release flag is not checked
   # Allows you to run workflow manually from the Actions tab
   # workflow_dispatch:
 
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+# Do not cancel in-progress runs so production deployments can complete.
 concurrency:
   group: "deployment"
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: write  # <-- to allow assets to be uploaded to the release
@@ -49,7 +49,7 @@ jobs:
 
       - name: Checkout Repository
         id: checkout-repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.GIT_BRANCH }}
 
@@ -101,7 +101,7 @@ jobs:
 
       - name: Checkout repository
         id: checkout-repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.GIT_BRANCH }}
 
@@ -176,7 +176,7 @@ jobs:
 
       - name: Checkout repository
         id: checkout-repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.GIT_BRANCH }}
 
@@ -234,7 +234,7 @@ jobs:
 
       - name: Checkout smoke-test fixtures
         if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.14' }}
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.release.tag_name }}
           path: dfc-smoke-fixtures
@@ -292,7 +292,7 @@ jobs:
 
       - name: Set up Python
         id: setup-python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -307,7 +307,7 @@ jobs:
           uv sync --no-cache
 
       - name: Checkout smoke-test fixtures
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.release.tag_name }}
           path: dfc-smoke-fixtures
@@ -349,14 +349,14 @@ jobs:
     needs:
       - test
       - deploy-package
-    if: ${{ always() && needs.test.result == 'success' && needs.deploy-package.result == 'success' }}
+    if: ${{ always() && needs.test.result == 'success' && needs.deploy-package.result == 'success' && !github.event.release.prerelease }}
     runs-on: ubuntu-latest
 
     steps:
 
       - name: Checkout repository
         id: checkout-repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.GIT_BRANCH }}
 
