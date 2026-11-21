@@ -1962,22 +1962,23 @@ class DocstringChecker:
         for line in docstring.split("\n"):
             line: str = line.strip()
             match: Optional[re.Match[str]] = re.match(section_pattern, line)
-            if match:
-                section_word: str = match.group(1)
-                section_name_lower: str = section_word.lower()
+            if not match:
+                continue
 
-                # Check if this is a configured non-admonition section
-                section_config: Optional[SectionConfig] = next(
-                    (s for s in self.sections_config if s.name.lower() == section_name_lower), None
+            section_word: str = match.group(1)
+            section_name_lower: str = section_word.lower()
+            section_config: Optional[SectionConfig] = next(
+                (s for s in self.sections_config if s.name.lower() == section_name_lower), None
+            )
+            if not section_config or section_config.admonition is not False:
+                continue
+
+            expected_title_case: str = section_config.name.title()
+            if section_word != expected_title_case:
+                errors.append(
+                    f"Section '{section_name_lower}' must be in title case as '{expected_title_case}', "
+                    f"found: '{section_word}'"
                 )
-                if section_config and section_config.admonition is False:
-                    # Check if it's title case
-                    expected_title_case: str = section_config.name.title()
-                    if section_word != expected_title_case:
-                        errors.append(
-                            f"Section '{section_name_lower}' must be in title case as '{expected_title_case}', "
-                            f"found: '{section_word}'"
-                        )
 
         return errors
 
@@ -2091,20 +2092,21 @@ class DocstringChecker:
             section_name: str = admonition_match.group(1)
             return next((s for s in parentheses_sections if s.name.lower() == section_name.lower()), None)
 
-        # Non-admonition sections (must not be indented)
-        if not full_line.startswith((" ", "\t")):
-            # Match section names (can include spaces) followed by an optional colon
-            simple_section_match: Optional[re.Match[str]] = re.match(r"^([A-Z][\w\s]+):?$", stripped_line)
-            if simple_section_match:
-                section_name: str = simple_section_match.group(1).strip()
-                # Check if it's a known section
-                potential_section: Optional[SectionConfig] = next(
-                    (s for s in self.sections_config if s.name.lower() == section_name.lower()), None
-                )
-                if potential_section:
-                    return next((s for s in parentheses_sections if s.name.lower() == section_name.lower()), None)
+        if full_line.startswith((" ", "\t")):
+            return None
 
-        return None
+        simple_section_match: Optional[re.Match[str]] = re.match(r"^([A-Z][\w\s]+):?$", stripped_line)
+        if not simple_section_match:
+            return None
+
+        section_name: str = simple_section_match.group(1).strip()
+        potential_section: Optional[SectionConfig] = next(
+            (s for s in self.sections_config if s.name.lower() == section_name.lower()), None
+        )
+        if not potential_section:
+            return None
+
+        return next((s for s in parentheses_sections if s.name.lower() == section_name.lower()), None)
 
     def _is_content_line(self, stripped_line: str) -> bool:
         """
