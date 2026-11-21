@@ -77,6 +77,7 @@ docs = [
 ]
 test = [
     "ty==0.*",
+    "tomli>=2.0.0",
     "parameterized==0.*",
     "pytest==9.*",
     "pytest-clarity==1.*",
@@ -85,7 +86,7 @@ test = [
     "pytest-sugar==1.*",
     "pytest-xdist==3.*",
     "requests==2.*",
-    "complexipy==5.*",
+    "complexipy>=5,<9",
 ]
 
 [tool.black]
