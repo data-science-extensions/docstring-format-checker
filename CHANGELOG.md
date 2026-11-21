@@ -9,6 +9,76 @@
 .md-nav--secondary .md-nav__list .md-nav__list { display: none; }
 </style>
 
+!!! info "v1.12.0"
+
+    ## **v1.12.0 - Add support for Python 3.15 and drop support for Python 3.9**
+
+    <!-- md:tag v1.12.0 --><br>
+    <!-- md:date 2026-11-21 --><br>
+    <!-- md:link [data-science-extensions/docstring-format-checker/releases/v1.12.0](https://github.com/data-science-extensions/docstring-format-checker/releases/tag/v1.12.0) -->
+
+    ??? note "Release Notes"
+
+        ### What's Changed
+        
+        * 🤖 deps(pip): Update uv-build requirement from <0.13,>=0.12.23 to >=0.12.23,<0.14 by @dependabot[bot] in https://github.com/data-science-extensions/docstring-format-checker/pull/91
+        * Update Python version to 3.15 in CI/CD workflows and project classifiers by @chrimaho in https://github.com/data-science-extensions/docstring-format-checker/pull/93
+        * 🤖 deps(pip): Update complexipy requirement from ==5.* to >=5,<9 by @dependabot[bot] in https://github.com/data-science-extensions/docstring-format-checker/pull/92
+        
+        
+        **Full Changelog**: https://github.com/data-science-extensions/docstring-format-checker/compare/v1.11.5...v1.12.0
+
+    ??? abstract "Updates"
+
+        * [`e5fbe86`](https://github.com/data-science-extensions/docstring-format-checker/commit/e5fbe86b0a7b56a41a49b5d45c4f5ecd967ded62): Refactor docstring section validation logic for improved clarity and efficiency
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`05fb6ab`](https://github.com/data-science-extensions/docstring-format-checker/commit/05fb6ab8036bacab5fa2d810a25d0c38c38608a8): Add tomli dependency for testing
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`8bd89ef`](https://github.com/data-science-extensions/docstring-format-checker/commit/8bd89ef5f9492141c963469b2088adeae6d50957): Update rich dependency version range<br>
+            Restricting Rich to version 15 makes installations conflict with applications that pin Rich 13 or 14, even though those versions satisfied the previous requirement and no Rich usage changed here. Please retain the existing lower-bound requirement so adding Python 3.15 support does not break those environments.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`6c3d8ab`](https://github.com/data-science-extensions/docstring-format-checker/commit/6c3d8ab3c48c971e0de04aa30aa67fa1016fab13): Update Typer dependency version constraint<br>
+            This removes the minimum Typer version and allows releases such as 0.4.2, which predate the `rich_markup_mode` argument used when constructing the CLI in `cli.py`. An environment pinned to that otherwise compatible Typer version can now resolve this package but cannot start `dfc`. Please retain the previous minimum version.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`eaa8747`](https://github.com/data-science-extensions/docstring-format-checker/commit/eaa8747c5a37f70d0f317e149807c05e40e8678d): Update pip version constraint in pyproject.toml<br>
+            `pip==26` pins pip to 26.0 and excludes the fixes for [CVE-2026-3219](https://github.com/advisories/GHSA-58qw-9mgm-455v) and [CVE-2026-8643](https://advisories.gitlab.com/pypi/pip/CVE-2026-8643/). Installing a crafted package with this version can install unintended files or write entry-point scripts outside the target directory. Require `pip>=26.1.2,<27` to allow patched 26.x releases.
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`ec7677c`](https://github.com/data-science-extensions/docstring-format-checker/commit/ec7677c3ef03c52c42277341567d1bca80abadfd): chore: Remove Python 3.9 from CI/CD workflows and update matrix configurations
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`f99eb53`](https://github.com/data-science-extensions/docstring-format-checker/commit/f99eb535323c68278ee8f41be649b4e295ce303a): fix: Update uv_sync command to use system certificates for secure connections
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`88556af`](https://github.com/data-science-extensions/docstring-format-checker/commit/88556afafb0e7981472c67bf13e4ee0314fff397): chore: Update Python requirements and dependencies in `pyproject.toml`
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`96e8da0`](https://github.com/data-science-extensions/docstring-format-checker/commit/96e8da044558eea6ff8ec81beb041d538392d352): chore: Update Python version to 3.15 in CI/CD workflows and project classifiers
+            (by [chrimaho](https://github.com/chrimaho))
+        * [`8594b09`](https://github.com/data-science-extensions/docstring-format-checker/commit/8594b097299a71ae5203dcce4a41555a5610066f): 🤖 deps(pip): Update complexipy requirement from ==5.* to >=5,<9<br>
+            Updates the requirements on [complexipy](https://github.com/rohaquinlop/complexipy) to permit the latest version.<br>
+            - [Release notes](https://github.com/rohaquinlop/complexipy/releases)<br>
+            - [Changelog](https://github.com/rohaquinlop/complexipy/blob/main/CHANGELOG.md)<br>
+            - [Commits](https://github.com/rohaquinlop/complexipy/compare/5.0.0...8.1.0)<br>
+            ---<br>
+            updated-dependencies:<br>
+            - dependency-name: complexipy<br>
+            dependency-version: 8.1.0<br>
+            dependency-type: direct:development<br>
+            ...<br>
+            Signed-off-by: dependabot[bot] <support@github.com>
+            (by [dependabot[bot]](https://github.com/apps/dependabot))
+        * [`3d5a606`](https://github.com/data-science-extensions/docstring-format-checker/commit/3d5a606115181def729aaaf95014b46e2c03e744): 🤖 deps(pip): Update uv-build requirement<br>
+            Updates the requirements on [uv-build](https://github.com/astral-sh/uv) to permit the latest version.<br>
+            - [Release notes](https://github.com/astral-sh/uv/releases)<br>
+            - [Changelog](https://github.com/astral-sh/uv/blob/main/CHANGELOG.md)<br>
+            - [Commits](https://github.com/astral-sh/uv/compare/0.12.23...0.13.1)<br>
+            ---<br>
+            updated-dependencies:<br>
+            - dependency-name: uv-build<br>
+            dependency-version: 0.13.1<br>
+            dependency-type: direct:development<br>
+            ...<br>
+            Signed-off-by: dependabot[bot] <support@github.com>
+            (by [dependabot[bot]](https://github.com/apps/dependabot))
+
+
 !!! info "v1.11.5"
 
     ## **v1.11.5 - Post-deployment smoke tests, release workflow hardening, and dependency refresh**
