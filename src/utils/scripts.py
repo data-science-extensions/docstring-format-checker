@@ -56,7 +56,7 @@ run = run_command
 
 
 def uv_sync() -> None:
-    run("uv sync --all-groups --native-tls --link-mode=copy")
+    run("uv sync --all-groups --system-certs --link-mode=copy")
 
 
 def lint_check() -> None:
