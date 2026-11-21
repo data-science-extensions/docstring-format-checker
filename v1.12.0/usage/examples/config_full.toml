@@ -1,0 +1,41 @@
+[tool.dfc]
+require_docstrings = true
+check_private = true
+allow_undefined_sections = false
+validate_param_types = true
+optional_style = "validate"
+
+[[tool.dfc.sections]]
+name = "summary"
+type = "free_text"
+order = 1
+admonition = "note"
+required = true
+prefix = "!!!"
+message = "A brief summary is required."
+
+[[tool.dfc.sections]]
+name = "details"
+type = "free_text"
+order = 2
+required = false
+admonition = "abstract"
+prefix = "???+"
+
+[[tool.dfc.sections]]
+name = "params"
+type = "list_name_and_type"
+order = 3
+required = false
+
+[[tool.dfc.sections]]
+name = "raises"
+type = "list_type"
+order = 4
+required = false
+
+[[tool.dfc.sections]]
+name = "notes"
+type = "free_text"
+admonition = "note"
+prefix = "???"

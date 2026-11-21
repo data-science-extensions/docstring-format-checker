@@ -1,0 +1,15 @@
+[tool.dfc]
+# Require docstrings for all functions/methods (default: true)
+require_docstrings = true
+
+# Check private members starting with an underscore (default: false)
+check_private = true
+
+# Allow sections that are not defined in the configuration (default: false)
+allow_undefined_sections = true
+
+# Validate that parameter types are provided (default: true)
+validate_param_types = true
+
+# Style for reporting issues in optional sections (silent, validate, strict)
+optional_style = "strict"

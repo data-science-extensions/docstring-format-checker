@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/icons/1589516.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
     
     
       
@@ -31,10 +31,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -6874,7 +6874,9 @@
 <span class="normal">2284</span>
 <span class="normal">2285</span>
 <span class="normal">2286</span>
-<span class="normal">2287</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">DocstringChecker</span><span class="p">:</span>
+<span class="normal">2287</span>
+<span class="normal">2288</span>
+<span class="normal">2289</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">DocstringChecker</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    !!! note "Summary"</span>
 <span class="sd">        Main class for checking docstring format and completeness.</span>
@@ -8753,22 +8755,23 @@
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">docstring</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">):</span>
             <span class="n">line</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
             <span class="n">match</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">Match</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">section_pattern</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
-                <span class="n">section_word</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-                <span class="n">section_name_lower</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">section_word</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+                <span class="k">continue</span>
 
-                <span class="c1"># Check if this is a configured non-admonition section</span>
-                <span class="n">section_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SectionConfig</span><span class="p">]</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-                    <span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sections_config</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">section_name_lower</span><span class="p">),</span> <span class="kc">None</span>
+            <span class="n">section_word</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">section_name_lower</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">section_word</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="n">section_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SectionConfig</span><span class="p">]</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sections_config</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">section_name_lower</span><span class="p">),</span> <span class="kc">None</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">section_config</span> <span class="ow">or</span> <span class="n">section_config</span><span class="o">.</span><span class="n">admonition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">expected_title_case</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">section_config</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">title</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">section_word</span> <span class="o">!=</span> <span class="n">expected_title_case</span><span class="p">:</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Section '</span><span class="si">{</span><span class="n">section_name_lower</span><span class="si">}</span><span class="s2">' must be in title case as '</span><span class="si">{</span><span class="n">expected_title_case</span><span class="si">}</span><span class="s2">', "</span>
+                    <span class="sa">f</span><span class="s2">"found: '</span><span class="si">{</span><span class="n">section_word</span><span class="si">}</span><span class="s2">'"</span>
                 <span class="p">)</span>
-                <span class="k">if</span> <span class="n">section_config</span> <span class="ow">and</span> <span class="n">section_config</span><span class="o">.</span><span class="n">admonition</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
-                    <span class="c1"># Check if it's title case</span>
-                    <span class="n">expected_title_case</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">section_config</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">title</span><span class="p">()</span>
-                    <span class="k">if</span> <span class="n">section_word</span> <span class="o">!=</span> <span class="n">expected_title_case</span><span class="p">:</span>
-                        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                            <span class="sa">f</span><span class="s2">"Section '</span><span class="si">{</span><span class="n">section_name_lower</span><span class="si">}</span><span class="s2">' must be in title case as '</span><span class="si">{</span><span class="n">expected_title_case</span><span class="si">}</span><span class="s2">', "</span>
-                            <span class="sa">f</span><span class="s2">"found: '</span><span class="si">{</span><span class="n">section_word</span><span class="si">}</span><span class="s2">'"</span>
-                        <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">errors</span>
 
@@ -8882,20 +8885,21 @@
             <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">admonition_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
             <span class="k">return</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">parentheses_sections</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">section_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span> <span class="kc">None</span><span class="p">)</span>
 
-        <span class="c1"># Non-admonition sections (must not be indented)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">full_line</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">" "</span><span class="p">,</span> <span class="s2">"</span><span class="se">\t</span><span class="s2">"</span><span class="p">)):</span>
-            <span class="c1"># Match section names (can include spaces) followed by an optional colon</span>
-            <span class="n">simple_section_match</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">Match</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^([A-Z][\w\s]+):?$"</span><span class="p">,</span> <span class="n">stripped_line</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">simple_section_match</span><span class="p">:</span>
-                <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">simple_section_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-                <span class="c1"># Check if it's a known section</span>
-                <span class="n">potential_section</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SectionConfig</span><span class="p">]</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-                    <span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sections_config</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">section_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span> <span class="kc">None</span>
-                <span class="p">)</span>
-                <span class="k">if</span> <span class="n">potential_section</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">parentheses_sections</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">section_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">full_line</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">" "</span><span class="p">,</span> <span class="s2">"</span><span class="se">\t</span><span class="s2">"</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="kc">None</span>
 
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">simple_section_match</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">Match</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^([A-Z][\w\s]+):?$"</span><span class="p">,</span> <span class="n">stripped_line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">simple_section_match</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">simple_section_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">potential_section</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SectionConfig</span><span class="p">]</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sections_config</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">section_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">potential_section</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">parentheses_sections</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">section_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span> <span class="kc">None</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_is_content_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stripped_line</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
@@ -18147,7 +18151,8 @@
 <span class="normal">1979</span>
 <span class="normal">1980</span>
 <span class="normal">1981</span>
-<span class="normal">1982</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_check_title_case_sections</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">docstring</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="normal">1982</span>
+<span class="normal">1983</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_check_title_case_sections</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">docstring</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    !!! note "Summary"</span>
 <span class="sd">        Check that non-admonition sections are single word, title case, and match config name.</span>
@@ -18161,22 +18166,23 @@
     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">docstring</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">):</span>
         <span class="n">line</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="n">match</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">Match</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">section_pattern</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
-            <span class="n">section_word</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-            <span class="n">section_name_lower</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">section_word</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+            <span class="k">continue</span>
 
-            <span class="c1"># Check if this is a configured non-admonition section</span>
-            <span class="n">section_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SectionConfig</span><span class="p">]</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-                <span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sections_config</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">section_name_lower</span><span class="p">),</span> <span class="kc">None</span>
+        <span class="n">section_word</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">section_name_lower</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">section_word</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">section_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SectionConfig</span><span class="p">]</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sections_config</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">section_name_lower</span><span class="p">),</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">section_config</span> <span class="ow">or</span> <span class="n">section_config</span><span class="o">.</span><span class="n">admonition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">expected_title_case</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">section_config</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">title</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">section_word</span> <span class="o">!=</span> <span class="n">expected_title_case</span><span class="p">:</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Section '</span><span class="si">{</span><span class="n">section_name_lower</span><span class="si">}</span><span class="s2">' must be in title case as '</span><span class="si">{</span><span class="n">expected_title_case</span><span class="si">}</span><span class="s2">', "</span>
+                <span class="sa">f</span><span class="s2">"found: '</span><span class="si">{</span><span class="n">section_word</span><span class="si">}</span><span class="s2">'"</span>
             <span class="p">)</span>
-            <span class="k">if</span> <span class="n">section_config</span> <span class="ow">and</span> <span class="n">section_config</span><span class="o">.</span><span class="n">admonition</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
-                <span class="c1"># Check if it's title case</span>
-                <span class="n">expected_title_case</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">section_config</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">title</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">section_word</span> <span class="o">!=</span> <span class="n">expected_title_case</span><span class="p">:</span>
-                    <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">"Section '</span><span class="si">{</span><span class="n">section_name_lower</span><span class="si">}</span><span class="s2">' must be in title case as '</span><span class="si">{</span><span class="n">expected_title_case</span><span class="si">}</span><span class="s2">', "</span>
-                        <span class="sa">f</span><span class="s2">"found: '</span><span class="si">{</span><span class="n">section_word</span><span class="si">}</span><span class="s2">'"</span>
-                    <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">errors</span>
 </code></pre></div></td></tr></table></div>
@@ -18211,8 +18217,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/docstring_format_checker/core.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1984</span>
-<span class="normal">1985</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1985</span>
 <span class="normal">1986</span>
 <span class="normal">1987</span>
 <span class="normal">1988</span>
@@ -18257,7 +18262,8 @@
 <span class="normal">2027</span>
 <span class="normal">2028</span>
 <span class="normal">2029</span>
-<span class="normal">2030</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_check_parentheses_validation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">docstring</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="normal">2030</span>
+<span class="normal">2031</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_check_parentheses_validation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">docstring</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    !!! note "Summary"</span>
 <span class="sd">        Check that list_type and list_name_and_type sections have proper parentheses.</span>
@@ -18408,8 +18414,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/docstring_format_checker/core.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2032</span>
-<span class="normal">2033</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2033</span>
 <span class="normal">2034</span>
 <span class="normal">2035</span>
 <span class="normal">2036</span>
@@ -18441,7 +18446,8 @@
 <span class="normal">2062</span>
 <span class="normal">2063</span>
 <span class="normal">2064</span>
-<span class="normal">2065</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_detect_any_section_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stripped_line</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">full_line</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="normal">2065</span>
+<span class="normal">2066</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_detect_any_section_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stripped_line</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">full_line</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    !!! note "Summary"</span>
 <span class="sd">        Detect any section header (for section transitions).</span>
@@ -18607,8 +18613,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/docstring_format_checker/core.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2067</span>
-<span class="normal">2068</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2068</span>
 <span class="normal">2069</span>
 <span class="normal">2070</span>
 <span class="normal">2071</span>
@@ -18647,7 +18652,9 @@
 <span class="normal">2104</span>
 <span class="normal">2105</span>
 <span class="normal">2106</span>
-<span class="normal">2107</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_detect_section_header</span><span class="p">(</span>
+<span class="normal">2107</span>
+<span class="normal">2108</span>
+<span class="normal">2109</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_detect_section_header</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span> <span class="n">stripped_line</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">full_line</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parentheses_sections</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SectionConfig</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SectionConfig</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""</span>
@@ -18674,20 +18681,21 @@
         <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">admonition_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">parentheses_sections</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">section_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span> <span class="kc">None</span><span class="p">)</span>
 
-    <span class="c1"># Non-admonition sections (must not be indented)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">full_line</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">" "</span><span class="p">,</span> <span class="s2">"</span><span class="se">\t</span><span class="s2">"</span><span class="p">)):</span>
-        <span class="c1"># Match section names (can include spaces) followed by an optional colon</span>
-        <span class="n">simple_section_match</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">Match</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^([A-Z][\w\s]+):?$"</span><span class="p">,</span> <span class="n">stripped_line</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">simple_section_match</span><span class="p">:</span>
-            <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">simple_section_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-            <span class="c1"># Check if it's a known section</span>
-            <span class="n">potential_section</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SectionConfig</span><span class="p">]</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-                <span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sections_config</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">section_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span> <span class="kc">None</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="n">potential_section</span><span class="p">:</span>
-                <span class="k">return</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">parentheses_sections</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">section_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">full_line</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">" "</span><span class="p">,</span> <span class="s2">"</span><span class="se">\t</span><span class="s2">"</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="kc">None</span>
 
-    <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">simple_section_match</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">Match</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^([A-Z][\w\s]+):?$"</span><span class="p">,</span> <span class="n">stripped_line</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">simple_section_match</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">simple_section_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">potential_section</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SectionConfig</span><span class="p">]</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sections_config</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">section_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span> <span class="kc">None</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">potential_section</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">parentheses_sections</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">section_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span> <span class="kc">None</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -18774,9 +18782,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/docstring_format_checker/core.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2109</span>
-<span class="normal">2110</span>
-<span class="normal">2111</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2111</span>
 <span class="normal">2112</span>
 <span class="normal">2113</span>
 <span class="normal">2114</span>
@@ -18787,7 +18793,9 @@
 <span class="normal">2119</span>
 <span class="normal">2120</span>
 <span class="normal">2121</span>
-<span class="normal">2122</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_is_content_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stripped_line</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="normal">2122</span>
+<span class="normal">2123</span>
+<span class="normal">2124</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_is_content_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stripped_line</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    !!! note "Summary"</span>
 <span class="sd">        Check if line is content that needs validation.</span>
@@ -18887,9 +18895,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/docstring_format_checker/core.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2124</span>
-<span class="normal">2125</span>
-<span class="normal">2126</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2126</span>
 <span class="normal">2127</span>
 <span class="normal">2128</span>
 <span class="normal">2129</span>
@@ -18919,7 +18925,9 @@
 <span class="normal">2153</span>
 <span class="normal">2154</span>
 <span class="normal">2155</span>
-<span class="normal">2156</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_is_description_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stripped_line</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="normal">2156</span>
+<span class="normal">2157</span>
+<span class="normal">2158</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_is_description_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stripped_line</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    !!! note "Summary"</span>
 <span class="sd">        Check if line is a description rather than a type definition.</span>
@@ -19096,9 +19104,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/docstring_format_checker/core.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2158</span>
-<span class="normal">2159</span>
-<span class="normal">2160</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2160</span>
 <span class="normal">2161</span>
 <span class="normal">2162</span>
 <span class="normal">2163</span>
@@ -19134,7 +19140,9 @@
 <span class="normal">2193</span>
 <span class="normal">2194</span>
 <span class="normal">2195</span>
-<span class="normal">2196</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_validate_parentheses_line</span><span class="p">(</span>
+<span class="normal">2196</span>
+<span class="normal">2197</span>
+<span class="normal">2198</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_validate_parentheses_line</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span> <span class="n">full_line</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stripped_line</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">current_section</span><span class="p">:</span> <span class="n">SectionConfig</span><span class="p">,</span> <span class="n">type_line_indent</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">"""</span>
@@ -19317,9 +19325,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/docstring_format_checker/core.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2198</span>
-<span class="normal">2199</span>
-<span class="normal">2200</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2200</span>
 <span class="normal">2201</span>
 <span class="normal">2202</span>
 <span class="normal">2203</span>
@@ -19354,7 +19360,9 @@
 <span class="normal">2232</span>
 <span class="normal">2233</span>
 <span class="normal">2234</span>
-<span class="normal">2235</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_validate_list_type_line</span><span class="p">(</span>
+<span class="normal">2235</span>
+<span class="normal">2236</span>
+<span class="normal">2237</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_validate_list_type_line</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span> <span class="n">stripped_line</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">current_indent</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">type_line_indent</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">current_section</span><span class="p">:</span> <span class="n">SectionConfig</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">"""</span>
@@ -19536,9 +19544,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/docstring_format_checker/core.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2237</span>
-<span class="normal">2238</span>
-<span class="normal">2239</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2239</span>
 <span class="normal">2240</span>
 <span class="normal">2241</span>
 <span class="normal">2242</span>
@@ -19586,7 +19592,9 @@
 <span class="normal">2284</span>
 <span class="normal">2285</span>
 <span class="normal">2286</span>
-<span class="normal">2287</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_validate_list_name_and_type_line</span><span class="p">(</span>
+<span class="normal">2287</span>
+<span class="normal">2288</span>
+<span class="normal">2289</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_validate_list_name_and_type_line</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span> <span class="n">stripped_line</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">current_indent</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">type_line_indent</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">current_section</span><span class="p">:</span> <span class="n">SectionConfig</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">"""</span>
@@ -19715,10 +19723,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.indexes", "navigation.top", "navigation.instant", "search.highlight", "search.suggest", "toc.follow", "content.action.edit", "content.action.view", "content.code.select", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.indexes", "navigation.top", "navigation.instant", "search.highlight", "search.suggest", "toc.follow", "content.action.edit", "content.action.view", "content.code.select", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
     
   </body>
